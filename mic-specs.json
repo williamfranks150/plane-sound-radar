@@ -1,0 +1,220 @@
+[
+  {
+    "manufacturer": "Sennheiser",
+    "name": "Sennheiser MKH 416",
+    "short": "MKH 416",
+    "kind": "boom shotgun",
+    "mic": 13,
+    "hot": 6.5,
+    "tail": 35,
+    "ceil": 12000,
+    "aliases": [
+      "MKH416",
+      "416"
+    ],
+    "status": "verified",
+    "confidence": "verified-database"
+  },
+  {
+    "manufacturer": "Sennheiser",
+    "name": "Sennheiser MKH 8060",
+    "short": "MKH 8060",
+    "kind": "boom shotgun",
+    "mic": 14,
+    "hot": 7,
+    "tail": 38,
+    "ceil": 13000,
+    "aliases": [
+      "MKH8060",
+      "8060"
+    ],
+    "status": "verified",
+    "confidence": "verified-database"
+  },
+  {
+    "manufacturer": "Sennheiser",
+    "name": "Sennheiser MKH 50",
+    "short": "MKH 50",
+    "kind": "interior boom",
+    "mic": 10,
+    "hot": 5,
+    "tail": 25,
+    "ceil": 10000,
+    "aliases": [
+      "MKH50",
+      "50"
+    ],
+    "status": "verified",
+    "confidence": "verified-database"
+  },
+  {
+    "manufacturer": "Schoeps",
+    "name": "Schoeps CMIT 5U",
+    "short": "CMIT 5U",
+    "kind": "boom shotgun",
+    "mic": 15,
+    "hot": 7.5,
+    "tail": 40,
+    "ceil": 14000,
+    "aliases": [
+      "CMIT",
+      "CMIT5U"
+    ],
+    "status": "verified",
+    "confidence": "verified-database"
+  },
+  {
+    "manufacturer": "Schoeps",
+    "name": "Schoeps MiniCMIT",
+    "short": "MiniCMIT",
+    "kind": "boom shotgun",
+    "mic": 14,
+    "hot": 7,
+    "tail": 38,
+    "ceil": 13000,
+    "aliases": [
+      "Mini CMIT",
+      "MiniCMIT"
+    ],
+    "status": "verified",
+    "confidence": "verified-database"
+  },
+  {
+    "manufacturer": "Schoeps",
+    "name": "Schoeps CMC/MK 41",
+    "short": "MK 41",
+    "kind": "dialogue boom",
+    "mic": 11,
+    "hot": 5.5,
+    "tail": 28,
+    "ceil": 11000,
+    "aliases": [
+      "MK41",
+      "CMC MK41"
+    ],
+    "status": "verified",
+    "confidence": "verified-database"
+  },
+  {
+    "manufacturer": "DPA",
+    "name": "DPA 4017",
+    "short": "DPA 4017",
+    "kind": "boom shotgun",
+    "mic": 15,
+    "hot": 7.5,
+    "tail": 40,
+    "ceil": 14000,
+    "aliases": [
+      "4017"
+    ],
+    "status": "verified",
+    "confidence": "verified-database"
+  },
+  {
+    "manufacturer": "DPA",
+    "name": "DPA 4018",
+    "short": "DPA 4018",
+    "kind": "dialogue boom",
+    "mic": 11,
+    "hot": 5.5,
+    "tail": 28,
+    "ceil": 11000,
+    "aliases": [
+      "4018"
+    ],
+    "status": "verified",
+    "confidence": "verified-database"
+  },
+  {
+    "manufacturer": "Sanken",
+    "name": "Sanken COS-11D",
+    "short": "COS-11D",
+    "kind": "lav",
+    "mic": 18,
+    "hot": 9,
+    "tail": 50,
+    "ceil": 15000,
+    "aliases": [
+      "COS11D",
+      "COS 11D"
+    ],
+    "status": "verified",
+    "confidence": "verified-database"
+  },
+  {
+    "manufacturer": "DPA",
+    "name": "DPA 4060",
+    "short": "DPA 4060",
+    "kind": "lav",
+    "mic": 20,
+    "hot": 10,
+    "tail": 55,
+    "ceil": 16000,
+    "aliases": [
+      "4060"
+    ],
+    "status": "verified",
+    "confidence": "verified-database"
+  },
+  {
+    "manufacturer": "DPA",
+    "name": "DPA 6060",
+    "short": "DPA 6060",
+    "kind": "lav",
+    "mic": 19,
+    "hot": 9.5,
+    "tail": 52,
+    "ceil": 16000,
+    "aliases": [
+      "6060"
+    ],
+    "status": "verified",
+    "confidence": "verified-database"
+  },
+  {
+    "manufacturer": "Countryman",
+    "name": "Countryman B6",
+    "short": "B6",
+    "kind": "lav",
+    "mic": 18,
+    "hot": 9,
+    "tail": 50,
+    "ceil": 15000,
+    "aliases": [
+      "B6"
+    ],
+    "status": "verified",
+    "confidence": "verified-database"
+  },
+  {
+    "manufacturer": "Sennheiser",
+    "name": "Sennheiser MKE 2",
+    "short": "MKE 2",
+    "kind": "lav",
+    "mic": 17,
+    "hot": 8.5,
+    "tail": 48,
+    "ceil": 15000,
+    "aliases": [
+      "MKE2"
+    ],
+    "status": "verified",
+    "confidence": "verified-database"
+  },
+  {
+    "manufacturer": "Shure",
+    "name": "Shure TwinPlex TL47",
+    "short": "TwinPlex",
+    "kind": "lav",
+    "mic": 19,
+    "hot": 9.5,
+    "tail": 52,
+    "ceil": 16000,
+    "aliases": [
+      "TwinPlex",
+      "TL47"
+    ],
+    "status": "verified",
+    "confidence": "verified-database"
+  }
+]
