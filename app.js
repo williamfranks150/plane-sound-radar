@@ -1,17 +1,6 @@
 'use strict';
 
 
-const CITIES=[
-  ['Toronto',43.6532,-79.3832],
-  ['Vancouver',49.2827,-123.1207],
-  ['Los Angeles',34.0522,-118.2437],
-  ['Atlanta',33.749,-84.388],
-  ['NYC',40.7128,-74.006],
-  ['London',51.5074,-.1278],
-  ['Vegas',36.1699,-115.1398],
-  ['Albuquerque',35.0844,-106.6504]
-];
-
 const RING_COLORS=['#7fb7ff','#b9a7ff','#8bd3ff','#d5c7ff','#a7b8ff','#78a6c8','#c5d4e6','#9aa8bd'];
 
 const MICS={
