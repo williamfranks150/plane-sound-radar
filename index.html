@@ -1742,9 +1742,22 @@ function psOpenMicSpecForm(id=''){
 
   form.classList.remove('hidden');
   form.dataset.initializedClosed='1';
+  form.dataset.currentEditMic=id||'';
+
   $('micSpecEditId').value=id||'';
 
   const m=id&&MICS[id]?MICS[id]:null;
+
+  [
+    'specManufacturer',
+    'specModel',
+    'specTransducer',
+    'specPattern',
+    'specFreq',
+    'specSensitivity'
+  ].forEach(fieldId=>{
+    if($(fieldId))$(fieldId).value='';
+  });
 
   $('specManufacturer').value=m?psSpecManufacturer(m):'';
   $('specModel').value=m?psSpecModel(m):'';
@@ -1774,7 +1787,9 @@ function psOpenMicSpecForm(id=''){
     'sensitivityMVPA'
   ]):'';
 
-  psSpecMsg(id?'EDITING MIC SPECS.':'ENTER MANUFACTURER SPEC VALUES.', true);
+  if($('micSpecSave'))$('micSpecSave').textContent=id?'SAVE MIC SPECS':'ADD MIC SPECS';
+
+  psSpecMsg(id?'EDITING '+(m?.name||m?.short||'MIC')+'.':'ENTER MANUFACTURER SPEC VALUES.', true);
   form.scrollIntoView({block:'nearest',behavior:'smooth'});
 }
 
@@ -1939,9 +1954,6 @@ function psWireMicSpecEditor(){
     grid.dataset.specEditorWired='1';
 
     grid.addEventListener('click',e=>{
-      const del=e.target.closest('[data-delete-mic]');
-      if(del)return;
-
       const edit=e.target.closest('[data-edit-mic]');
       if(edit){
         e.preventDefault();
@@ -1949,6 +1961,9 @@ function psWireMicSpecEditor(){
         psOpenMicSpecForm(edit.dataset.editMic);
         return;
       }
+
+      const del=e.target.closest('[data-delete-mic]');
+      if(del)return;
 
       const chip=e.target.closest('.chip');
       if(chip && chip.dataset.mic && MICS[chip.dataset.mic] && typeof psMicRangePending==='function' && psMicRangePending(MICS[chip.dataset.mic])){
