@@ -222,12 +222,43 @@
   #results {
     display:none!important;
   }
+
+  .app-logo-wrap{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    height:116px;
+    padding:8px 0 6px;
+    box-sizing:border-box;
+  }
+
+  .app-logo{
+    display:block;
+    height:104px;
+    width:auto;
+    max-width:min(420px,82vw);
+    object-fit:contain;
+    filter:drop-shadow(0 0 12px rgba(0,217,122,.34));
+  }
+
+  @media (max-height:760px){
+    .app-logo-wrap{
+      height:82px;
+      padding:5px 0 4px;
+    }
+
+    .app-logo{
+      height:74px;
+      max-width:min(330px,76vw);
+    }
+  }
+
 </style>
 </head>
 <body>
 <div class="app">
   <div class="meta"><span id="metaLoc">no location</span><span id="metaApi">—</span></div>
-  <div class="app-title">Plane Sound</div>
+  <div class="app-logo-wrap"><img class="app-logo" src="assets/plane-sound-logo.png" alt="Plane Sound"></div>
 
   <div id="banner" class="banner">
     <div id="headline" class="headline">NO DATA</div>
