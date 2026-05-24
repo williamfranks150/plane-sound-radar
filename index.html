@@ -416,6 +416,12 @@ function visibleMicEntries(){
 
 function hideOrDeleteMic(id){
   if(!MICS[id])return;
+
+  const micName=MICS[id].name||MICS[id].short||"this mic";
+  const confirmed=window.confirm("Delete " + micName + " from the mic list?");
+
+  if(!confirmed)return;
+
   const active=new Set(activeMicIds());
   active.delete(id);
   state.settings.package='custom';
