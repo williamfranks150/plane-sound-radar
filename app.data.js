@@ -1,5 +1,46 @@
 'use strict';
 
+const HUMAN_BASELINE={id:'human',name:'',short:'',kind:'baseline',mic:8,hot:4,tail:20,ceil:10000,color:'#8aa0b8',human:true};
+
+const PACKAGES={
+  none:{label:'No Mic Selected',mics:[]},
+  boom_lav:{label:'Boom + Lav Dialogue',mics:['mkh416','cos11d']},
+  exterior_quiet:{label:'Quiet Exterior Dialogue',mics:['cmit','dpa4060','cos11d']},
+  lav_heavy:{label:'Lav Heavy / Wardrobe',mics:['cos11d','dpa4060','dpa6060','b6']},
+  boom_only:{label:'Boom Only',mics:['mkh416','cmit']},
+  interior:{label:'Interior / Controlled',mics:['mkh50','mk41']},
+  custom:{label:'Specific Mic Override',mics:[]}
+};
+
+const ADSB=[
+  {
+    name:'adsb.lol',
+    url:(lat,lon,nm)=>`https://api.adsb.lol/v2/lat/${lat}/lon/${lon}/dist/${nm}`,
+    parse:d=>Array.isArray(d?.ac)?d.ac:[]
+  },
+  {
+    name:'airplanes.live',
+    url:(lat,lon,nm)=>`https://api.airplanes.live/v2/point/${lat}/${lon}/${nm}`,
+    parse:d=>Array.isArray(d?.ac)?d.ac:[]
+  },
+  {
+    name:'opensky',
+    url:(lat,lon,nm)=>{
+      const dl=nm*NM_TO_KM/KM_PER_LAT;
+      const dn=nm*NM_TO_KM/(KM_PER_LAT*Math.cos(lat*D2R));
+      return `https://opensky-network.org/api/states/all?lamin=${lat-dl}&lomin=${lon-dn}&lamax=${lat+dl}&lomax=${lon+dn}`;
+    },
+    parse:d=>Array.isArray(d?.states)
+      ? d.states.map(s=>({
+          hex:s[0],flight:s[1]||'',lat:s[6],lon:s[5],
+          alt_baro:s[7]!=null?s[7]*FT_PER_M:null,
+          gs:s[9]!=null?s[9]/.5144:0,
+          track:s[10]||0,t:'?'
+        })).filter(a=>a.lat!=null&&a.lon!=null)
+      : []
+  }
+];
+
 const CITIES=[
   ['Toronto',43.6532,-79.3832],
   ['Vancouver',49.2827,-123.1207],
