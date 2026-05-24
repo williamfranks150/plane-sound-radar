@@ -16,17 +16,6 @@ const state={
   timer:null
 };
 
-function findMicMatch(query){
-  const q=normText(query);
-  if(!q)return null;
-  return Object.entries(MICS).find(([id,m])=>{
-    const n=normText(m.name);
-    const sh=normText(m.short);
-    const aliases=(m.aliases||[]).map(normText);
-    return n.includes(q)||q.includes(n)||sh.includes(q)||q.includes(sh)||aliases.some(a=>a&&((a.includes(q)||q.includes(a))));
-  })||null;
-}
-
 async function lookupFromSameOriginDatabase(query){
   try{
     const res=await fetch(SAME_ORIGIN_MIC_DB,{cache:'no-store'});
