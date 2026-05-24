@@ -13,7 +13,11 @@
       "416"
     ],
     "status": "verified",
-    "confidence": "verified-database"
+    "confidence": "verified-database",
+    "transducerType": "RF CONDENSER",
+    "pickupPattern": "SUPERCARDIOID / LOBAR",
+    "frequencyResponse": "40 HZ - 20 KHZ",
+    "sensitivity": "25 MV/PA �1 DB"
   },
   {
     "manufacturer": "Sennheiser",
@@ -29,7 +33,11 @@
       "8060"
     ],
     "status": "verified",
-    "confidence": "verified-database"
+    "confidence": "verified-database",
+    "transducerType": "RF CONDENSER",
+    "pickupPattern": "SUPERCARDIOID / LOBAR",
+    "frequencyResponse": "50 HZ - 25 KHZ",
+    "sensitivity": "-24 DBV/PA, 63 MV/PA"
   },
   {
     "manufacturer": "Sennheiser",
@@ -45,7 +53,11 @@
       "50"
     ],
     "status": "verified",
-    "confidence": "verified-database"
+    "confidence": "verified-database",
+    "transducerType": "RF CONDENSER",
+    "pickupPattern": "SUPERCARDIOID",
+    "frequencyResponse": "40 HZ - 20 KHZ",
+    "sensitivity": "25 MV/PA �1 DB"
   },
   {
     "manufacturer": "Schoeps",
@@ -61,7 +73,11 @@
       "CMIT5U"
     ],
     "status": "verified",
-    "confidence": "verified-database"
+    "confidence": "verified-database",
+    "transducerType": "CONDENSER",
+    "pickupPattern": "SUPERCARDIOID / LOBE-SHAPED",
+    "frequencyResponse": "40 HZ - 20 KHZ",
+    "sensitivity": "17 MV/PA"
   },
   {
     "manufacturer": "Schoeps",
@@ -77,7 +93,11 @@
       "MiniCMIT"
     ],
     "status": "verified",
-    "confidence": "verified-database"
+    "confidence": "verified-database",
+    "transducerType": "CONDENSER",
+    "pickupPattern": "SUPERCARDIOID / LOBE-SHAPED",
+    "frequencyResponse": "60 HZ - 20 KHZ",
+    "sensitivity": "-35 DB (V/PA), 17 MV/PA"
   },
   {
     "manufacturer": "Schoeps",
@@ -93,7 +113,11 @@
       "CMC MK41"
     ],
     "status": "verified",
-    "confidence": "verified-database"
+    "confidence": "verified-database",
+    "transducerType": "CONDENSER",
+    "pickupPattern": "SUPERCARDIOID",
+    "frequencyResponse": "40 HZ - 26 KHZ",
+    "sensitivity": "-36 DB (V/PA), 16 MV/PA"
   },
   {
     "manufacturer": "DPA",
@@ -108,7 +132,11 @@
       "4017"
     ],
     "status": "verified",
-    "confidence": "verified-database"
+    "confidence": "verified-database",
+    "transducerType": "PRE-POLARIZED CONDENSER",
+    "pickupPattern": "SUPERCARDIOID / LOBE-SHAPED",
+    "frequencyResponse": "20 HZ - 20 KHZ",
+    "sensitivity": "19 MV/PA, -34.4 DB RE 1 V/PA"
   },
   {
     "manufacturer": "DPA",
@@ -123,7 +151,11 @@
       "4018"
     ],
     "status": "verified",
-    "confidence": "verified-database"
+    "confidence": "verified-database",
+    "transducerType": "PRE-POLARIZED CONDENSER",
+    "pickupPattern": "SUPERCARDIOID",
+    "frequencyResponse": "20 HZ - 20 KHZ",
+    "sensitivity": "25 MV/PA, -32 DB RE 1 V/PA"
   },
   {
     "manufacturer": "Sanken",
@@ -139,7 +171,11 @@
       "COS 11D"
     ],
     "status": "verified",
-    "confidence": "verified-database"
+    "confidence": "verified-database",
+    "transducerType": "SELF-POLARIZED CONDENSER",
+    "pickupPattern": "OMNIDIRECTIONAL",
+    "frequencyResponse": "50 HZ - 20 KHZ",
+    "sensitivity": "NORMAL SENSITIVITY VERSION"
   },
   {
     "manufacturer": "DPA",
@@ -154,7 +190,11 @@
       "4060"
     ],
     "status": "verified",
-    "confidence": "verified-database"
+    "confidence": "verified-database",
+    "transducerType": "PRE-POLARIZED CONDENSER",
+    "pickupPattern": "OMNIDIRECTIONAL",
+    "frequencyResponse": "20 HZ - 20 KHZ",
+    "sensitivity": "20 MV/PA, -34 DB RE 1 V/PA"
   },
   {
     "manufacturer": "DPA",
@@ -169,7 +209,11 @@
       "6060"
     ],
     "status": "verified",
-    "confidence": "verified-database"
+    "confidence": "verified-database",
+    "transducerType": "PRE-POLARIZED CONDENSER",
+    "pickupPattern": "OMNIDIRECTIONAL",
+    "frequencyResponse": "20 HZ - 20 KHZ",
+    "sensitivity": "20 MV/PA, -34 DB RE 1 V/PA"
   },
   {
     "manufacturer": "Countryman",
@@ -184,7 +228,11 @@
       "B6"
     ],
     "status": "verified",
-    "confidence": "verified-database"
+    "confidence": "verified-database",
+    "transducerType": "CONDENSER",
+    "pickupPattern": "OMNIDIRECTIONAL",
+    "frequencyResponse": "20 HZ - 20 KHZ",
+    "sensitivity": "16.0 MV/PA, STANDARD SENSITIVITY"
   },
   {
     "manufacturer": "Sennheiser",
@@ -199,7 +247,11 @@
       "MKE2"
     ],
     "status": "verified",
-    "confidence": "verified-database"
+    "confidence": "verified-database",
+    "transducerType": "PRE-POLARIZED CONDENSER",
+    "pickupPattern": "OMNIDIRECTIONAL",
+    "frequencyResponse": "20 HZ - 20 KHZ �3 DB",
+    "sensitivity": "5 MV/PA �3 DB"
   },
   {
     "manufacturer": "Shure",
@@ -215,6 +267,10 @@
       "TL47"
     ],
     "status": "verified",
-    "confidence": "verified-database"
+    "confidence": "verified-database",
+    "transducerType": "DUAL-DIAPHRAGM PREPOLARIZED CONDENSER",
+    "pickupPattern": "OMNIDIRECTIONAL",
+    "frequencyResponse": "20 HZ - 20 KHZ",
+    "sensitivity": "-45.0 DBV, 5.62 MV/PA"
   }
 ]

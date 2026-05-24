@@ -114,7 +114,7 @@
   .chip{text-align:left;background:#050e08;border:1px solid #1a3a2a;border-radius:6px;color:#9fb8a7;padding:8px 34px 8px 8px;font-size:10px;line-height:1.22;min-height:44px;position:relative;overflow:hidden}
   .chip.active{border-color:#d4a017;color:#f0d070;background:rgba(212,160,23,.13)}
   .chip small{display:block;color:#607868;text-transform:uppercase;letter-spacing:.08em;margin-top:2px;font-size:8px}
-  .chip-x{position:absolute;right:7px;top:50%;transform:translateY(-50%);width:22px;height:22px;border:1px solid #31483a;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#789080;background:rgba(0,0,0,.25);font-size:15px;line-height:1;font-family:'JetBrains Mono',monospace}
+  .chip-x{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:38px;height:22px;border:1px solid #31483a;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#789080;background:rgba(0,0,0,.25);font-size:9px;line-height:1;font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:.04em}
   .chip-x:active{border-color:#d4a017;color:#f0d070}
   .custom-row{align-items:stretch}
   .manual-mic{border-top:1px solid rgba(26,58,42,.45);padding-top:10px}
@@ -196,6 +196,33 @@
     white-space:nowrap!important;
     line-height:.92!important;
   }
+
+  .mic-spec-editor input{margin-bottom:6px}
+  .chip{padding-right:96px}
+  .chip.pending{opacity:.78}
+  .chip.pending small{display:block;color:#d4a017;text-transform:uppercase;letter-spacing:.08em;margin-top:3px;font-size:8px}
+  .chip-edit{
+    position:absolute;right:48px;top:50%;transform:translateY(-50%);
+    width:42px;height:22px;border:1px solid #31483a;border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    color:#789080;background:rgba(0,0,0,.25);font-size:9px;line-height:1;
+    font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:.04em
+  }
+  .chip-edit:active{border-color:#d4a017;color:#f0d070}
+
+
+  /* PLANE SOUND UPPERCASE UI */
+  body, button, input, select, textarea, .headline, .app-title, .chip, .tab, .btn, .msg, .title {
+    text-transform: uppercase!important;
+  }
+
+  /* HIDE OLD MIC SEARCH */
+  #customMicName,
+  #customMicBtn,
+  #customMicMsg,
+  #results {
+    display:none!important;
+  }
 </style>
 </head>
 <body>
@@ -236,6 +263,25 @@
       </div>
       <div id="customMicMsg" class="msg hidden"></div>
     </div>
+
+    <div class="sblock mic-spec-editor">
+      <button id="micSpecAddToggle" class="btn" style="width:100%">Add Mic Specs</button>
+
+      <div id="micSpecForm" class="hidden" style="margin-top:10px">
+        <input id="micSpecEditId" type="hidden">
+
+        <input id="specManufacturer" class="input" placeholder="Manufacturer">
+        <input id="specModel" class="input" placeholder="Model">
+        <input id="specTransducer" class="input" placeholder="Transducer type">
+        <input id="specPattern" class="input" placeholder="Pickup pattern">
+        <input id="specFreq" class="input" placeholder="Frequency response">
+        <input id="specSensitivity" class="input" placeholder="Sensitivity">
+<button id="micSpecSave" class="btn primary" style="width:100%;margin-top:8px">Save Mic Specs</button>
+        <button id="micSpecCancel" class="btn" style="width:100%;margin-top:8px">Cancel</button>
+        <div id="micSpecMsg" class="msg hidden"></div>
+      </div>
+    </div>
+
     <div class="sblock range-read" id="rangeRead"></div>
   </div>
 
@@ -402,7 +448,7 @@ function packageIds(){
 }
 
 function activeMicIds(){
-  return micIds();
+  return micIds().filter(id => MICS[id] && psMicHasUsableRange(MICS[id]));
 }
 
 function hiddenMicSet(){
@@ -794,11 +840,17 @@ function renderPanels(){
   $('tabAircraft').classList.toggle('active',state.activePanel==='aircraft');
   $('tabLocation').classList.toggle('active',state.activePanel==='location');
 
-  const rs=rangeSettings();
   const active=new Set(activeMicIds());
-  $('chipGrid').innerHTML=visibleMicEntries().map(([id,m])=>
-    `<button class="chip ${active.has(id)?'active':''}" data-mic="${id}">${esc(m.name)}<span class="chip-x" data-delete-mic="${id}" title="Remove mic">×</span></button>`
-  ).join('');
+
+  $('chipGrid').innerHTML=visibleMicEntries().map(([id,m])=>{
+    const pending=typeof psMicRangePending==='function'?psMicRangePending(m):false;
+    const pendingText=pending?'<small>SPECS SAVED � RANGE PENDING</small>':'';
+    return `<button class="chip ${active.has(id)?'active':''} ${pending?'pending':''}" data-mic="${id}">
+      ${esc(m.name||m.short||id)}${pendingText}
+      <span class="chip-edit" data-edit-mic="${id}" title="Edit mic specs">EDIT</span>
+      <span class="chip-x" data-delete-mic="${id}" title="Remove mic">DEL</span>
+    </button>`;
+  }).join('');
 
   $('rangeRead').innerHTML='';
 
@@ -806,6 +858,8 @@ function renderPanels(){
   $('results').innerHTML=state.search.results.map((r,i)=>
     `<button class="result" data-i="${i}"><div class="rmain">${esc(r.shortLabel)}</div><div class="rsub">${esc(r.fullLabel)}</div></button>`
   ).join('');
+
+  if(typeof psWireMicSpecEditor==='function')psWireMicSpecEditor();
 }
 
 function renderErr(){
@@ -1421,7 +1475,494 @@ async function addManualMic(){
 }
 // === End strict mic lookup override ===
 
+
+// === Plane Sound manual mic spec editor ===
+function psMicHasUsableRange(m){
+  if(!m)return false;
+  if(m.rangeStatus==='pending')return false;
+  if(m.status==='spec_record')return false;
+
+  const vals=[m.mic,m.hot,m.tail,m.ceil].map(Number);
+  if(vals.some(v=>!Number.isFinite(v)))return false;
+
+  const mic=vals[0],hot=vals[1],tail=vals[2],ceil=vals[3];
+  return mic>0 && hot>0 && hot<=mic && tail>=0 && ceil>0;
+}
+
+function psMicRangePending(m){
+  return !psMicHasUsableRange(m);
+}
+
+function psSpecKey(s){
+  return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'');
+}
+
+function psSpecMsg(text, ok=false){
+  const msg=$('micSpecMsg');
+  if(!msg)return;
+  msg.classList.remove('hidden');
+  msg.className=ok?'msg ok':'msg';
+  msg.textContent=text;
+}
+
+function psShortFromModel(manufacturer,model){
+  const clean=String(model||'').trim();
+  return clean.slice(0,22) || String(manufacturer||'Mic').slice(0,22);
+}
+
+function psSpecManufacturer(m){
+  const explicit = psSpecValue(m, ['manufacturer','brand','make']);
+  if (explicit) return explicit;
+
+  const name = String((m && (m.name || m.short)) || '').trim();
+  if (!name) return '';
+
+  const brands = [
+    'Sennheiser',
+    'Schoeps',
+    'DPA',
+    'Sanken',
+    'Countryman',
+    'Shure',
+    'Audio-Technica',
+    'Rode',
+    'RODE',
+    'Deity',
+    'Sony',
+    'Neumann',
+    'AKG',
+    'Beyerdynamic'
+  ];
+
+  for (const brand of brands) {
+    if (name.toLowerCase().startsWith(brand.toLowerCase() + ' ')) {
+      return brand === 'RODE' ? 'Rode' : brand;
+    }
+  }
+
+  return '';
+}
+
+function psSpecModel(m){
+  if (!m) return '';
+
+  const name = String(m.name || m.short || '').trim();
+  const manufacturer = psSpecManufacturer(m);
+
+  if (!name) return '';
+
+  if (manufacturer) {
+    const lowerName = name.toLowerCase();
+    const lowerBrand = manufacturer.toLowerCase();
+
+    if (lowerName.startsWith(lowerBrand + ' ')) {
+      return name.slice(manufacturer.length).trim();
+    }
+  }
+
+  return name;
+}
+
+function psModelFromMicRecord(m){
+  return psSpecModel(m);
+}
+
+
+// === Plane Sound mic spec prefill helpers ===
+function psSpecValue(m, keys){
+  for (const k of keys) {
+    const v = m && m[k];
+    if (v !== undefined && v !== null && String(v).trim() !== '') return String(v).trim();
+  }
+  return '';
+}
+
+function psSpecManufacturer(m){
+  const explicit = psSpecValue(m, ['manufacturer','brand','make']);
+  if (explicit) return explicit;
+
+  const name = String((m && (m.name || m.short)) || '').trim();
+  if (!name) return '';
+
+  const brands = [
+    'Sennheiser',
+    'Schoeps',
+    'DPA',
+    'Sanken',
+    'Countryman',
+    'Shure',
+    'Audio-Technica',
+    'Rode',
+    'Deity',
+    'Sony',
+    'Neumann',
+    'AKG',
+    'Beyerdynamic'
+  ];
+
+  for (const brand of brands) {
+    if (name.toLowerCase().startsWith(brand.toLowerCase() + ' ')) {
+      return brand;
+    }
+  }
+
+  return '';
+}
+
+function psSpecModel(m){
+  if (!m) return '';
+
+  const name = String(m.name || m.short || '').trim();
+  const manufacturer = psSpecManufacturer(m);
+
+  if (!name) return '';
+
+  if (manufacturer) {
+    const lowerName = name.toLowerCase();
+    const lowerBrand = manufacturer.toLowerCase();
+
+    if (lowerName.startsWith(lowerBrand + ' ')) {
+      return name.slice(manufacturer.length).trim();
+    }
+  }
+
+  return name;
+}
+// === End mic spec prefill helpers ===
+
+
+// === Plane Sound built-in mic spec preload ===
+function psApplySeedMicSpecs(){
+  const seedSpecs = {
+  "Sennheiser MKH 416": {
+    "transducerType": "RF CONDENSER",
+    "pickupPattern": "SUPERCARDIOID / LOBAR",
+    "frequencyResponse": "40 HZ - 20 KHZ",
+    "sensitivity": "25 MV/PA �1 DB"
+  },
+  "Sennheiser MKH 8060": {
+    "transducerType": "RF CONDENSER",
+    "pickupPattern": "SUPERCARDIOID / LOBAR",
+    "frequencyResponse": "50 HZ - 25 KHZ",
+    "sensitivity": "-24 DBV/PA, 63 MV/PA"
+  },
+  "Sennheiser MKH 50": {
+    "transducerType": "RF CONDENSER",
+    "pickupPattern": "SUPERCARDIOID",
+    "frequencyResponse": "40 HZ - 20 KHZ",
+    "sensitivity": "25 MV/PA �1 DB"
+  },
+  "Schoeps CMIT 5U": {
+    "transducerType": "CONDENSER",
+    "pickupPattern": "SUPERCARDIOID / LOBE-SHAPED",
+    "frequencyResponse": "40 HZ - 20 KHZ",
+    "sensitivity": "17 MV/PA"
+  },
+  "Schoeps MiniCMIT": {
+    "transducerType": "CONDENSER",
+    "pickupPattern": "SUPERCARDIOID / LOBE-SHAPED",
+    "frequencyResponse": "60 HZ - 20 KHZ",
+    "sensitivity": "-35 DB (V/PA), 17 MV/PA"
+  },
+  "Schoeps CMC/MK 41": {
+    "transducerType": "CONDENSER",
+    "pickupPattern": "SUPERCARDIOID",
+    "frequencyResponse": "40 HZ - 26 KHZ",
+    "sensitivity": "-36 DB (V/PA), 16 MV/PA"
+  },
+  "DPA 4017": {
+    "transducerType": "PRE-POLARIZED CONDENSER",
+    "pickupPattern": "SUPERCARDIOID / LOBE-SHAPED",
+    "frequencyResponse": "20 HZ - 20 KHZ",
+    "sensitivity": "19 MV/PA, -34.4 DB RE 1 V/PA"
+  },
+  "DPA 4018": {
+    "transducerType": "PRE-POLARIZED CONDENSER",
+    "pickupPattern": "SUPERCARDIOID",
+    "frequencyResponse": "20 HZ - 20 KHZ",
+    "sensitivity": "25 MV/PA, -32 DB RE 1 V/PA"
+  },
+  "Sanken COS-11D": {
+    "transducerType": "SELF-POLARIZED CONDENSER",
+    "pickupPattern": "OMNIDIRECTIONAL",
+    "frequencyResponse": "50 HZ - 20 KHZ",
+    "sensitivity": "NORMAL SENSITIVITY VERSION"
+  },
+  "DPA 4060": {
+    "transducerType": "PRE-POLARIZED CONDENSER",
+    "pickupPattern": "OMNIDIRECTIONAL",
+    "frequencyResponse": "20 HZ - 20 KHZ",
+    "sensitivity": "20 MV/PA, -34 DB RE 1 V/PA"
+  },
+  "DPA 6060": {
+    "transducerType": "PRE-POLARIZED CONDENSER",
+    "pickupPattern": "OMNIDIRECTIONAL",
+    "frequencyResponse": "20 HZ - 20 KHZ",
+    "sensitivity": "20 MV/PA, -34 DB RE 1 V/PA"
+  },
+  "Countryman B6": {
+    "transducerType": "CONDENSER",
+    "pickupPattern": "OMNIDIRECTIONAL",
+    "frequencyResponse": "20 HZ - 20 KHZ",
+    "sensitivity": "16.0 MV/PA, STANDARD SENSITIVITY"
+  },
+  "Sennheiser MKE 2": {
+    "transducerType": "PRE-POLARIZED CONDENSER",
+    "pickupPattern": "OMNIDIRECTIONAL",
+    "frequencyResponse": "20 HZ - 20 KHZ �3 DB",
+    "sensitivity": "5 MV/PA �3 DB"
+  },
+  "Shure TwinPlex TL47": {
+    "transducerType": "DUAL-DIAPHRAGM PREPOLARIZED CONDENSER",
+    "pickupPattern": "OMNIDIRECTIONAL",
+    "frequencyResponse": "20 HZ - 20 KHZ",
+    "sensitivity": "-45.0 DBV, 5.62 MV/PA"
+  }
+};
+
+  for (const m of Object.values(MICS)) {
+    if (!m || !m.name) continue;
+    const spec = seedSpecs[m.name];
+    if (!spec) continue;
+
+    for (const [k, v] of Object.entries(spec)) {
+      if (m[k] === undefined || m[k] === null || String(m[k]).trim() === '') {
+        m[k] = v;
+      }
+    }
+  }
+}
+// === End built-in mic spec preload ===
+
+function psOpenMicSpecForm(id=''){
+  if(typeof psApplySeedMicSpecs==='function')psApplySeedMicSpecs();
+
+  const form=$('micSpecForm');
+  if(!form)return;
+
+  form.classList.remove('hidden');
+  form.dataset.initializedClosed='1';
+  $('micSpecEditId').value=id||'';
+
+  const m=id&&MICS[id]?MICS[id]:null;
+
+  $('specManufacturer').value=m?psSpecManufacturer(m):'';
+  $('specModel').value=m?psSpecModel(m):'';
+
+  $('specTransducer').value=m?psSpecValue(m,[
+    'transducerType',
+    'transducer',
+    'capsuleType',
+    'principle'
+  ]):'';
+
+  $('specPattern').value=m?psSpecValue(m,[
+    'pickupPattern',
+    'polarPattern',
+    'pattern'
+  ]):'';
+
+  $('specFreq').value=m?psSpecValue(m,[
+    'frequencyResponse',
+    'freqResponse',
+    'frequency'
+  ]):'';
+
+  $('specSensitivity').value=m?psSpecValue(m,[
+    'sensitivity',
+    'sensitivityMvPa',
+    'sensitivityMVPA'
+  ]):'';
+
+  psSpecMsg(id?'EDITING MIC SPECS.':'ENTER MANUFACTURER SPEC VALUES.', true);
+  form.scrollIntoView({block:'nearest',behavior:'smooth'});
+}
+
+function psSaveMicSpec(){
+  const editId=$('micSpecEditId').value.trim();
+
+  const manufacturer=$('specManufacturer').value.trim();
+  const model=$('specModel').value.trim();
+  const transducerType=$('specTransducer').value.trim();
+  const pickupPattern=$('specPattern').value.trim();
+  const frequencyResponse=$('specFreq').value.trim();
+  const sensitivity=$('specSensitivity').value.trim();
+  
+
+  if(!manufacturer||!model||!transducerType||!pickupPattern||!frequencyResponse||!sensitivity){
+    psSpecMsg('Missing required field.');
+    return;
+  }
+
+  const record={
+    manufacturer,
+    name:manufacturer+' '+model,
+    short:psShortFromModel(manufacturer,model),
+    kind:pickupPattern+' '+transducerType,
+    transducerType,
+    pickupPattern,
+    frequencyResponse,
+    sensitivity,
+    
+    aliases:[model],
+    status:'spec_record',
+    confidence:'manual-spec-entry',
+    rangeStatus:'pending'
+  };
+
+  const recordKey=psSpecKey(record.name);
+
+  for(const [id,m] of Object.entries(MICS)){
+    if(id===editId)continue;
+    if(psSpecKey(m.name)===recordKey && !id.startsWith('custom_')){
+      if(!editId){
+        psSpecMsg('Mic already exists. Use edit.');
+        return;
+      }
+    }
+  }
+
+  let id=editId&&editId.startsWith('custom_')
+    ? editId
+    : 'custom_spec_'+recordKey.slice(0,32)+'_'+Date.now().toString(36);
+
+  if(editId && !editId.startsWith('custom_') && MICS[editId]){
+    const hidden=hiddenMicSet();
+    hidden.add(editId);
+    state.hiddenMics=[...hidden];
+    write(STORE_HIDDEN,state.hiddenMics);
+
+    const active=new Set(state.settings.active||[]);
+    active.delete(editId);
+    state.settings.active=[...active];
+  }
+
+  for(const [existingId,m] of Object.entries(MICS)){
+    if(existingId!==id && existingId.startsWith('custom_') && psSpecKey(m.name)===recordKey){
+      delete MICS[existingId];
+    }
+  }
+
+  MICS[id]=record;
+  saveCustomMics();
+
+  state.settings.package='custom';
+  state.settings.active=(state.settings.active||[]).filter(mid=>MICS[mid]&&psMicHasUsableRange(MICS[mid]));
+  write(STORE_SETTINGS,state.settings);
+
+  psSpecMsg('Mic specs saved. Range pending.', true);
+
+  [
+    'specManufacturer',
+    'specModel',
+    'specTransducer',
+    'specPattern',
+    'specFreq',
+    'specSensitivity',
+    'specSource'
+  ].forEach(id=>{$(id).value='';});
+
+  $('micSpecEditId').value='';
+  $('micSpecForm').classList.add('hidden');
+
+  render();
+  if(state.loc)fetchFeed();
+}
+
+function psCancelMicSpec(){
+  const form=$('micSpecForm');
+  if(!form)return;
+
+  [
+    'specManufacturer',
+    'specModel',
+    'specTransducer',
+    'specPattern',
+    'specFreq',
+    'specSensitivity'
+  ].forEach(id=>{ if($(id)) $(id).value=''; });
+
+  $('micSpecEditId').value='';
+  form.classList.add('hidden');
+
+  const msg=$('micSpecMsg');
+  if(msg){
+    msg.classList.add('hidden');
+    msg.textContent='';
+  }
+}
+
+function psWireMicSpecEditor(){
+  const add=$('micSpecAddToggle');
+  const form=$('micSpecForm');
+  const save=$('micSpecSave');
+  const cancel=$('micSpecCancel');
+  const grid=$('chipGrid');
+
+  const oldSearch=$('customMicName');
+  if(oldSearch){
+    const row=oldSearch.closest('.row')||oldSearch.parentElement;
+    if(row)row.style.display='none';
+  }
+
+  if($('customMicMsg'))$('customMicMsg').style.display='none';
+  if($('results'))$('results').style.display='none';
+
+  if(form && !form.dataset.initializedClosed){
+    form.classList.add('hidden');
+    form.dataset.initializedClosed='1';
+  }
+
+  if(add && !add.dataset.specAddWired){
+    add.dataset.specAddWired='1';
+    add.onclick=()=>{
+      if(!form)return;
+      if(form.classList.contains('hidden')){
+        psOpenMicSpecForm('');
+      }else{
+        psCancelMicSpec();
+      }
+    };
+  }
+
+  if(save && !save.dataset.specSaveWired){
+    save.dataset.specSaveWired='1';
+    save.onclick=psSaveMicSpec;
+  }
+
+  if(cancel && !cancel.dataset.specCancelWired){
+    cancel.dataset.specCancelWired='1';
+    cancel.onclick=psCancelMicSpec;
+  }
+
+  if(grid && !grid.dataset.specEditorWired){
+    grid.dataset.specEditorWired='1';
+
+    grid.addEventListener('click',e=>{
+      const del=e.target.closest('[data-delete-mic]');
+      if(del)return;
+
+      const edit=e.target.closest('[data-edit-mic]');
+      if(edit){
+        e.preventDefault();
+        e.stopPropagation();
+        psOpenMicSpecForm(edit.dataset.editMic);
+        return;
+      }
+
+      const chip=e.target.closest('.chip');
+      if(chip && chip.dataset.mic && MICS[chip.dataset.mic] && typeof psMicRangePending==='function' && psMicRangePending(MICS[chip.dataset.mic])){
+        e.preventDefault();
+        e.stopPropagation();
+        psOpenMicSpecForm(chip.dataset.mic);
+      }
+    },true);
+  }
+}
+// === End manual mic spec editor ===
+
 function init(){
+  if(typeof psApplySeedMicSpecs==='function')psApplySeedMicSpecs();
   state.savedLoc=read(STORE_LOC,null);
   const custom=read(STORE_CUSTOM,{});
   if(custom&&typeof custom==='object')Object.assign(MICS,custom);
@@ -1444,6 +1985,7 @@ function init(){
   };
   $('gpsBtn').onclick=()=>gps(false);
   $('customMicBtn').onclick=addManualMic;
+  psWireMicSpecEditor();
   $('customMicName').onkeydown=e=>{if(e.key==='Enter')addManualMic()};
 
   $('chipGrid').onclick=e=>{
