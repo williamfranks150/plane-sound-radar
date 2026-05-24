@@ -709,34 +709,39 @@ function fitHeadline(){
   const padX=parseFloat(style.paddingLeft)+parseFloat(style.paddingRight);
   const padY=parseFloat(style.paddingTop)+parseFloat(style.paddingBottom);
 
-  const availableW=Math.max(120,rect.width-padX-12);
+  const availableW=Math.max(120,rect.width-padX-16);
   const availableH=Math.max(34,rect.height-padY-4);
+  const label=h.textContent||'';
+  const isClear=label==='CLEAR';
 
   h.style.setProperty('width','100%','important');
   h.style.setProperty('max-width','100%','important');
   h.style.setProperty('text-align','center','important');
   h.style.setProperty('white-space','nowrap','important');
-  h.style.setProperty('overflow','visible','important');
+  h.style.setProperty('overflow','hidden','important');
   h.style.setProperty('text-overflow','clip','important');
   h.style.setProperty('line-height','.9','important');
 
-  const text=h.textContent||'';
-  const isClear=text==='CLEAR';
+  const canvas=fitHeadline._canvas||(fitHeadline._canvas=document.createElement('canvas'));
+  const ctx=canvas.getContext('2d');
 
-  let size=isClear
-    ? Math.floor(availableH*.92)
-    : Math.floor(availableH*.82);
+  const maxSize=isClear?110:104;
+  const minSize=16;
+  let chosen=minSize;
 
-  size=Math.min(isClear?110:96,Math.max(18,size));
+  for(let s=maxSize;s>=minSize;s--){
+    ctx.font='800 '+s+'px -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif';
+    const measured=ctx.measureText(label).width;
+    const fitsWidth=measured<=availableW;
+    const fitsHeight=(s*.92)<=availableH;
 
-  h.style.setProperty('font-size',size+'px','important');
-
-  if(!isClear){
-    for(let s=size;s>=14;s--){
-      h.style.setProperty('font-size',s+'px','important');
-      if(h.scrollWidth<=availableW)break;
+    if(fitsWidth&&fitsHeight){
+      chosen=s;
+      break;
     }
   }
+
+  h.style.setProperty('font-size',chosen+'px','important');
 }
 
 function renderBanner(){
@@ -800,7 +805,7 @@ function renderErr(){
   const el=$('err');
   if(state.adsb.state==='error'){
     el.classList.remove('hidden');
-    el.innerHTML=`Aircraft feeds unreachable: ${esc(state.adsb.error||'unknown')} <button class="btn red" onclick="fetchFeed()">Retry</button>`;
+    el.innerHTML=`Connection lost <button class="btn red" onclick="fetchFeed()">Retry</button>`;
   }else{
     el.classList.add('hidden');
   }
