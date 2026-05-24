@@ -295,7 +295,7 @@
     </div>
 
     <div class="sblock mic-spec-editor">
-      <button id="micSpecAddToggle" class="btn" style="width:100%">Add Mic Specs</button>
+      <button id="micSpecAddToggle" class="btn" style="width:100%">Add Mic</button>
 
       <div id="micSpecForm" class="hidden" style="margin-top:10px">
         <input id="micSpecEditId" type="hidden">
@@ -1858,7 +1858,7 @@ function psOpenMicSpecForm(id=''){
     'sensitivityMVPA'
   ]):'';
 
-  if($('micSpecSave'))$('micSpecSave').textContent=id?'SAVE MIC SPECS':'ADD MIC SPECS';
+  if($('micSpecSave'))$('micSpecSave').textContent=id?'SAVE MIC SPECS':'ADD MIC';
 
   psSpecMsg(id?'EDITING '+(m?.name||m?.short||'MIC')+'.':'ENTER MANUFACTURER SPEC VALUES.', true);
   form.scrollIntoView({block:'nearest',behavior:'smooth'});
