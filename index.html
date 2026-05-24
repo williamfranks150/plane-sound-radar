@@ -762,7 +762,7 @@ function renderBanner(){
   }
 
   if(state.adsb.state==='error'&&!state.adsb.lastFetch){
-    $('headline').textContent='NO AIRCRAFT FEED';
+    $('headline').textContent='CONNECTION LOST';
     fitHeadline();
     return;
   }
@@ -805,7 +805,7 @@ function renderErr(){
   const el=$('err');
   if(state.adsb.state==='error'){
     el.classList.remove('hidden');
-    el.innerHTML=`Connection lost <button class="btn red" onclick="fetchFeed()">Retry</button>`;
+    el.innerHTML=`<div style="text-align:center;width:100%;font-weight:700;letter-spacing:.08em">CONNECTION LOST</div><div style="text-align:center;margin-top:8px"><button class="btn red" onclick="fetchFeed()">Retry</button></div>`;
   }else{
     el.classList.add('hidden');
   }
