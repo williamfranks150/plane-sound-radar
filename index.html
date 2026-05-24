@@ -59,7 +59,7 @@
   .headline{
     font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Helvetica Neue',Arial,sans-serif;
     font-size:clamp(29px,7.2vw,54px);font-weight:800;
-    line-height:1.04;letter-spacing:-.035em;margin:0;color:#90a0b0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    line-height:1.04;letter-spacing:-.035em;margin:0;color:#90a0b0;white-space:nowrap;overflow:visible;text-overflow:clip;min-width:0;
     align-self:center;
   }
   .clear .headline{color:#00ff95;text-shadow:none}
@@ -165,6 +165,36 @@
     .bigCount{font-size:clamp(46px,12vw,72px)}
     .radar-wrap{min-height:240px}
     .tab{padding:8px 3px}
+  }
+
+  .banner{grid-template-columns:1fr!important;}
+  .countBox{display:none!important;}
+  .headline{width:100%!important;max-width:100%!important;text-align:left;overflow:visible!important;text-overflow:clip!important;}
+  .banner.clear .headline{text-align:center;}
+
+  .banner{grid-template-columns:1fr!important;display:flex!important;align-items:center!important;justify-content:flex-start!important;}
+  .countBox{display:none!important;}
+  .headline{width:100%!important;max-width:100%!important;text-align:left;overflow:visible!important;text-overflow:clip!important;font-size:clamp(32px,7.4vw,88px)!important;line-height:.92!important;}
+  .banner.clear{justify-content:center!important;}
+  .banner.clear .headline{text-align:center;font-size:clamp(52px,9.8vw,104px)!important;}
+
+  .banner{
+    grid-template-columns:1fr!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    text-align:center!important;
+    overflow:hidden!important;
+  }
+  .countBox{display:none!important;}
+  .headline{
+    width:100%!important;
+    max-width:100%!important;
+    text-align:center!important;
+    overflow:visible!important;
+    text-overflow:clip!important;
+    white-space:nowrap!important;
+    line-height:.92!important;
   }
 </style>
 </head>
@@ -668,43 +698,80 @@ function renderMeta(){
   // intentionally hidden in the main interface
 }
 
+
+function fitHeadline(){
+  const h=$('headline');
+  const banner=$('banner');
+  if(!h||!banner)return;
+
+  const rect=banner.getBoundingClientRect();
+  const style=getComputedStyle(banner);
+  const padX=parseFloat(style.paddingLeft)+parseFloat(style.paddingRight);
+  const padY=parseFloat(style.paddingTop)+parseFloat(style.paddingBottom);
+
+  const availableW=Math.max(120,rect.width-padX-12);
+  const availableH=Math.max(34,rect.height-padY-4);
+
+  h.style.setProperty('width','100%','important');
+  h.style.setProperty('max-width','100%','important');
+  h.style.setProperty('text-align','center','important');
+  h.style.setProperty('white-space','nowrap','important');
+  h.style.setProperty('overflow','visible','important');
+  h.style.setProperty('text-overflow','clip','important');
+  h.style.setProperty('line-height','.9','important');
+
+  const text=h.textContent||'';
+  const isClear=text==='CLEAR';
+
+  let size=isClear
+    ? Math.floor(availableH*.92)
+    : Math.floor(availableH*.82);
+
+  size=Math.min(isClear?110:96,Math.max(18,size));
+
+  h.style.setProperty('font-size',size+'px','important');
+
+  if(!isClear){
+    for(let s=size;s>=14;s--){
+      h.style.setProperty('font-size',s+'px','important');
+      if(h.scrollWidth<=availableW)break;
+    }
+  }
+}
+
 function renderBanner(){
   const c=counts();
   const banner=$('banner');
   const rs=rangeSettings();
+
+  banner.className='banner no-count';
+  $('bigCount').textContent='';
+  $('countLabel').textContent='';
+  $('statusLeft').textContent='';
+  $('statusRight').textContent='';
+
   if(!state.loc){
-    banner.className='banner no-count';
     $('headline').textContent='NO LOCATION';
-    $('bigCount').textContent='';
-    $('countLabel').textContent='';
-    $('statusLeft').textContent='';
-    $('statusRight').textContent='';
+    fitHeadline();
     return;
   }
 
   if(state.adsb.state==='error'&&!state.adsb.lastFetch){
-    banner.className='banner no-count';
     $('headline').textContent='NO AIRCRAFT FEED';
-    $('bigCount').textContent='';
-    $('countLabel').textContent='';
-    $('statusLeft').textContent='';
-    $('statusRight').textContent='';
+    fitHeadline();
     return;
   }
 
   if(c.audible>0){
-    banner.className='banner bad';
-    $('headline').textContent=rs.usingHuman?'AIRCRAFT IN HEARING RANGE':'AIRCRAFT IN MIC RANGE';
-    $('bigCount').textContent=c.audible;
-    $('countLabel').textContent='';
+    banner.className='banner bad no-count';
+    const rangeText=rs.usingHuman?'HEARING RANGE':'MIC RANGE';
+    $('headline').textContent=c.audible+' AIRCRAFT IN '+rangeText;
   }else{
     banner.className='banner clear no-count';
     $('headline').textContent='CLEAR';
-    $('bigCount').textContent='';
-    $('countLabel').textContent='';
   }
-  $('statusLeft').textContent='';
-  $('statusRight').textContent='';
+
+  fitHeadline();
 }
 
 function renderPanels(){
@@ -1201,8 +1268,8 @@ function init(){
     if(state.loc)fetchFeed();
   };
 
-  window.addEventListener('resize',resizeCanvas);
-  window.visualViewport?.addEventListener('resize',resizeCanvas);
+  window.addEventListener('resize',()=>{resizeCanvas();fitHeadline();});
+  window.visualViewport?.addEventListener('resize',()=>{resizeCanvas();fitHeadline();});
 
   const q=new URLSearchParams(location.search);
   const lat=parseFloat(q.get('lat'));
