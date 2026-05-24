@@ -761,7 +761,8 @@ function renderBanner(){
     return;
   }
 
-  if(state.adsb.state==='error'&&!state.adsb.lastFetch){
+  if(state.adsb.state==='error'){
+    banner.className='banner bad no-count';
     $('headline').textContent='CONNECTION LOST';
     fitHeadline();
     return;
@@ -803,12 +804,8 @@ function renderPanels(){
 
 function renderErr(){
   const el=$('err');
-  if(state.adsb.state==='error'){
-    el.classList.remove('hidden');
-    el.innerHTML=`<div style="text-align:center;width:100%;font-weight:700;letter-spacing:.08em">CONNECTION LOST</div><div style="text-align:center;margin-top:8px"><button class="btn red" onclick="fetchFeed()">Retry</button></div>`;
-  }else{
-    el.classList.add('hidden');
-  }
+  el.classList.add('hidden');
+  el.innerHTML='';
 }
 
 function planeCard(p){
