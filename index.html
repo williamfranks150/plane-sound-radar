@@ -200,7 +200,6 @@
   .mic-spec-editor input{margin-bottom:6px}
   .chip{padding-right:96px}
   .chip.pending{opacity:.78}
-  .chip.pending small{display:block;color:#d4a017;text-transform:uppercase;letter-spacing:.08em;margin-top:3px;font-size:8px}
   .chip-edit{
     position:absolute;right:48px;top:50%;transform:translateY(-50%);
     width:42px;height:22px;border:1px solid #31483a;border-radius:12px;
@@ -844,9 +843,8 @@ function renderPanels(){
 
   $('chipGrid').innerHTML=visibleMicEntries().map(([id,m])=>{
     const pending=typeof psMicRangePending==='function'?psMicRangePending(m):false;
-    const pendingText=pending?'<small>SPECS SAVED � RANGE PENDING</small>':'';
     return `<button class="chip ${active.has(id)?'active':''} ${pending?'pending':''}" data-mic="${id}">
-      ${esc(m.name||m.short||id)}${pendingText}
+      ${esc(m.displayName||m.name||m.short||id)}
       <span class="chip-edit" data-edit-mic="${id}" title="Edit mic specs">EDIT</span>
       <span class="chip-x" data-delete-mic="${id}" title="Remove mic">DEL</span>
     </button>`;
@@ -1343,23 +1341,23 @@ function psUnhideMic(id){
 }
 
 function psRemoveDuplicateCustomMics(){
-  const builtIn = [];
-  const customSeen = [];
-
-  for (const [id, m] of Object.entries(MICS)) {
-    if (!id.startsWith("custom_")) builtIn.push(m);
-  }
+  const seenCustom = [];
 
   for (const [id, m] of Object.entries(MICS)) {
     if (!id.startsWith("custom_")) continue;
 
-    const duplicatesBuiltIn = builtIn.some(b => psMicRecordsMatch(m, b));
-    const duplicatesCustom = customSeen.some(c => psMicRecordsMatch(m, c));
+    // Preserve deliberate manual spec copies of built-in mics.
+    if (m && (m.baseMicId || m.status === "spec_record")) {
+      seenCustom.push(m);
+      continue;
+    }
 
-    if (duplicatesBuiltIn || duplicatesCustom) {
+    const duplicatesCustom = seenCustom.some(c => psMicRecordsMatch(m, c));
+
+    if (duplicatesCustom) {
       delete MICS[id];
     } else {
-      customSeen.push(m);
+      seenCustom.push(m);
     }
   }
 
@@ -1638,7 +1636,7 @@ function psApplySeedMicSpecs(){
     "transducerType": "RF CONDENSER",
     "pickupPattern": "SUPERCARDIOID / LOBAR",
     "frequencyResponse": "40 HZ - 20 KHZ",
-    "sensitivity": "25 MV/PA �1 DB"
+    "sensitivity": "25 MV/PA +/- 1 DB"
   },
   "Sennheiser MKH 8060": {
     "transducerType": "RF CONDENSER",
@@ -1650,7 +1648,7 @@ function psApplySeedMicSpecs(){
     "transducerType": "RF CONDENSER",
     "pickupPattern": "SUPERCARDIOID",
     "frequencyResponse": "40 HZ - 20 KHZ",
-    "sensitivity": "25 MV/PA �1 DB"
+    "sensitivity": "25 MV/PA +/- 1 DB"
   },
   "Schoeps CMIT 5U": {
     "transducerType": "CONDENSER",
@@ -1709,8 +1707,8 @@ function psApplySeedMicSpecs(){
   "Sennheiser MKE 2": {
     "transducerType": "PRE-POLARIZED CONDENSER",
     "pickupPattern": "OMNIDIRECTIONAL",
-    "frequencyResponse": "20 HZ - 20 KHZ �3 DB",
-    "sensitivity": "5 MV/PA �3 DB"
+    "frequencyResponse": "20 HZ - 20 KHZ +/- 3 DB",
+    "sensitivity": "5 MV/PA +/- 3 DB"
   },
   "Shure TwinPlex TL47": {
     "transducerType": "DUAL-DIAPHRAGM PREPOLARIZED CONDENSER",
@@ -1802,24 +1800,26 @@ function psSaveMicSpec(){
   const pickupPattern=$('specPattern').value.trim();
   const frequencyResponse=$('specFreq').value.trim();
   const sensitivity=$('specSensitivity').value.trim();
-  
 
   if(!manufacturer||!model||!transducerType||!pickupPattern||!frequencyResponse||!sensitivity){
-    psSpecMsg('Missing required field.');
+    psSpecMsg('MISSING REQUIRED FIELD.');
     return;
   }
 
+  const baseName=manufacturer+' '+model;
+  const editingBuiltIn=editId && MICS[editId] && !editId.startsWith('custom_');
+
   const record={
     manufacturer,
-    name:manufacturer+' '+model,
+    name:baseName,
+    displayName:editingBuiltIn ? baseName+' (CUSTOM)' : baseName,
     short:psShortFromModel(manufacturer,model),
     kind:pickupPattern+' '+transducerType,
     transducerType,
     pickupPattern,
     frequencyResponse,
     sensitivity,
-    
-    aliases:[model],
+    aliases:[],
     status:'spec_record',
     confidence:'manual-spec-entry',
     rangeStatus:'pending'
@@ -1827,45 +1827,55 @@ function psSaveMicSpec(){
 
   const recordKey=psSpecKey(record.name);
 
-  for(const [id,m] of Object.entries(MICS)){
-    if(id===editId)continue;
-    if(psSpecKey(m.name)===recordKey && !id.startsWith('custom_')){
-      if(!editId){
-        psSpecMsg('Mic already exists. Use edit.');
-        return;
-      }
+  let id='';
+
+  if(editId && editId.startsWith('custom_') && MICS[editId]){
+    // Editing an existing manual/custom mic updates that custom record in place.
+    id=editId;
+    record.baseMicId=MICS[editId].baseMicId||'';
+    if(record.baseMicId){
+      record.displayName=baseName+' (CUSTOM)';
     }
-  }
+  }else if(editingBuiltIn){
+    // Editing a built-in mic creates/updates one local copy.
+    record.baseMicId=editId;
 
-  let id=editId&&editId.startsWith('custom_')
-    ? editId
-    : 'custom_spec_'+recordKey.slice(0,32)+'_'+Date.now().toString(36);
+    const existingCopy=Object.entries(MICS).find(([existingId,m])=>
+      existingId.startsWith('custom_') &&
+      m &&
+      m.baseMicId===editId
+    );
 
-  if(editId && !editId.startsWith('custom_') && MICS[editId]){
-    const hidden=hiddenMicSet();
-    hidden.add(editId);
-    state.hiddenMics=[...hidden];
-    write(STORE_HIDDEN,state.hiddenMics);
+    id=existingCopy
+      ? existingCopy[0]
+      : 'custom_spec_'+recordKey.slice(0,32)+'_'+Date.now().toString(36);
+  }else{
+    // New manual mic. Block exact duplicate custom records, but do not block built-ins.
+    const duplicateCustom=Object.entries(MICS).find(([existingId,m])=>
+      existingId.startsWith('custom_') &&
+      m &&
+      psSpecKey(m.name)===recordKey &&
+      existingId!==editId
+    );
 
-    const active=new Set(state.settings.active||[]);
-    active.delete(editId);
-    state.settings.active=[...active];
-  }
-
-  for(const [existingId,m] of Object.entries(MICS)){
-    if(existingId!==id && existingId.startsWith('custom_') && psSpecKey(m.name)===recordKey){
-      delete MICS[existingId];
+    if(duplicateCustom){
+      psSpecMsg('MIC ALREADY EXISTS.');
+      return;
     }
+
+    id='custom_spec_'+recordKey.slice(0,32)+'_'+Date.now().toString(36);
   }
 
   MICS[id]=record;
   saveCustomMics();
 
+  // Keep built-in originals untouched and visible.
+  // Pending spec records do not participate in radar range calculations.
   state.settings.package='custom';
   state.settings.active=(state.settings.active||[]).filter(mid=>MICS[mid]&&psMicHasUsableRange(MICS[mid]));
   write(STORE_SETTINGS,state.settings);
 
-  psSpecMsg('Mic specs saved. Range pending.', true);
+  psSpecMsg(editingBuiltIn ? 'CUSTOM MIC COPY SAVED. ORIGINAL KEPT.' : 'MIC SPECS SAVED. RANGE PENDING.', true);
 
   [
     'specManufacturer',
@@ -1873,9 +1883,8 @@ function psSaveMicSpec(){
     'specTransducer',
     'specPattern',
     'specFreq',
-    'specSensitivity',
-    'specSource'
-  ].forEach(id=>{$(id).value='';});
+    'specSensitivity'
+  ].forEach(fieldId=>{ if($(fieldId))$(fieldId).value=''; });
 
   $('micSpecEditId').value='';
   $('micSpecForm').classList.add('hidden');
@@ -2044,3 +2053,4 @@ document.readyState==='loading'?document.addEventListener('DOMContentLoaded',ini
 </script>
 </body>
 </html>
+

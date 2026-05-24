@@ -17,7 +17,7 @@
     "transducerType": "RF CONDENSER",
     "pickupPattern": "SUPERCARDIOID / LOBAR",
     "frequencyResponse": "40 HZ - 20 KHZ",
-    "sensitivity": "25 MV/PA �1 DB"
+    "sensitivity": "25 MV/PA +/-1 DB"
   },
   {
     "manufacturer": "Sennheiser",
@@ -57,7 +57,7 @@
     "transducerType": "RF CONDENSER",
     "pickupPattern": "SUPERCARDIOID",
     "frequencyResponse": "40 HZ - 20 KHZ",
-    "sensitivity": "25 MV/PA �1 DB"
+    "sensitivity": "25 MV/PA +/-1 DB"
   },
   {
     "manufacturer": "Schoeps",
@@ -250,8 +250,8 @@
     "confidence": "verified-database",
     "transducerType": "PRE-POLARIZED CONDENSER",
     "pickupPattern": "OMNIDIRECTIONAL",
-    "frequencyResponse": "20 HZ - 20 KHZ �3 DB",
-    "sensitivity": "5 MV/PA �3 DB"
+    "frequencyResponse": "20 HZ - 20 KHZ +/-3 DB",
+    "sensitivity": "5 MV/PA +/-3 DB"
   },
   {
     "manufacturer": "Shure",
