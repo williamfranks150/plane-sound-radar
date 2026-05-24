@@ -918,59 +918,6 @@ function psShortFromModel(manufacturer,model){
   return clean.slice(0,22) || String(manufacturer||'Mic').slice(0,22);
 }
 
-function psSpecManufacturer(m){
-  const explicit = psSpecValue(m, ['manufacturer','brand','make']);
-  if (explicit) return explicit;
-
-  const name = String((m && (m.name || m.short)) || '').trim();
-  if (!name) return '';
-
-  const brands = [
-    'Sennheiser',
-    'Schoeps',
-    'DPA',
-    'Sanken',
-    'Countryman',
-    'Shure',
-    'Audio-Technica',
-    'Rode',
-    'RODE',
-    'Deity',
-    'Sony',
-    'Neumann',
-    'AKG',
-    'Beyerdynamic'
-  ];
-
-  for (const brand of brands) {
-    if (name.toLowerCase().startsWith(brand.toLowerCase() + ' ')) {
-      return brand === 'RODE' ? 'Rode' : brand;
-    }
-  }
-
-  return '';
-}
-
-function psSpecModel(m){
-  if (!m) return '';
-
-  const name = String(m.name || m.short || '').trim();
-  const manufacturer = psSpecManufacturer(m);
-
-  if (!name) return '';
-
-  if (manufacturer) {
-    const lowerName = name.toLowerCase();
-    const lowerBrand = manufacturer.toLowerCase();
-
-    if (lowerName.startsWith(lowerBrand + ' ')) {
-      return name.slice(manufacturer.length).trim();
-    }
-  }
-
-  return name;
-}
-
 function psModelFromMicRecord(m){
   return psSpecModel(m);
 }
