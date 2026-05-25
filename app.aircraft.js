@@ -44,6 +44,7 @@ function analyze(ac) {
   const h = Math.hypot(pos.x, pos.y);
   const altKm = altFt / FT_PER_M / 1000;
   const slant = Math.hypot(h, altKm);
+
   const acoustic = psEstimateAircraftNoise(ac, {
     aircraft: p,
     horizontalKm: h,
@@ -53,12 +54,15 @@ function analyze(ac) {
     rangeSettings: rs,
   });
 
-  // Keep the warning logic synchronized with the visible mic/risk ring.
-  // The acoustic model estimates contamination risk, but the displayed app state
-  // should not mark aircraft as inside the mic ring when they are visibly outside it.
-  const acousticRadiusKm = clamp(acoustic.radiusKm, 0, rs.mic);
+  // Aircraft-specific acoustic threshold.
+  // Do not clamp this to the visible blue mic reference ring.
+  // Each aircraft gets its own range based on source level, altitude, distance, and selected mic.
+  const acousticRadiusKm = Number.isFinite(Number(acoustic.radiusKm))
+    ? Math.max(0, Number(acoustic.radiusKm))
+    : 0;
+
   acoustic.displayRadiusKm = acousticRadiusKm;
-  acoustic.radiusKm = acousticRadiusKm;
+
   const tooHigh = acoustic.tooHigh || acousticRadiusKm <= 0;
 
   let entry = null;
