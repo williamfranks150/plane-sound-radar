@@ -123,6 +123,60 @@ function drawRadar(){
   ctx.fillText('E',W-pad,cy+4*uiScale);
   ctx.fillText('W',pad,cy+4*uiScale);
 
+  const placedTimeLabels=[];
+
+  function timeLabelOverlaps(a,b){
+    return !(
+      a.x+a.w<=b.x ||
+      b.x+b.w<=a.x ||
+      a.y+a.h<=b.y ||
+      b.y+b.h<=a.y
+    );
+  }
+
+  function placeTimeLabel(preferred){
+    const minX=4;
+    const minY=4;
+    const maxX=W-4;
+    const maxY=H-4;
+    const step=Math.max(24,28*uiScale);
+
+    const baseX=clamp(preferred.x,minX,maxX-preferred.w);
+    const baseY=clamp(preferred.y,minY,maxY-preferred.h);
+
+    const candidates=[
+      {x:baseX,y:baseY,w:preferred.w,h:preferred.h}
+    ];
+
+    for(let i=1;i<=10;i++){
+      candidates.push({x:baseX,y:clamp(baseY+i*step,minY,maxY-preferred.h),w:preferred.w,h:preferred.h});
+      candidates.push({x:baseX,y:clamp(baseY-i*step,minY,maxY-preferred.h),w:preferred.w,h:preferred.h});
+    }
+
+    for(const c of candidates){
+      if(!placedTimeLabels.some(r=>timeLabelOverlaps(r,c))){
+        placedTimeLabels.push(c);
+        return c;
+      }
+    }
+
+    let best=candidates[0];
+    let bestScore=Infinity;
+
+    for(const c of candidates){
+      const collisions=placedTimeLabels.filter(r=>timeLabelOverlaps(r,c)).length;
+      const distance=Math.abs(c.y-baseY)/step;
+      const score=collisions*100+distance;
+      if(score<bestScore){
+        bestScore=score;
+        best=c;
+      }
+    }
+
+    placedTimeLabels.push(best);
+    return best;
+  }
+
   state.analyzed.forEach(p=>{
     if(p.status==='high'&&p.h>rs.radar)return;
     const px=cx+p.x*scale;
@@ -164,16 +218,24 @@ function drawRadar(){
     else if(p.entry!=null)tag='+'+fmt(p.entry);
 
     if(tag){
-      const tagFont=Math.round(Math.max(20,22*uiScale));
-      const tagPad=7*uiScale;
-      const tagH=Math.max(30,30*uiScale);
+      const tagFont=Math.round(Math.max(18,19*uiScale));
+      const tagPad=6*uiScale;
+      const tagH=Math.max(27,28*uiScale);
       ctx.font=`800 ${tagFont}px -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif`;
       ctx.textAlign='left';
+
       const w=ctx.measureText(tag).width+tagPad*2;
-      let x=px+size*.7;
-      let y=py-size-(16*uiScale);
-      x=clamp(x,4,W-w-4);
-      y=clamp(y,4,H-tagH-4);
+      const preferred={
+        x:px+size*.7,
+        y:py-size-(14*uiScale),
+        w,
+        h:tagH
+      };
+
+      const placed=placeTimeLabel(preferred);
+      const x=placed.x;
+      const y=placed.y;
+
       ctx.fillStyle='rgba(0,0,0,.78)';
       ctx.fillRect(x,y,w,tagH);
       ctx.strokeStyle=col;
