@@ -251,3 +251,11 @@
 .privacy-link a:active{
   color:#00d97a;
 }
+
+.location-note{
+  margin:0 0 8px;
+  color:#9fb6ab;
+  font-size:12px;
+  line-height:16px;
+  text-align:center;
+}
