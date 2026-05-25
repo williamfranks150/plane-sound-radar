@@ -44,48 +44,6 @@ function drawRadar() {
   const scale = gridR / rs.radar;
 
   ctx.clearRect(0, 0, c.width, c.height);
-  ctx.save();
-  ctx.scale(dpr, dpr);
-  ctx.fillStyle = "#020907";
-  ctx.fillRect(0, 0, W, H);
-
-  // Full-panel atmospheric glow.
-  const bg = ctx.createRadialGradient(cx, cy, 0, cx, cy, effectR);
-  bg.addColorStop(0, "#061510");
-  bg.addColorStop(0.58, "#03100b");
-  bg.addColorStop(1, "#020907");
-  ctx.fillStyle = bg;
-  ctx.fillRect(0, 0, W, H);
-
-  // Circular radar grid. Circles remain round and fully visible inside the panel.
-  ctx.strokeStyle = "rgba(0,100,60,.17)";
-  ctx.lineWidth = 0.7;
-  [0.25, 0.5, 0.75, 1].forEach((k) => {
-    ctx.beginPath();
-    ctx.arc(cx, cy, gridR * k, 0, Math.PI * 2);
-    ctx.stroke();
-  });
-  ctx.beginPath();
-  ctx.moveTo(cx, 0);
-  ctx.lineTo(cx, H);
-  ctx.moveTo(0, cy);
-  ctx.lineTo(W, cy);
-  ctx.stroke();
-
-  // Selected mic/hearing rings: always perfect circles.
-  rs.mics
-    .slice()
-    .sort((a, b) => b.mic - a.mic)
-    .forEach((m, idx) => {
-      const rr = m.mic * scale;
-      ctx.setLineDash([8, 6]);
-      ctx.strokeStyle = m.color;
-      ctx.lineWidth = 2.2;
-      ctx.beginPath();
-      ctx.arc(cx, cy, rr, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.setLineDash([]);
-      if (!rs.usingHuman && !m.human) {
         const label = `${m.short}`;
         const angle = (-90 + idx * 18) * D2R;
         let lx = cx + Math.cos(angle) * rr;
