@@ -5,6 +5,7 @@ const files = [
   "app.constants.js",
   "app.data.js",
   "app.utils.js",
+  "app.acoustics.js",
   "app.aircraft.js",
   "app.mics.js",
   "app.connection.js",

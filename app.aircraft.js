@@ -53,8 +53,13 @@ function analyze(ac) {
     rangeSettings: rs,
   });
 
-  const acousticRadiusKm = acoustic.radiusKm;
-  const tooHigh = acoustic.tooHigh;
+  // Keep the warning logic synchronized with the visible mic/risk ring.
+  // The acoustic model estimates contamination risk, but the displayed app state
+  // should not mark aircraft as inside the mic ring when they are visibly outside it.
+  const acousticRadiusKm = clamp(acoustic.radiusKm, 0, rs.mic);
+  acoustic.displayRadiusKm = acousticRadiusKm;
+  acoustic.radiusKm = acousticRadiusKm;
+  const tooHigh = acoustic.tooHigh || acousticRadiusKm <= 0;
 
   let entry = null;
   let exit = null;

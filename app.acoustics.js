@@ -135,10 +135,16 @@ function psParseSensitivityMvPa(value) {
 }
 
 function psMicAcousticProfile(mic) {
+  // This is a production contamination threshold, not a raw microphone audibility threshold.
+  // The earlier 28-32 dBA threshold made the calculated radius unrealistically huge.
+  // Microphone sensitivity affects output voltage, but it does not make distant aircraft
+  // magically contaminate dialogue at 25-100 km. The practical threshold is the aircraft SPL
+  // at the recording position becoming high enough to matter in production sound.
+
   if (!mic || mic.human) {
     return {
       name: "Human hearing",
-      thresholdDba: 40,
+      thresholdDba: 45,
       sensitivityMvPa: null,
       confidence: 0.55,
     };
@@ -148,25 +154,33 @@ function psMicAcousticProfile(mic) {
   const pattern = String(mic.pickupPattern || "").toLowerCase();
   const sensitivityMvPa = psParseSensitivityMvPa(mic.sensitivity);
 
-  let thresholdDba = 32;
+  let thresholdDba = 58;
 
-  if (kind.includes("lav")) thresholdDba = 28;
-  if (kind.includes("shotgun")) thresholdDba = 30;
-  if (kind.includes("dialogue") || kind.includes("interior")) thresholdDba = 31;
+  if (kind.includes("lav")) thresholdDba = 54;
+  if (kind.includes("shotgun")) thresholdDba = 57;
+  if (kind.includes("dialogue") || kind.includes("interior")) thresholdDba = 55;
 
   if (pattern.includes("omni")) thresholdDba -= 1;
   if (pattern.includes("supercardioid") || pattern.includes("lob"))
     thresholdDba += 1;
 
+  // Keep sensitivity influence intentionally small.
+  // Large sensitivity corrections created unrealistic aircraft ranges.
   if (sensitivityMvPa) {
-    thresholdDba -= 20 * Math.log10(Math.max(0.1, sensitivityMvPa) / 10);
+    const sensitivityAdjustment = clamp(
+      20 * Math.log10(Math.max(0.1, sensitivityMvPa) / 10),
+      -2,
+      2,
+    );
+
+    thresholdDba -= sensitivityAdjustment;
   }
 
   return {
     name: mic.displayName || mic.name || mic.short || "Selected mic",
-    thresholdDba: clamp(thresholdDba, 20, 42),
+    thresholdDba: clamp(thresholdDba, 48, 64),
     sensitivityMvPa,
-    confidence: sensitivityMvPa ? 0.55 : 0.38,
+    confidence: sensitivityMvPa ? 0.6 : 0.42,
   };
 }
 
