@@ -111,6 +111,15 @@ function renderBanner() {
     return;
   }
 
+  const rs = typeof rangeSettings === "function" ? rangeSettings() : null;
+
+  if (rs && rs.noMicSelected) {
+    banner.className = "banner clear no-count";
+    $("headline").textContent = "";
+    fitHeadline();
+    return;
+  }
+
   if (c.audible > 0) {
     banner.className = "banner bad no-count";
     $("headline").textContent = c.audible + " AIRCRAFT LIKELY TO AFFECT MIC";
