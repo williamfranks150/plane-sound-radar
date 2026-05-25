@@ -224,16 +224,30 @@ function psDrawTimeTag(
   if (!tag) return false;
 
   const tagFont = Math.round(Math.max(18, 19 * uiScale));
-  const tagPad = 6 * uiScale;
-  const tagH = Math.max(30, 30 * uiScale);
+  const tagPad = Math.max(7, 7 * uiScale);
+  const tagH = Math.max(32, 32 * uiScale);
 
   ctx.font =
     "800 " +
     tagFont +
     "px -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif";
   ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
 
-  const tagW = ctx.measureText(tag).width + tagPad * 2.4;
+  const metrics = ctx.measureText(tag);
+  const measuredW = Math.ceil(
+    Math.max(
+      metrics.width,
+      Math.abs(metrics.actualBoundingBoxLeft || 0) +
+        Math.abs(metrics.actualBoundingBoxRight || 0),
+    ),
+  );
+
+  // Extra safety padding prevents the seconds from ever escaping the timer box.
+  const tagW = Math.ceil(
+    Math.max(measuredW + tagPad * 3.5 + 10 * uiScale, 82 * uiScale),
+  );
+
   const heading = p.track * D2R;
   const forwardX = Math.sin(heading);
   const forwardY = -Math.cos(heading);
@@ -244,8 +258,6 @@ function psDrawTimeTag(
   let x;
   let y;
 
-  // Put the timer banner immediately behind the aircraft arrow.
-  // Use side placement for mostly horizontal movement and top/bottom placement for mostly vertical movement.
   if (Math.abs(backX) >= Math.abs(backY)) {
     x = backX >= 0 ? px + size * 0.72 + gap : px - tagW - size * 0.72 - gap;
     y = py - tagH / 2 + backY * size * 0.25;
@@ -255,8 +267,8 @@ function psDrawTimeTag(
   }
 
   const placed = {
-    x: clamp(x, 4, W - tagW - 4),
-    y: clamp(y, 4, H - tagH - 4),
+    x: Math.round(clamp(x, 4, W - tagW - 4)),
+    y: Math.round(clamp(y, 4, H - tagH - 4)),
     w: tagW,
     h: tagH,
   };
@@ -268,7 +280,9 @@ function psDrawTimeTag(
   ctx.strokeStyle = col;
   ctx.strokeRect(placed.x, placed.y, tagW, tagH);
   ctx.fillStyle = col;
-  ctx.fillText(tag, placed.x + tagPad, placed.y + tagH * 0.72);
+  ctx.fillText(tag, placed.x + tagPad, placed.y + tagH / 2);
+
+  ctx.textBaseline = "alphabetic";
 
   return true;
 }
