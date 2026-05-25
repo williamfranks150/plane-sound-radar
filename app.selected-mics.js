@@ -22,29 +22,30 @@ function psRenderSelectedMicList() {
 
   const items = psSelectedMicDisplayItems();
 
-  const list = items.length ? items : ["AIRCRAFT ONLY"];
+  const list = items.length ? items : ["NO MICS SELECTED"];
 
-  el.innerHTML =
-    '<div class="selected-mic-list-title">SELECTED MICS</div>' +
-    list
-      .map((item) => {
-        const safe = String(item)
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;");
+  el.innerHTML = items.length
+    ? '<div class="selected-mic-list-title">SELECTED MICS</div>'
+    : "" +
+      list
+        .map((item) => {
+          const safe = String(item)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
 
-        const emptyClass =
-          safe === "AIRCRAFT ONLY" ? " selected-mic-list-empty" : "";
+          const emptyClass =
+            safe === "NO MICS SELECTED" ? " selected-mic-list-empty" : "";
 
-        return (
-          '<div class="selected-mic-list-item' +
-          emptyClass +
-          '">' +
-          safe +
-          "</div>"
-        );
-      })
-      .join("");
+          return (
+            '<div class="selected-mic-list-item' +
+            emptyClass +
+            '">' +
+            safe +
+            "</div>"
+          );
+        })
+        .join("");
 }
 
 document.addEventListener("DOMContentLoaded", psRenderSelectedMicList);
