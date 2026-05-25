@@ -51,7 +51,7 @@ function hideOrDeleteMic(id) {
 
 function selectedMics() {
   const ids = activeMicIds();
-  if (!ids.length) return [HUMAN_BASELINE];
+
   return ids.map((id, i) => ({
     id,
     ...MICS[id],
@@ -61,22 +61,25 @@ function selectedMics() {
 
 function rangeSettings() {
   const mics = selectedMics();
-  let mic = HUMAN_BASELINE.mic,
-    hot = HUMAN_BASELINE.hot,
-    tail = HUMAN_BASELINE.tail,
-    ceil = HUMAN_BASELINE.ceil;
+  const noMicSelected = !mics.length;
+
+  let mic = 0,
+    hot = 0,
+    tail = 20,
+    ceil = 10000;
+
   mics.forEach((m) => {
-    mic = Math.max(mic, m.mic);
-    hot = Math.max(hot, m.hot);
-    tail = Math.max(tail, m.tail);
-    ceil = Math.max(ceil, m.ceil);
+    mic = Math.max(mic, Number(m.mic) || 0);
+    hot = Math.max(hot, Number(m.hot) || 0);
+    tail = Math.max(tail, Number(m.tail) || 20);
+    ceil = Math.max(ceil, Number(m.ceil) || 10000);
   });
-  // Keep extra radar space so aircraft about 60 seconds before mic-range entry remain visible.
-  const oneMinuteLeadKm = 18;
-  const radar = Math.max(
-    12,
-    Math.ceil(Math.max(mic * 1.08, mic + oneMinuteLeadKm * 0.25) / 4) * 4,
-  );
+
+  const noMicRadarKm = 32;
+  const micRadarKm = Math.max(mic * 1.08, mic + 4.5);
+  const radarBase = noMicSelected ? noMicRadarKm : micRadarKm;
+  const radar = Math.max(12, Math.ceil(radarBase / 4) * 4);
+
   return {
     mic,
     hot,
@@ -84,7 +87,8 @@ function rangeSettings() {
     ceil,
     radar,
     mics,
-    usingHuman: !activeMicIds().length,
+    usingHuman: false,
+    noMicSelected,
   };
 }
 

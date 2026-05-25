@@ -88,7 +88,6 @@ function fitHeadline() {
 function renderBanner() {
   const c = counts();
   const banner = $("banner");
-  const rs = rangeSettings();
 
   banner.className = "banner no-count";
   $("bigCount").textContent = "";
@@ -114,8 +113,10 @@ function renderBanner() {
 
   if (c.audible > 0) {
     banner.className = "banner bad no-count";
-    const rangeText = rs.usingHuman ? "HEARING RANGE" : "MIC RANGE";
-    $("headline").textContent = c.audible + " AIRCRAFT IN " + rangeText;
+    $("headline").textContent = c.audible + " AIRCRAFT LIKELY TO AFFECT MIC";
+  } else if (c.approaching > 0) {
+    banner.className = "banner bad no-count";
+    $("headline").textContent = "APPROACHING AIRCRAFT";
   } else {
     banner.className = "banner clear no-count";
     $("headline").textContent = "CLEAR";

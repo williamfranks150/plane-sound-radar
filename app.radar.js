@@ -72,37 +72,6 @@ function drawRadar() {
   ctx.lineTo(W, cy);
   ctx.stroke();
 
-  // Selected mic/hearing rings: always perfect circles.
-  rs.mics
-    .slice()
-    .sort((a, b) => b.mic - a.mic)
-    .forEach((m, idx) => {
-      const rr = m.mic * scale;
-      ctx.setLineDash([]);
-      ctx.strokeStyle = m.color;
-      ctx.lineWidth = 2.2;
-      ctx.beginPath();
-      ctx.arc(cx, cy, rr, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.setLineDash([]);
-      if (!rs.usingHuman && !m.human) {
-        const label = `${m.short}`;
-        const angle = (-90 + idx * 18) * D2R;
-        let lx = cx + Math.cos(angle) * rr;
-        let ly = cy + Math.sin(angle) * rr;
-        ctx.font = `800 ${Math.round(Math.max(21, 22 * uiScale))}px -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif`;
-        ctx.textAlign = "center";
-        const tw = ctx.measureText(label).width + 10 * uiScale;
-        const bh = 24 * uiScale;
-        lx = clamp(lx, tw / 2 + 4, W - tw / 2 - 4);
-        ly = clamp(ly, bh * 0.75 + 4, H - bh * 0.25 - 4);
-        ctx.fillStyle = "rgba(0,12,8,.78)";
-        ctx.fillRect(lx - tw / 2, ly - bh * 0.55, tw, bh);
-        ctx.fillStyle = m.color;
-        ctx.fillText(label, lx, ly + 6 * uiScale);
-      }
-    });
-
   // Sweep fan reaches the farthest rectangle corner while rings stay fully visible.
   const sr = (state.sweep - 90) * D2R;
   for (let i = 0; i < 30; i++) {
@@ -222,9 +191,7 @@ function drawRadar() {
       );
       ctx.strokeStyle =
         p.status === "audible" ? "rgba(255,80,80,.35)" : "rgba(255,210,60,.3)";
-      ctx.setLineDash([]);
       ctx.stroke();
-      ctx.setLineDash([]);
     }
 
     const size = clamp((9 + p.risk * 8) * uiScale, 5, 22 * uiScale);
