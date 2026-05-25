@@ -62,7 +62,7 @@
   .tabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
   .tab{
     border:1px solid #1a3a2a;border-radius:5px;background:transparent;color:#90a898;padding:10px 4px;
-    font-family:'Saira Condensed',sans-serif;font-weight:700;letter-spacing:.11em;text-transform:uppercase;font-size:clamp(10px,2.2vw,13px)
+    font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif;font-weight:700;letter-spacing:.11em;text-transform:uppercase;font-size:clamp(10px,2.2vw,13px)
   }
   .tab.active{border-color:#d4a017;color:#f0d070;background:rgba(212,160,23,.08)}
   .tab:active{border-color:#d4a017;color:#d4a017}
@@ -72,7 +72,7 @@
   }
   .hidden{display:none!important}
   .title{
-    font-family:'Saira Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.16em;
+    font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:13px;letter-spacing:.16em;
     text-transform:uppercase;color:#d4a017;margin-bottom:9px
   }
   .sblock{margin-bottom:14px}.sblock:last-child{margin-bottom:0}
@@ -86,7 +86,7 @@
   .row{display:flex;gap:6px}
   .btn{
     border:1px solid #1a3a2a;border-radius:5px;background:transparent;color:#90a898;padding:9px 10px;
-    font-family:'Saira Condensed',sans-serif;font-weight:700;letter-spacing:.11em;text-transform:uppercase;font-size:12px
+    font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif;font-weight:700;letter-spacing:.11em;text-transform:uppercase;font-size:12px
   }
   .btn.primary{background:#d4a017;border-color:#d4a017;color:#06100a}
   .btn.green{border-color:#00d97a;color:#00ff95;background:rgba(0,217,122,.1)}
@@ -96,7 +96,7 @@
   .chip{text-align:left;background:#050e08;border:1px solid #1a3a2a;border-radius:6px;color:#9fb8a7;padding:8px 34px 8px 8px;font-size:10px;line-height:1.22;min-height:44px;position:relative;overflow:hidden}
   .chip.active{border-color:#d4a017;color:#f0d070;background:rgba(212,160,23,.13)}
   .chip small{display:block;color:#607868;text-transform:uppercase;letter-spacing:.08em;margin-top:2px;font-size:8px}
-  .chip-x{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:38px;height:22px;border:1px solid #31483a;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#789080;background:rgba(0,0,0,.25);font-size:9px;line-height:1;font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:.04em}
+  .chip-x{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:38px;height:22px;border:1px solid #31483a;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#789080;background:rgba(0,0,0,.25);font-size:9px;line-height:1;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace;font-weight:700;letter-spacing:.04em}
   .chip-x:active{border-color:#d4a017;color:#f0d070}
   .custom-row{align-items:stretch}
   .manual-mic{border-top:1px solid rgba(26,58,42,.45);padding-top:10px}
@@ -126,8 +126,8 @@
   .planeCard.approaching{border-left-color:#ffb020;background:rgba(40,25,0,.5)}
   .planeCard.clear{border-left-color:#00d97a}
   .planeHead{display:flex;justify-content:space-between;gap:8px;align-items:baseline;margin-bottom:5px}
-  .callsign{font-family:'Saira Condensed',sans-serif;font-weight:700;font-size:18px;color:#e0eae0}
-  .pill{font-family:'Saira Condensed',sans-serif;font-weight:700;font-size:10px;letter-spacing:.12em;padding:2px 8px;border-radius:3px;text-transform:uppercase;white-space:nowrap;background:#3a4850;color:#90a8b0}
+  .callsign{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:18px;color:#e0eae0}
+  .pill{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:10px;letter-spacing:.12em;padding:2px 8px;border-radius:3px;text-transform:uppercase;white-space:nowrap;background:#3a4850;color:#90a8b0}
   .audible .pill{background:#ff4040;color:white}.approaching .pill{background:#ffb020;color:#1a0e00}.clear .pill{background:#00d97a;color:#001810}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px}
   .grid div{display:flex;justify-content:space-between;gap:8px}
@@ -187,7 +187,7 @@
     width:42px;height:22px;border:1px solid #31483a;border-radius:12px;
     display:flex;align-items:center;justify-content:center;
     color:#789080;background:rgba(0,0,0,.25);font-size:9px;line-height:1;
-    font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:.04em
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace;font-weight:700;letter-spacing:.04em
   }
   .chip-edit:active{border-color:#d4a017;color:#f0d070}
 
