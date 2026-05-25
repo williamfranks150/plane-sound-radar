@@ -234,3 +234,20 @@
       max-width:min(330px,76vw);
     }
   }
+
+.privacy-link{
+  position:absolute;
+  top:max(6px,env(safe-area-inset-top));
+  right:10px;
+  z-index:5;
+  font-size:11px;
+  line-height:14px;
+  opacity:.72;
+}
+.privacy-link a{
+  color:#b8ccc2;
+  text-decoration:none;
+}
+.privacy-link a:active{
+  color:#00d97a;
+}
