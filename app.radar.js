@@ -50,6 +50,16 @@ function psPlaneTimeTag(p) {
   return "";
 }
 
+function psPlaneHasTimer(p) {
+  return psPlaneTimeTag(p) !== "";
+}
+
+function psTimedPlaneSize(p, uiScale) {
+  const base = clamp((9 + p.risk * 8) * uiScale, 5, 22 * uiScale);
+
+  return psPlaneHasTimer(p) ? clamp(base * 1.5, 8, 34 * uiScale) : base;
+}
+
 function psDrawRadarBackground(
   ctx,
   W,
@@ -211,11 +221,18 @@ function psDrawTimeTag(
   H,
   uiScale,
 ) {
-  if (!tag) return;
+  if (!tag) return false;
 
   const tagFont = Math.round(Math.max(18, 19 * uiScale));
   const tagPad = 6 * uiScale;
-  const tagH = Math.max(27, 28 * uiScale);
+  const tagH = Math.max(30, 30 * uiScale);
+  const tagW = ctx.measureText(tag).width + tagPad * 2.4;
+  const heading = p.track * D2R;
+  const forwardX = Math.sin(heading);
+  const forwardY = -Math.cos(heading);
+  const backX = -forwardX;
+  const backY = -forwardY;
+  const offset = size * 1.25 + Math.max(tagW, tagH) * 0.55;
 
   ctx.font =
     "800 " +
@@ -223,21 +240,23 @@ function psDrawTimeTag(
     "px -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif";
   ctx.textAlign = "left";
 
-  const w = ctx.measureText(tag).width + tagPad * 2;
   const preferred = {
-    x: px + size * 0.7,
-    y: py - size - 14 * uiScale,
-    w,
+    x: px + backX * offset - tagW / 2,
+    y: py + backY * offset - tagH / 2,
+    w: tagW,
     h: tagH,
   };
+
   const placed = psPlaceTimeLabel(preferred, placedLabels, W, H, uiScale);
 
   ctx.fillStyle = "rgba(0,0,0,.78)";
-  ctx.fillRect(placed.x, placed.y, w, tagH);
+  ctx.fillRect(placed.x, placed.y, tagW, tagH);
   ctx.strokeStyle = col;
-  ctx.strokeRect(placed.x, placed.y, w, tagH);
+  ctx.strokeRect(placed.x, placed.y, tagW, tagH);
   ctx.fillStyle = col;
   ctx.fillText(tag, placed.x + tagPad, placed.y + tagH * 0.72);
+
+  return true;
 }
 
 function psDrawHomeMarker(ctx, cx, cy) {
@@ -288,23 +307,13 @@ function drawRadar() {
     }
 
     const col = psPlaneColor(p);
-    const size = clamp((9 + p.risk * 8) * uiScale, 5, 22 * uiScale);
+    const size = psTimedPlaneSize(p, uiScale);
 
     psDrawAircraftPath(ctx, p, px, py, cx, cy, scale, col);
+    const tag = psPlaneTimeTag(p);
+
+    psDrawTimeTag(ctx, tag, p, px, py, size, col, placedLabels, W, H, uiScale);
     psDrawAircraftIcon(ctx, p, px, py, size, col);
-    psDrawTimeTag(
-      ctx,
-      psPlaneTimeTag(p),
-      p,
-      px,
-      py,
-      size,
-      col,
-      placedLabels,
-      W,
-      H,
-      uiScale,
-    );
   });
 
   psDrawHomeMarker(ctx, cx, cy);
