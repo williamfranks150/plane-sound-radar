@@ -62,32 +62,23 @@ function selectedMics() {
 function rangeSettings() {
   const mics = selectedMics();
   const noMicSelected = !mics.length;
-
-  let mic = 0,
-    hot = 0,
-    tail = 20,
-    ceil = 10000;
-
-  mics.forEach((m) => {
-    mic = Math.max(mic, Number(m.mic) || 0);
-    hot = Math.max(hot, Number(m.hot) || 0);
-    tail = Math.max(tail, Number(m.tail) || 20);
-    ceil = Math.max(ceil, Number(m.ceil) || 10000);
-  });
-
-  const noMicRadarKm = 32;
-  const micRadarKm = Math.max(mic * 1.08, mic + 4.5);
-  const radarBase = noMicSelected ? noMicRadarKm : micRadarKm;
+  const tail = mics.reduce(
+    (value, mic) => Math.max(value, Number(mic.tail) || 20),
+    20,
+  );
+  const widestMicKm = mics.reduce(
+    (value, mic) => Math.max(value, Number(mic.mic) || 0),
+    0,
+  );
+  const radarBase = noMicSelected
+    ? 32
+    : Math.max(widestMicKm * 1.08, widestMicKm + 4.5);
   const radar = Math.max(12, Math.ceil(radarBase / 4) * 4);
 
   return {
-    mic,
-    hot,
     tail,
-    ceil,
     radar,
     mics,
-    usingHuman: false,
     noMicSelected,
   };
 }

@@ -54,9 +54,7 @@ function analyze(ac) {
     rangeSettings: rs,
   });
 
-  // Aircraft-specific acoustic threshold.
-  // Do not clamp this to the visible blue mic reference ring.
-  // Each aircraft gets its own range based on source level, altitude, distance, and selected mic.
+  // Aircraft-specific acoustic threshold based on source level, altitude, distance, and selected mic.
   const acousticRadiusKm = Number.isFinite(Number(acoustic.radiusKm))
     ? Math.max(0, Number(acoustic.radiusKm))
     : 0;

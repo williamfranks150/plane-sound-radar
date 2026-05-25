@@ -8,9 +8,7 @@ function psSelectedMicDisplayItems() {
 
     const label = mic.short || mic.name || mic.displayName || id || "MIC";
 
-    if (!label) return;
-
-    byId.set(String(id || label), String(label).toUpperCase());
+    if (label) byId.set(String(id || label), String(label).toUpperCase());
   }
 
   if (typeof activeMicIds === "function") {
@@ -23,13 +21,18 @@ function psSelectedMicDisplayItems() {
     const rs = rangeSettings();
 
     if (rs && Array.isArray(rs.mics)) {
-      rs.mics.forEach((mic, index) => {
-        addMic(mic.id || index, mic);
-      });
+      rs.mics.forEach((mic, index) => addMic(mic.id || index, mic));
     }
   }
 
   return [...byId.values()];
+}
+
+function psEscapeSelectedMicLabel(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }
 
 function psRenderSelectedMicList() {
@@ -39,9 +42,7 @@ function psRenderSelectedMicList() {
 
   const parent = el.parentElement;
 
-  if (parent) {
-    parent.style.position = "relative";
-  }
+  if (parent) parent.style.position = "relative";
 
   const items = psSelectedMicDisplayItems();
 
@@ -55,12 +56,11 @@ function psRenderSelectedMicList() {
     '<div class="selected-mic-list-title">SELECTED MICS</div>' +
     items
       .map((item) => {
-        const safe = String(item)
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;");
-
-        return '<div class="selected-mic-list-item">' + safe + "</div>";
+        return (
+          '<div class="selected-mic-list-item">' +
+          psEscapeSelectedMicLabel(item) +
+          "</div>"
+        );
       })
       .join("");
 }
