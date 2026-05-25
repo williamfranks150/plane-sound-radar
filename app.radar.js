@@ -226,13 +226,6 @@ function psDrawTimeTag(
   const tagFont = Math.round(Math.max(18, 19 * uiScale));
   const tagPad = 6 * uiScale;
   const tagH = Math.max(30, 30 * uiScale);
-  const tagW = ctx.measureText(tag).width + tagPad * 2.4;
-  const heading = p.track * D2R;
-  const forwardX = Math.sin(heading);
-  const forwardY = -Math.cos(heading);
-  const backX = -forwardX;
-  const backY = -forwardY;
-  const offset = size * 1.25 + Math.max(tagW, tagH) * 0.55;
 
   ctx.font =
     "800 " +
@@ -240,14 +233,35 @@ function psDrawTimeTag(
     "px -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif";
   ctx.textAlign = "left";
 
-  const preferred = {
-    x: px + backX * offset - tagW / 2,
-    y: py + backY * offset - tagH / 2,
+  const tagW = ctx.measureText(tag).width + tagPad * 2.4;
+  const heading = p.track * D2R;
+  const forwardX = Math.sin(heading);
+  const forwardY = -Math.cos(heading);
+  const backX = -forwardX;
+  const backY = -forwardY;
+  const gap = Math.max(2, 3 * uiScale);
+
+  let x;
+  let y;
+
+  // Put the timer banner immediately behind the aircraft arrow.
+  // Use side placement for mostly horizontal movement and top/bottom placement for mostly vertical movement.
+  if (Math.abs(backX) >= Math.abs(backY)) {
+    x = backX >= 0 ? px + size * 0.72 + gap : px - tagW - size * 0.72 - gap;
+    y = py - tagH / 2 + backY * size * 0.25;
+  } else {
+    x = px - tagW / 2 + backX * size * 0.25;
+    y = backY >= 0 ? py + size * 0.72 + gap : py - tagH - size * 0.72 - gap;
+  }
+
+  const placed = {
+    x: clamp(x, 4, W - tagW - 4),
+    y: clamp(y, 4, H - tagH - 4),
     w: tagW,
     h: tagH,
   };
 
-  const placed = psPlaceTimeLabel(preferred, placedLabels, W, H, uiScale);
+  placedLabels.push(placed);
 
   ctx.fillStyle = "rgba(0,0,0,.78)";
   ctx.fillRect(placed.x, placed.y, tagW, tagH);
