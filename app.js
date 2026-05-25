@@ -52,6 +52,12 @@ function setPanel(name) {
 // === End manual mic spec editor ===
 
 function init() {
+  if (typeof psLoadAircraftNoiseProfiles === "function") {
+    psLoadAircraftNoiseProfiles().then(() => {
+      render();
+      if (state.loc) fetchFeed();
+    });
+  }
   if (typeof psApplySeedMicSpecs === "function") psApplySeedMicSpecs();
   state.savedLoc = read(STORE_LOC, null);
   const custom = read(STORE_CUSTOM, {});
