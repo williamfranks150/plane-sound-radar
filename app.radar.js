@@ -81,7 +81,7 @@ function drawRadar(){
         const angle=(-90+idx*18)*D2R;
         let lx=cx+Math.cos(angle)*rr;
         let ly=cy+Math.sin(angle)*rr;
-        ctx.font=`bold ${Math.round(20*uiScale)}px 'Saira Condensed'`;
+        ctx.font=`800 ${Math.round(Math.max(21,22*uiScale))}px -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif`;
         ctx.textAlign='center';
         const tw=ctx.measureText(label).width+(10*uiScale);
         const bh=24*uiScale;
@@ -116,7 +116,7 @@ function drawRadar(){
 
   // Cardinal labels sit against the rectangular panel edges.
   ctx.fillStyle='rgba(80,150,95,.6)';
-  ctx.font=`bold ${Math.round(13*uiScale)}px 'Saira Condensed'`;
+  ctx.font=`800 ${Math.round(Math.max(14,14*uiScale))}px -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif`;
   ctx.textAlign='center';
   ctx.fillText('N',cx,pad);
   ctx.fillText('S',cx,H-pad+4*uiScale);
@@ -164,10 +164,10 @@ function drawRadar(){
     else if(p.entry!=null)tag='+'+fmt(p.entry);
 
     if(tag){
-      const tagFont=Math.round(16*uiScale);
-      const tagPad=5*uiScale;
-      const tagH=24*uiScale;
-      ctx.font=`bold ${tagFont}px 'JetBrains Mono'`;
+      const tagFont=Math.round(Math.max(20,22*uiScale));
+      const tagPad=7*uiScale;
+      const tagH=Math.max(30,30*uiScale);
+      ctx.font=`800 ${tagFont}px ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace`;
       ctx.textAlign='left';
       const w=ctx.measureText(tag).width+tagPad*2;
       let x=px+size*.7;
@@ -179,7 +179,7 @@ function drawRadar(){
       ctx.strokeStyle=col;
       ctx.strokeRect(x,y,w,tagH);
       ctx.fillStyle=col;
-      ctx.fillText(tag,x+tagPad,y+tagH*.7);
+      ctx.fillText(tag,x+tagPad,y+tagH*.72);
     }
   });
 

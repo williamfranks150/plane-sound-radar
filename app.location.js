@@ -18,7 +18,8 @@ function gps(auto=false){
     return;
   }
   $('gpsBtn').disabled=true;
-  $('gpsMsg').textContent=auto?'Requesting location…':'Getting location…';
+  $('gpsMsg').textContent='';
+  $('gpsMsg').classList.add('hidden');
   $('gpsMsg').className='msg ok';
   $('gpsMsg').classList.remove('hidden');
 

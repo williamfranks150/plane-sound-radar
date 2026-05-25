@@ -252,10 +252,96 @@
   color:#00d97a;
 }
 
-.location-note{
-  margin:0 0 8px;
-  color:#9fb6ab;
-  font-size:12px;
-  line-height:16px;
-  text-align:center;
+
+
+/* MOBILE LAYOUT POLISH */
+@media (max-width:520px){
+  .app{
+    position:relative;
+    height:100dvh;
+    min-height:100dvh;
+    overflow:hidden;
+    gap:4px;
+    padding:max(4px,env(safe-area-inset-top)) 4px max(4px,env(safe-area-inset-bottom));
+  }
+
+  .privacy-link{
+    top:max(4px,env(safe-area-inset-top));
+    right:8px;
+    font-size:10px;
+    line-height:12px;
+  }
+
+  .app-logo-wrap{
+    height:98px!important;
+    padding:3px 0 2px!important;
+  }
+
+  .app-logo{
+    height:94px!important;
+    max-width:min(440px,94vw)!important;
+  }
+
+  .banner{
+    padding:5px 8px!important;
+    min-height:42px;
+  }
+
+  .headline{
+    font-size:clamp(29px,8vw,42px)!important;
+    line-height:.9!important;
+  }
+
+  .banner.clear .headline{
+    font-size:clamp(42px,11vw,62px)!important;
+  }
+
+  .radar-wrap{
+    flex:1 1 auto;
+    min-height:0!important;
+  }
+
+  .tabs{
+    gap:3px!important;
+  }
+
+  .tab{
+    padding:6px 2px!important;
+    font-size:11px!important;
+  }
+
+  .panel{
+    flex:0 0 auto;
+    padding:8px!important;
+    max-height:24dvh!important;
+  }
+
+  .sblock{
+    margin-bottom:8px!important;
+  }
+
+  .btn{
+    padding:7px 8px!important;
+  }
+}
+
+@media (max-height:700px){
+  .app-logo-wrap{
+    height:92px!important;
+    padding:2px 0!important;
+  }
+
+  .app-logo{
+    height:88px!important;
+    max-width:min(430px,94vw)!important;
+  }
+
+  .banner{
+    padding:4px 8px!important;
+    min-height:38px;
+  }
+
+  .panel{
+    max-height:21dvh!important;
+  }
 }
