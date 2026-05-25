@@ -122,7 +122,7 @@ function renderBanner() {
 
   if (c.audible > 0) {
     banner.className = "banner bad no-count";
-    $("headline").textContent = c.audible + " AIRCRAFT LIKELY TO AFFECT MIC";
+    $("headline").textContent = c.audible + " AIRCRAFT IN RANGE";
   } else if (c.approaching > 0) {
     banner.className = "banner warn no-count";
     $("headline").textContent = "APPROACHING AIRCRAFT";
