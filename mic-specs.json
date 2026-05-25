@@ -8,10 +8,7 @@
     "hot": 6.5,
     "tail": 35,
     "ceil": 12000,
-    "aliases": [
-      "MKH416",
-      "416"
-    ],
+    "aliases": ["MKH416", "416"],
     "status": "verified",
     "confidence": "verified-database",
     "transducerType": "RF CONDENSER",
@@ -28,10 +25,7 @@
     "hot": 7,
     "tail": 38,
     "ceil": 13000,
-    "aliases": [
-      "MKH8060",
-      "8060"
-    ],
+    "aliases": ["MKH8060", "8060"],
     "status": "verified",
     "confidence": "verified-database",
     "transducerType": "RF CONDENSER",
@@ -48,10 +42,7 @@
     "hot": 5,
     "tail": 25,
     "ceil": 10000,
-    "aliases": [
-      "MKH50",
-      "50"
-    ],
+    "aliases": ["MKH50", "50"],
     "status": "verified",
     "confidence": "verified-database",
     "transducerType": "RF CONDENSER",
@@ -68,10 +59,7 @@
     "hot": 7.5,
     "tail": 40,
     "ceil": 14000,
-    "aliases": [
-      "CMIT",
-      "CMIT5U"
-    ],
+    "aliases": ["CMIT", "CMIT5U"],
     "status": "verified",
     "confidence": "verified-database",
     "transducerType": "CONDENSER",
@@ -88,10 +76,7 @@
     "hot": 7,
     "tail": 38,
     "ceil": 13000,
-    "aliases": [
-      "Mini CMIT",
-      "MiniCMIT"
-    ],
+    "aliases": ["Mini CMIT", "MiniCMIT"],
     "status": "verified",
     "confidence": "verified-database",
     "transducerType": "CONDENSER",
@@ -108,10 +93,7 @@
     "hot": 5.5,
     "tail": 28,
     "ceil": 11000,
-    "aliases": [
-      "MK41",
-      "CMC MK41"
-    ],
+    "aliases": ["MK41", "CMC MK41"],
     "status": "verified",
     "confidence": "verified-database",
     "transducerType": "CONDENSER",
@@ -128,9 +110,7 @@
     "hot": 7.5,
     "tail": 40,
     "ceil": 14000,
-    "aliases": [
-      "4017"
-    ],
+    "aliases": ["4017"],
     "status": "verified",
     "confidence": "verified-database",
     "transducerType": "PRE-POLARIZED CONDENSER",
@@ -147,9 +127,7 @@
     "hot": 5.5,
     "tail": 28,
     "ceil": 11000,
-    "aliases": [
-      "4018"
-    ],
+    "aliases": ["4018"],
     "status": "verified",
     "confidence": "verified-database",
     "transducerType": "PRE-POLARIZED CONDENSER",
@@ -166,10 +144,7 @@
     "hot": 9,
     "tail": 50,
     "ceil": 15000,
-    "aliases": [
-      "COS11D",
-      "COS 11D"
-    ],
+    "aliases": ["COS11D", "COS 11D"],
     "status": "verified",
     "confidence": "verified-database",
     "transducerType": "SELF-POLARIZED CONDENSER",
@@ -186,9 +161,7 @@
     "hot": 10,
     "tail": 55,
     "ceil": 16000,
-    "aliases": [
-      "4060"
-    ],
+    "aliases": ["4060"],
     "status": "verified",
     "confidence": "verified-database",
     "transducerType": "PRE-POLARIZED CONDENSER",
@@ -205,9 +178,7 @@
     "hot": 9.5,
     "tail": 52,
     "ceil": 16000,
-    "aliases": [
-      "6060"
-    ],
+    "aliases": ["6060"],
     "status": "verified",
     "confidence": "verified-database",
     "transducerType": "PRE-POLARIZED CONDENSER",
@@ -224,9 +195,7 @@
     "hot": 9,
     "tail": 50,
     "ceil": 15000,
-    "aliases": [
-      "B6"
-    ],
+    "aliases": ["B6"],
     "status": "verified",
     "confidence": "verified-database",
     "transducerType": "CONDENSER",
@@ -243,9 +212,7 @@
     "hot": 8.5,
     "tail": 48,
     "ceil": 15000,
-    "aliases": [
-      "MKE2"
-    ],
+    "aliases": ["MKE2"],
     "status": "verified",
     "confidence": "verified-database",
     "transducerType": "PRE-POLARIZED CONDENSER",
@@ -262,10 +229,7 @@
     "hot": 9.5,
     "tail": 52,
     "ceil": 16000,
-    "aliases": [
-      "TwinPlex",
-      "TL47"
-    ],
+    "aliases": ["TwinPlex", "TL47"],
     "status": "verified",
     "confidence": "verified-database",
     "transducerType": "DUAL-DIAPHRAGM PREPOLARIZED CONDENSER",

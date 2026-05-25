@@ -1,56 +1,65 @@
-'use strict';
+"use strict";
 
-function removeDeprecatedMics(){
-  const banned=['atr1100','audio-technica atr1100x','atr1100x','audio technica atr1100x'];
-  const bannedNorm=banned.map(normText);
-  Object.keys(MICS).forEach(id=>{
-    const m=MICS[id]||{};
-    const values=[id,m.name,m.short,...(m.aliases||[])].map(normText);
-    if(values.some(v=>bannedNorm.includes(v)||v.includes('audiotechnicaatr1100'))){
+function removeDeprecatedMics() {
+  const banned = [
+    "atr1100",
+    "audio-technica atr1100x",
+    "atr1100x",
+    "audio technica atr1100x",
+  ];
+  const bannedNorm = banned.map(normText);
+  Object.keys(MICS).forEach((id) => {
+    const m = MICS[id] || {};
+    const values = [id, m.name, m.short, ...(m.aliases || [])].map(normText);
+    if (
+      values.some(
+        (v) => bannedNorm.includes(v) || v.includes("audiotechnicaatr1100"),
+      )
+    ) {
       delete MICS[id];
     }
   });
-  const active=(state.settings.active||[]).filter(id=>MICS[id]);
-  if(active.length!==(state.settings.active||[]).length){
-    state.settings.active=active;
-    write(STORE_SETTINGS,state.settings);
+  const active = (state.settings.active || []).filter((id) => MICS[id]);
+  if (active.length !== (state.settings.active || []).length) {
+    state.settings.active = active;
+    write(STORE_SETTINGS, state.settings);
   }
   saveCustomMics();
 }
 
-function psMicKey(s){
-  return String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+function psMicKey(s) {
+  return String(s || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "");
 }
 
-function psMicKeys(m){
+function psMicKeys(m) {
   if (!m) return [];
-  return [
-    m.name,
-    m.short,
-    ...(Array.isArray(m.aliases) ? m.aliases : [])
-  ].map(psMicKey).filter(Boolean);
+  return [m.name, m.short, ...(Array.isArray(m.aliases) ? m.aliases : [])]
+    .map(psMicKey)
+    .filter(Boolean);
 }
 
-function psMicMatchesQuery(query, m){
+function psMicMatchesQuery(query, m) {
   const q = psMicKey(query);
   if (!q || !m) return false;
   return psMicKeys(m).includes(q);
 }
 
-function psMicRecordsMatch(a, b){
+function psMicRecordsMatch(a, b) {
   const ak = psMicKeys(a);
   const bk = psMicKeys(b);
-  return ak.some(k => bk.includes(k));
+  return ak.some((k) => bk.includes(k));
 }
 
-function psExistingMicIdForRecord(record){
+function psExistingMicIdForRecord(record) {
   for (const [id, m] of Object.entries(MICS)) {
     if (psMicRecordsMatch(record, m)) return id;
   }
   return null;
 }
 
-function psUnhideMic(id){
+function psUnhideMic(id) {
   if (!id || !MICS[id]) return;
 
   const hidden = new Set(state.hiddenMics || []);
@@ -61,7 +70,7 @@ function psUnhideMic(id){
   }
 }
 
-function psRemoveDuplicateCustomMics(){
+function psRemoveDuplicateCustomMics() {
   const seenCustom = [];
 
   for (const [id, m] of Object.entries(MICS)) {
@@ -73,7 +82,7 @@ function psRemoveDuplicateCustomMics(){
       continue;
     }
 
-    const duplicatesCustom = seenCustom.some(c => psMicRecordsMatch(m, c));
+    const duplicatesCustom = seenCustom.some((c) => psMicRecordsMatch(m, c));
 
     if (duplicatesCustom) {
       delete MICS[id];
@@ -82,101 +91,109 @@ function psRemoveDuplicateCustomMics(){
     }
   }
 
-  state.settings.active = (state.settings.active || []).filter(id => MICS[id]);
+  state.settings.active = (state.settings.active || []).filter(
+    (id) => MICS[id],
+  );
   write(STORE_SETTINGS, state.settings);
   saveCustomMics();
 }
 
-function psMicHasUsableRange(m){
-  if(!m)return false;
-  if(m.rangeStatus==='pending')return false;
-  if(m.status==='spec_record')return false;
+function psMicHasUsableRange(m) {
+  if (!m) return false;
+  if (m.rangeStatus === "pending") return false;
+  if (m.status === "spec_record") return false;
 
-  const vals=[m.mic,m.hot,m.tail,m.ceil].map(Number);
-  if(vals.some(v=>!Number.isFinite(v)))return false;
+  const vals = [m.mic, m.hot, m.tail, m.ceil].map(Number);
+  if (vals.some((v) => !Number.isFinite(v))) return false;
 
-  const mic=vals[0],hot=vals[1],tail=vals[2],ceil=vals[3];
-  return mic>0 && hot>0 && hot<=mic && tail>=0 && ceil>0;
+  const mic = vals[0],
+    hot = vals[1],
+    tail = vals[2],
+    ceil = vals[3];
+  return mic > 0 && hot > 0 && hot <= mic && tail >= 0 && ceil > 0;
 }
 
-function psMicRangePending(m){
+function psMicRangePending(m) {
   return !psMicHasUsableRange(m);
 }
 
-function psSpecKey(s){
-  return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'');
+function psSpecKey(s) {
+  return String(s || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "");
 }
 
-function psSpecMsg(text, ok=false){
-  const msg=$('micSpecMsg');
-  if(!msg)return;
-  msg.classList.remove('hidden');
-  msg.className=ok?'msg ok':'msg';
-  msg.textContent=text;
+function psSpecMsg(text, ok = false) {
+  const msg = $("micSpecMsg");
+  if (!msg) return;
+  msg.classList.remove("hidden");
+  msg.className = ok ? "msg ok" : "msg";
+  msg.textContent = text;
 }
 
-function psShortFromModel(manufacturer,model){
-  const clean=String(model||'').trim();
-  return clean.slice(0,22) || String(manufacturer||'Mic').slice(0,22);
+function psShortFromModel(manufacturer, model) {
+  const clean = String(model || "").trim();
+  return clean.slice(0, 22) || String(manufacturer || "Mic").slice(0, 22);
 }
 
-function psModelFromMicRecord(m){
+function psModelFromMicRecord(m) {
   return psSpecModel(m);
 }
 
-function psSpecValue(m, keys){
+function psSpecValue(m, keys) {
   for (const k of keys) {
     const v = m && m[k];
-    if (v !== undefined && v !== null && String(v).trim() !== '') return String(v).trim();
+    if (v !== undefined && v !== null && String(v).trim() !== "")
+      return String(v).trim();
   }
-  return '';
+  return "";
 }
 
-function psSpecManufacturer(m){
-  const explicit = psSpecValue(m, ['manufacturer','brand','make']);
+function psSpecManufacturer(m) {
+  const explicit = psSpecValue(m, ["manufacturer", "brand", "make"]);
   if (explicit) return explicit;
 
-  const name = String((m && (m.name || m.short)) || '').trim();
-  if (!name) return '';
+  const name = String((m && (m.name || m.short)) || "").trim();
+  if (!name) return "";
 
   const brands = [
-    'Sennheiser',
-    'Schoeps',
-    'DPA',
-    'Sanken',
-    'Countryman',
-    'Shure',
-    'Audio-Technica',
-    'Rode',
-    'Deity',
-    'Sony',
-    'Neumann',
-    'AKG',
-    'Beyerdynamic'
+    "Sennheiser",
+    "Schoeps",
+    "DPA",
+    "Sanken",
+    "Countryman",
+    "Shure",
+    "Audio-Technica",
+    "Rode",
+    "Deity",
+    "Sony",
+    "Neumann",
+    "AKG",
+    "Beyerdynamic",
   ];
 
   for (const brand of brands) {
-    if (name.toLowerCase().startsWith(brand.toLowerCase() + ' ')) {
+    if (name.toLowerCase().startsWith(brand.toLowerCase() + " ")) {
       return brand;
     }
   }
 
-  return '';
+  return "";
 }
 
-function psSpecModel(m){
-  if (!m) return '';
+function psSpecModel(m) {
+  if (!m) return "";
 
-  const name = String(m.name || m.short || '').trim();
+  const name = String(m.name || m.short || "").trim();
   const manufacturer = psSpecManufacturer(m);
 
-  if (!name) return '';
+  if (!name) return "";
 
   if (manufacturer) {
     const lowerName = name.toLowerCase();
     const lowerBrand = manufacturer.toLowerCase();
 
-    if (lowerName.startsWith(lowerBrand + ' ')) {
+    if (lowerName.startsWith(lowerBrand + " ")) {
       return name.slice(manufacturer.length).trim();
     }
   }
@@ -184,93 +201,93 @@ function psSpecModel(m){
   return name;
 }
 
-function psApplySeedMicSpecs(){
+function psApplySeedMicSpecs() {
   const seedSpecs = {
-  "Sennheiser MKH 416": {
-    "transducerType": "RF CONDENSER",
-    "pickupPattern": "SUPERCARDIOID / LOBAR",
-    "frequencyResponse": "40 HZ - 20 KHZ",
-    "sensitivity": "25 MV/PA"
-  },
-  "Sennheiser MKH 8060": {
-    "transducerType": "RF CONDENSER",
-    "pickupPattern": "SUPERCARDIOID / LOBAR",
-    "frequencyResponse": "50 HZ - 25 KHZ",
-    "sensitivity": "-24 DBV/PA, 63 MV/PA"
-  },
-  "Sennheiser MKH 50": {
-    "transducerType": "RF CONDENSER",
-    "pickupPattern": "SUPERCARDIOID",
-    "frequencyResponse": "40 HZ - 20 KHZ",
-    "sensitivity": "25 MV/PA"
-  },
-  "Schoeps CMIT 5U": {
-    "transducerType": "CONDENSER",
-    "pickupPattern": "SUPERCARDIOID / LOBE-SHAPED",
-    "frequencyResponse": "40 HZ - 20 KHZ",
-    "sensitivity": "17 MV/PA"
-  },
-  "Schoeps MiniCMIT": {
-    "transducerType": "CONDENSER",
-    "pickupPattern": "SUPERCARDIOID / LOBE-SHAPED",
-    "frequencyResponse": "60 HZ - 20 KHZ",
-    "sensitivity": "-35 DB (V/PA), 17 MV/PA"
-  },
-  "Schoeps CMC/MK 41": {
-    "transducerType": "CONDENSER",
-    "pickupPattern": "SUPERCARDIOID",
-    "frequencyResponse": "40 HZ - 26 KHZ",
-    "sensitivity": "-36 DB (V/PA), 16 MV/PA"
-  },
-  "DPA 4017": {
-    "transducerType": "PRE-POLARIZED CONDENSER",
-    "pickupPattern": "SUPERCARDIOID / LOBE-SHAPED",
-    "frequencyResponse": "20 HZ - 20 KHZ",
-    "sensitivity": "19 MV/PA, -34.4 DB RE 1 V/PA"
-  },
-  "DPA 4018": {
-    "transducerType": "PRE-POLARIZED CONDENSER",
-    "pickupPattern": "SUPERCARDIOID",
-    "frequencyResponse": "20 HZ - 20 KHZ",
-    "sensitivity": "25 MV/PA, -32 DB RE 1 V/PA"
-  },
-  "Sanken COS-11D": {
-    "transducerType": "SELF-POLARIZED CONDENSER",
-    "pickupPattern": "OMNIDIRECTIONAL",
-    "frequencyResponse": "50 HZ - 20 KHZ",
-    "sensitivity": "NORMAL SENSITIVITY VERSION"
-  },
-  "DPA 4060": {
-    "transducerType": "PRE-POLARIZED CONDENSER",
-    "pickupPattern": "OMNIDIRECTIONAL",
-    "frequencyResponse": "20 HZ - 20 KHZ",
-    "sensitivity": "20 MV/PA, -34 DB RE 1 V/PA"
-  },
-  "DPA 6060": {
-    "transducerType": "PRE-POLARIZED CONDENSER",
-    "pickupPattern": "OMNIDIRECTIONAL",
-    "frequencyResponse": "20 HZ - 20 KHZ",
-    "sensitivity": "20 MV/PA, -34 DB RE 1 V/PA"
-  },
-  "Countryman B6": {
-    "transducerType": "CONDENSER",
-    "pickupPattern": "OMNIDIRECTIONAL",
-    "frequencyResponse": "20 HZ - 20 KHZ",
-    "sensitivity": "16.0 MV/PA, STANDARD SENSITIVITY"
-  },
-  "Sennheiser MKE 2": {
-    "transducerType": "PRE-POLARIZED CONDENSER",
-    "pickupPattern": "OMNIDIRECTIONAL",
-    "frequencyResponse": "20 HZ - 20 KHZ",
-    "sensitivity": "5 MV/PA"
-  },
-  "Shure TwinPlex TL47": {
-    "transducerType": "DUAL-DIAPHRAGM PREPOLARIZED CONDENSER",
-    "pickupPattern": "OMNIDIRECTIONAL",
-    "frequencyResponse": "20 HZ - 20 KHZ",
-    "sensitivity": "-45.0 DBV, 5.62 MV/PA"
-  }
-};
+    "Sennheiser MKH 416": {
+      transducerType: "RF CONDENSER",
+      pickupPattern: "SUPERCARDIOID / LOBAR",
+      frequencyResponse: "40 HZ - 20 KHZ",
+      sensitivity: "25 MV/PA",
+    },
+    "Sennheiser MKH 8060": {
+      transducerType: "RF CONDENSER",
+      pickupPattern: "SUPERCARDIOID / LOBAR",
+      frequencyResponse: "50 HZ - 25 KHZ",
+      sensitivity: "-24 DBV/PA, 63 MV/PA",
+    },
+    "Sennheiser MKH 50": {
+      transducerType: "RF CONDENSER",
+      pickupPattern: "SUPERCARDIOID",
+      frequencyResponse: "40 HZ - 20 KHZ",
+      sensitivity: "25 MV/PA",
+    },
+    "Schoeps CMIT 5U": {
+      transducerType: "CONDENSER",
+      pickupPattern: "SUPERCARDIOID / LOBE-SHAPED",
+      frequencyResponse: "40 HZ - 20 KHZ",
+      sensitivity: "17 MV/PA",
+    },
+    "Schoeps MiniCMIT": {
+      transducerType: "CONDENSER",
+      pickupPattern: "SUPERCARDIOID / LOBE-SHAPED",
+      frequencyResponse: "60 HZ - 20 KHZ",
+      sensitivity: "-35 DB (V/PA), 17 MV/PA",
+    },
+    "Schoeps CMC/MK 41": {
+      transducerType: "CONDENSER",
+      pickupPattern: "SUPERCARDIOID",
+      frequencyResponse: "40 HZ - 26 KHZ",
+      sensitivity: "-36 DB (V/PA), 16 MV/PA",
+    },
+    "DPA 4017": {
+      transducerType: "PRE-POLARIZED CONDENSER",
+      pickupPattern: "SUPERCARDIOID / LOBE-SHAPED",
+      frequencyResponse: "20 HZ - 20 KHZ",
+      sensitivity: "19 MV/PA, -34.4 DB RE 1 V/PA",
+    },
+    "DPA 4018": {
+      transducerType: "PRE-POLARIZED CONDENSER",
+      pickupPattern: "SUPERCARDIOID",
+      frequencyResponse: "20 HZ - 20 KHZ",
+      sensitivity: "25 MV/PA, -32 DB RE 1 V/PA",
+    },
+    "Sanken COS-11D": {
+      transducerType: "SELF-POLARIZED CONDENSER",
+      pickupPattern: "OMNIDIRECTIONAL",
+      frequencyResponse: "50 HZ - 20 KHZ",
+      sensitivity: "NORMAL SENSITIVITY VERSION",
+    },
+    "DPA 4060": {
+      transducerType: "PRE-POLARIZED CONDENSER",
+      pickupPattern: "OMNIDIRECTIONAL",
+      frequencyResponse: "20 HZ - 20 KHZ",
+      sensitivity: "20 MV/PA, -34 DB RE 1 V/PA",
+    },
+    "DPA 6060": {
+      transducerType: "PRE-POLARIZED CONDENSER",
+      pickupPattern: "OMNIDIRECTIONAL",
+      frequencyResponse: "20 HZ - 20 KHZ",
+      sensitivity: "20 MV/PA, -34 DB RE 1 V/PA",
+    },
+    "Countryman B6": {
+      transducerType: "CONDENSER",
+      pickupPattern: "OMNIDIRECTIONAL",
+      frequencyResponse: "20 HZ - 20 KHZ",
+      sensitivity: "16.0 MV/PA, STANDARD SENSITIVITY",
+    },
+    "Sennheiser MKE 2": {
+      transducerType: "PRE-POLARIZED CONDENSER",
+      pickupPattern: "OMNIDIRECTIONAL",
+      frequencyResponse: "20 HZ - 20 KHZ",
+      sensitivity: "5 MV/PA",
+    },
+    "Shure TwinPlex TL47": {
+      transducerType: "DUAL-DIAPHRAGM PREPOLARIZED CONDENSER",
+      pickupPattern: "OMNIDIRECTIONAL",
+      frequencyResponse: "20 HZ - 20 KHZ",
+      sensitivity: "-45.0 DBV, 5.62 MV/PA",
+    },
+  };
 
   for (const m of Object.values(MICS)) {
     if (!m || !m.name) continue;
@@ -278,247 +295,279 @@ function psApplySeedMicSpecs(){
     if (!spec) continue;
 
     for (const [k, v] of Object.entries(spec)) {
-      if (m[k] === undefined || m[k] === null || String(m[k]).trim() === '') {
+      if (m[k] === undefined || m[k] === null || String(m[k]).trim() === "") {
         m[k] = v;
       }
     }
   }
 }
 
-function psOpenMicSpecForm(id=''){
-  if(typeof psApplySeedMicSpecs==='function')psApplySeedMicSpecs();
+function psOpenMicSpecForm(id = "") {
+  if (typeof psApplySeedMicSpecs === "function") psApplySeedMicSpecs();
 
-  const form=$('micSpecForm');
-  if(!form)return;
+  const form = $("micSpecForm");
+  if (!form) return;
 
-  form.classList.remove('hidden');
-  form.dataset.initializedClosed='1';
-  form.dataset.currentEditMic=id||'';
+  form.classList.remove("hidden");
+  form.dataset.initializedClosed = "1";
+  form.dataset.currentEditMic = id || "";
 
-  $('micSpecEditId').value=id||'';
+  $("micSpecEditId").value = id || "";
 
-  const m=id&&MICS[id]?MICS[id]:null;
+  const m = id && MICS[id] ? MICS[id] : null;
 
   [
-    'specManufacturer',
-    'specModel',
-    'specTransducer',
-    'specPattern',
-    'specFreq',
-    'specSensitivity'
-  ].forEach(fieldId=>{
-    if($(fieldId))$(fieldId).value='';
+    "specManufacturer",
+    "specModel",
+    "specTransducer",
+    "specPattern",
+    "specFreq",
+    "specSensitivity",
+  ].forEach((fieldId) => {
+    if ($(fieldId)) $(fieldId).value = "";
   });
 
-  $('specManufacturer').value=m?psSpecManufacturer(m):'';
-  $('specModel').value=m?psSpecModel(m):'';
+  $("specManufacturer").value = m ? psSpecManufacturer(m) : "";
+  $("specModel").value = m ? psSpecModel(m) : "";
 
-  $('specTransducer').value=m?psSpecValue(m,[
-    'transducerType',
-    'transducer',
-    'capsuleType',
-    'principle'
-  ]):'';
+  $("specTransducer").value = m
+    ? psSpecValue(m, [
+        "transducerType",
+        "transducer",
+        "capsuleType",
+        "principle",
+      ])
+    : "";
 
-  $('specPattern').value=m?psSpecValue(m,[
-    'pickupPattern',
-    'polarPattern',
-    'pattern'
-  ]):'';
+  $("specPattern").value = m
+    ? psSpecValue(m, ["pickupPattern", "polarPattern", "pattern"])
+    : "";
 
-  $('specFreq').value=m?psSpecValue(m,[
-    'frequencyResponse',
-    'freqResponse',
-    'frequency'
-  ]):'';
+  $("specFreq").value = m
+    ? psSpecValue(m, ["frequencyResponse", "freqResponse", "frequency"])
+    : "";
 
-  $('specSensitivity').value=m?psSpecValue(m,[
-    'sensitivity',
-    'sensitivityMvPa',
-    'sensitivityMVPA'
-  ]):'';
+  $("specSensitivity").value = m
+    ? psSpecValue(m, ["sensitivity", "sensitivityMvPa", "sensitivityMVPA"])
+    : "";
 
-  if($('micSpecSave'))$('micSpecSave').textContent=id?'SAVE MIC SPECS':'ADD MIC';
+  if ($("micSpecSave"))
+    $("micSpecSave").textContent = id ? "SAVE MIC SPECS" : "ADD MIC";
 
-  psSpecMsg(id?'EDITING '+(m?.name||m?.short||'MIC')+'.':'ENTER MANUFACTURER SPEC VALUES.', true);
-  form.scrollIntoView({block:'nearest',behavior:'smooth'});
+  psSpecMsg(
+    id
+      ? "EDITING " + (m?.name || m?.short || "MIC") + "."
+      : "ENTER MANUFACTURER SPEC VALUES.",
+    true,
+  );
+  form.scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
 
-function psSaveMicSpec(){
-  const editId=$('micSpecEditId').value.trim();
+function psSaveMicSpec() {
+  const editId = $("micSpecEditId").value.trim();
 
-  const manufacturer=$('specManufacturer').value.trim();
-  const model=$('specModel').value.trim();
-  const transducerType=$('specTransducer').value.trim();
-  const pickupPattern=$('specPattern').value.trim();
-  const frequencyResponse=$('specFreq').value.trim();
-  const sensitivity=$('specSensitivity').value.trim();
+  const manufacturer = $("specManufacturer").value.trim();
+  const model = $("specModel").value.trim();
+  const transducerType = $("specTransducer").value.trim();
+  const pickupPattern = $("specPattern").value.trim();
+  const frequencyResponse = $("specFreq").value.trim();
+  const sensitivity = $("specSensitivity").value.trim();
 
-  if(!manufacturer||!model||!transducerType||!pickupPattern||!frequencyResponse||!sensitivity){
-    psSpecMsg('MISSING REQUIRED FIELD.');
+  if (
+    !manufacturer ||
+    !model ||
+    !transducerType ||
+    !pickupPattern ||
+    !frequencyResponse ||
+    !sensitivity
+  ) {
+    psSpecMsg("MISSING REQUIRED FIELD.");
     return;
   }
 
-  const baseName=manufacturer+' '+model;
-  const editingBuiltIn=editId && MICS[editId] && !editId.startsWith('custom_');
+  const baseName = manufacturer + " " + model;
+  const editingBuiltIn =
+    editId && MICS[editId] && !editId.startsWith("custom_");
 
-  const record={
+  const record = {
     manufacturer,
-    name:baseName,
-    displayName:editingBuiltIn ? baseName+' (CUSTOM)' : baseName,
-    short:psShortFromModel(manufacturer,model),
-    kind:pickupPattern+' '+transducerType,
+    name: baseName,
+    displayName: editingBuiltIn ? baseName + " (CUSTOM)" : baseName,
+    short: psShortFromModel(manufacturer, model),
+    kind: pickupPattern + " " + transducerType,
     transducerType,
     pickupPattern,
     frequencyResponse,
     sensitivity,
-    aliases:[],
-    status:'spec_record',
-    confidence:'manual-spec-entry',
-    rangeStatus:'pending'
+    aliases: [],
+    status: "spec_record",
+    confidence: "manual-spec-entry",
+    rangeStatus: "pending",
   };
 
-  const recordKey=psSpecKey(record.name);
+  const recordKey = psSpecKey(record.name);
 
-  let id='';
+  let id = "";
 
-  if(editId && editId.startsWith('custom_') && MICS[editId]){
+  if (editId && editId.startsWith("custom_") && MICS[editId]) {
     // Editing an existing manual/custom mic updates that custom record in place.
-    id=editId;
-    record.baseMicId=MICS[editId].baseMicId||'';
-    if(record.baseMicId){
-      record.displayName=baseName+' (CUSTOM)';
+    id = editId;
+    record.baseMicId = MICS[editId].baseMicId || "";
+    if (record.baseMicId) {
+      record.displayName = baseName + " (CUSTOM)";
     }
-  }else if(editingBuiltIn){
+  } else if (editingBuiltIn) {
     // Editing a built-in mic creates/updates one local copy.
-    record.baseMicId=editId;
+    record.baseMicId = editId;
 
-    const existingCopy=Object.entries(MICS).find(([existingId,m])=>
-      existingId.startsWith('custom_') &&
-      m &&
-      m.baseMicId===editId
+    const existingCopy = Object.entries(MICS).find(
+      ([existingId, m]) =>
+        existingId.startsWith("custom_") && m && m.baseMicId === editId,
     );
 
-    id=existingCopy
+    id = existingCopy
       ? existingCopy[0]
-      : 'custom_spec_'+recordKey.slice(0,32)+'_'+Date.now().toString(36);
-  }else{
+      : "custom_spec_" + recordKey.slice(0, 32) + "_" + Date.now().toString(36);
+  } else {
     // New manual mic. Block exact duplicate custom records, but do not block built-ins.
-    const duplicateCustom=Object.entries(MICS).find(([existingId,m])=>
-      existingId.startsWith('custom_') &&
-      m &&
-      psSpecKey(m.name)===recordKey &&
-      existingId!==editId
+    const duplicateCustom = Object.entries(MICS).find(
+      ([existingId, m]) =>
+        existingId.startsWith("custom_") &&
+        m &&
+        psSpecKey(m.name) === recordKey &&
+        existingId !== editId,
     );
 
-    if(duplicateCustom){
-      psSpecMsg('MIC ALREADY EXISTS.');
+    if (duplicateCustom) {
+      psSpecMsg("MIC ALREADY EXISTS.");
       return;
     }
 
-    id='custom_spec_'+recordKey.slice(0,32)+'_'+Date.now().toString(36);
+    id =
+      "custom_spec_" + recordKey.slice(0, 32) + "_" + Date.now().toString(36);
   }
 
-  MICS[id]=record;
+  MICS[id] = record;
   saveCustomMics();
 
   // Keep built-in originals untouched and visible.
   // Pending spec records do not participate in radar range calculations.
-  state.settings.package='custom';
-  state.settings.active=(state.settings.active||[]).filter(mid=>MICS[mid]&&psMicHasUsableRange(MICS[mid]));
-  write(STORE_SETTINGS,state.settings);
+  state.settings.package = "custom";
+  state.settings.active = (state.settings.active || []).filter(
+    (mid) => MICS[mid] && psMicHasUsableRange(MICS[mid]),
+  );
+  write(STORE_SETTINGS, state.settings);
 
-  psSpecMsg(editingBuiltIn ? 'CUSTOM MIC COPY SAVED. ORIGINAL KEPT.' : 'MIC SPECS SAVED. RANGE PENDING.', true);
+  psSpecMsg(
+    editingBuiltIn
+      ? "CUSTOM MIC COPY SAVED. ORIGINAL KEPT."
+      : "MIC SPECS SAVED. RANGE PENDING.",
+    true,
+  );
 
   [
-    'specManufacturer',
-    'specModel',
-    'specTransducer',
-    'specPattern',
-    'specFreq',
-    'specSensitivity'
-  ].forEach(fieldId=>{ if($(fieldId))$(fieldId).value=''; });
+    "specManufacturer",
+    "specModel",
+    "specTransducer",
+    "specPattern",
+    "specFreq",
+    "specSensitivity",
+  ].forEach((fieldId) => {
+    if ($(fieldId)) $(fieldId).value = "";
+  });
 
-  $('micSpecEditId').value='';
-  $('micSpecForm').classList.add('hidden');
+  $("micSpecEditId").value = "";
+  $("micSpecForm").classList.add("hidden");
 
   render();
-  if(state.loc)fetchFeed();
+  if (state.loc) fetchFeed();
 }
 
-function psCancelMicSpec(){
-  const form=$('micSpecForm');
-  if(!form)return;
+function psCancelMicSpec() {
+  const form = $("micSpecForm");
+  if (!form) return;
 
   [
-    'specManufacturer',
-    'specModel',
-    'specTransducer',
-    'specPattern',
-    'specFreq',
-    'specSensitivity'
-  ].forEach(id=>{ if($(id)) $(id).value=''; });
+    "specManufacturer",
+    "specModel",
+    "specTransducer",
+    "specPattern",
+    "specFreq",
+    "specSensitivity",
+  ].forEach((id) => {
+    if ($(id)) $(id).value = "";
+  });
 
-  $('micSpecEditId').value='';
-  form.classList.add('hidden');
+  $("micSpecEditId").value = "";
+  form.classList.add("hidden");
 
-  const msg=$('micSpecMsg');
-  if(msg){
-    msg.classList.add('hidden');
-    msg.textContent='';
+  const msg = $("micSpecMsg");
+  if (msg) {
+    msg.classList.add("hidden");
+    msg.textContent = "";
   }
 }
 
-function psWireMicSpecEditor(){
-  const add=$('micSpecAddToggle');
-  const form=$('micSpecForm');
-  const save=$('micSpecSave');
-  const cancel=$('micSpecCancel');
-  const grid=$('chipGrid');
+function psWireMicSpecEditor() {
+  const add = $("micSpecAddToggle");
+  const form = $("micSpecForm");
+  const save = $("micSpecSave");
+  const cancel = $("micSpecCancel");
+  const grid = $("chipGrid");
 
-  if(form && !form.dataset.initializedClosed){
-    form.classList.add('hidden');
-    form.dataset.initializedClosed='1';
+  if (form && !form.dataset.initializedClosed) {
+    form.classList.add("hidden");
+    form.dataset.initializedClosed = "1";
   }
 
-  if(add && !add.dataset.specAddWired){
-    add.dataset.specAddWired='1';
-    add.onclick=()=>{
-      psOpenMicSpecForm('');
+  if (add && !add.dataset.specAddWired) {
+    add.dataset.specAddWired = "1";
+    add.onclick = () => {
+      psOpenMicSpecForm("");
     };
   }
 
-  if(save && !save.dataset.specSaveWired){
-    save.dataset.specSaveWired='1';
-    save.onclick=psSaveMicSpec;
+  if (save && !save.dataset.specSaveWired) {
+    save.dataset.specSaveWired = "1";
+    save.onclick = psSaveMicSpec;
   }
 
-  if(cancel && !cancel.dataset.specCancelWired){
-    cancel.dataset.specCancelWired='1';
-    cancel.onclick=psCancelMicSpec;
+  if (cancel && !cancel.dataset.specCancelWired) {
+    cancel.dataset.specCancelWired = "1";
+    cancel.onclick = psCancelMicSpec;
   }
 
-  if(grid && !grid.dataset.specEditorWired){
-    grid.dataset.specEditorWired='1';
+  if (grid && !grid.dataset.specEditorWired) {
+    grid.dataset.specEditorWired = "1";
 
-    grid.addEventListener('click',e=>{
-      const edit=e.target.closest('[data-edit-mic]');
-      if(edit){
-        e.preventDefault();
-        e.stopPropagation();
-        psOpenMicSpecForm(edit.dataset.editMic);
-        return;
-      }
+    grid.addEventListener(
+      "click",
+      (e) => {
+        const edit = e.target.closest("[data-edit-mic]");
+        if (edit) {
+          e.preventDefault();
+          e.stopPropagation();
+          psOpenMicSpecForm(edit.dataset.editMic);
+          return;
+        }
 
-      const del=e.target.closest('[data-delete-mic]');
-      if(del)return;
+        const del = e.target.closest("[data-delete-mic]");
+        if (del) return;
 
-      const chip=e.target.closest('.chip');
-      if(chip && chip.dataset.mic && MICS[chip.dataset.mic] && typeof psMicRangePending==='function' && psMicRangePending(MICS[chip.dataset.mic])){
-        e.preventDefault();
-        e.stopPropagation();
-        psOpenMicSpecForm(chip.dataset.mic);
-      }
-    },true);
+        const chip = e.target.closest(".chip");
+        if (
+          chip &&
+          chip.dataset.mic &&
+          MICS[chip.dataset.mic] &&
+          typeof psMicRangePending === "function" &&
+          psMicRangePending(MICS[chip.dataset.mic])
+        ) {
+          e.preventDefault();
+          e.stopPropagation();
+          psOpenMicSpecForm(chip.dataset.mic);
+        }
+      },
+      true,
+    );
   }
 }

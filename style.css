@@ -1,355 +1,881 @@
-*{box-sizing:border-box}
-  html,body{margin:0;padding:0;background:#030c08;color:#b8ccc2;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif;min-height:100%;overflow-x:hidden}
-  body{min-height:100dvh;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
-  button,input,select{font:inherit}
-  button{cursor:pointer}
-  .app{
-    width:100vw;
-    max-width:980px;
-    min-height:100dvh;
-    margin:0 auto;
-    padding:max(6px,env(safe-area-inset-top)) 6px max(6px,env(safe-area-inset-bottom));
-    display:flex;
-    flex-direction:column;
-    gap:6px;
-  }
-  .meta{display:none}
-  .app-title{
-    min-height:44px;display:flex;align-items:center;justify-content:center;text-align:center;
-    font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif;
-    font-size:17px;line-height:22px;font-weight:600;letter-spacing:-.02em;color:#eef7f1;
-    padding:0 12px;user-select:none;
-  }
-
-  .banner{
-    border:1px solid #506070;border-radius:10px;padding:10px 12px;
-    background:rgba(30,40,50,.28);
-    display:grid;
-    grid-template-columns:minmax(0,1fr) auto;
-    gap:4px 12px;
-    align-items:center;
-    min-height:clamp(74px,10.5dvh,104px);
-    animation:none!important;
-    transition:none!important;
-  }
-  .banner.clear{border-color:#00d97a;background:rgba(0,60,30,.24)}
-  .banner.warning{border-color:#ffb020;background:rgba(88,56,0,.28)}
-  .banner.bad{border-color:#ff4040;background:rgba(92,10,10,.36)}
-  .banner.no-count{grid-template-columns:1fr}
-  .banner.no-count .headline{text-align:center;justify-self:center;width:100%}
-  .banner.no-count .countBox{display:none}
-  .headline{
-    font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Helvetica Neue',Arial,sans-serif;
-    font-size:clamp(29px,7.2vw,54px);font-weight:800;
-    line-height:1.04;letter-spacing:-.035em;margin:0;color:#90a0b0;white-space:nowrap;overflow:visible;text-overflow:clip;min-width:0;
-    align-self:center;
-  }
-  .clear .headline{color:#00ff95;text-shadow:none}
-  .warning .headline{color:#ffcc44;text-shadow:none}
-  .bad .headline{color:#ff5858;text-shadow:none}
-  .countBox{text-align:right;min-width:70px;display:flex;align-items:center;justify-content:flex-end;align-self:center}
-  .bigCount{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Helvetica Neue',Arial,sans-serif;font-size:clamp(48px,12.5vw,86px);font-weight:800;line-height:1;letter-spacing:-.04em;color:#e9f8ef}
-  .clear .bigCount{color:#00ff95}.warning .bigCount{color:#ffcc44}.bad .bigCount{color:#ff5858}
-  .countLabel{display:none}
-  .statusLine{display:none}
-
-  .radar-wrap{
-    flex:1;min-height:280px;border:1px solid #0e2418;border-radius:12px;background:#020907;
-    padding:4px;display:flex;align-items:center;justify-content:center;overflow:hidden
-  }
-  canvas{display:block;max-width:100%}
-
-  .tabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
-  .tab{
-    border:1px solid #1a3a2a;border-radius:5px;background:transparent;color:#90a898;padding:10px 4px;
-    font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif;font-weight:700;letter-spacing:.11em;text-transform:uppercase;font-size:clamp(10px,2.2vw,13px)
-  }
-  .tab.active{border-color:#d4a017;color:#f0d070;background:rgba(212,160,23,.08)}
-  .tab:active{border-color:#d4a017;color:#d4a017}
-  .panel{
-    border:1px solid #0e2418;border-radius:10px;background:rgba(10,25,18,.78);padding:12px;
-    max-height:46dvh;overflow:auto
-  }
-  .hidden{display:none!important}
-  .title{
-    font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:13px;letter-spacing:.16em;
-    text-transform:uppercase;color:#d4a017;margin-bottom:9px
-  }
-  .sblock{margin-bottom:14px}.sblock:last-child{margin-bottom:0}
-  .slabel{display:flex;justify-content:space-between;align-items:baseline;color:#8aa0a0;font-size:10px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px}
-  .slabel b{color:#d4a017}
-  .select,.input{
-    width:100%;background:#050e08;border:1px solid #1a3a2a;color:#dcebe4;padding:10px;border-radius:5px;font-size:12px
-  }
-  .input{flex:1;min-width:0}
-  .select:focus,.input:focus{outline:none;border-color:#d4a017}
-  .row{display:flex;gap:6px}
-  .btn{
-    border:1px solid #1a3a2a;border-radius:5px;background:transparent;color:#90a898;padding:9px 10px;
-    font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif;font-weight:700;letter-spacing:.11em;text-transform:uppercase;font-size:12px
-  }
-  .btn.primary{background:#d4a017;border-color:#d4a017;color:#06100a}
-  .btn.green{border-color:#00d97a;color:#00ff95;background:rgba(0,217,122,.1)}
-  .btn.red{border-color:#ff4040;color:#ff8080}
-  .btn:disabled{opacity:.42}
-  .chips{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-  .chip{text-align:left;background:#050e08;border:1px solid #1a3a2a;border-radius:6px;color:#9fb8a7;padding:8px 34px 8px 8px;font-size:10px;line-height:1.22;min-height:44px;position:relative;overflow:hidden}
-  .chip.active{border-color:#d4a017;color:#f0d070;background:rgba(212,160,23,.13)}
-  .chip small{display:block;color:#607868;text-transform:uppercase;letter-spacing:.08em;margin-top:2px;font-size:8px}
-  .chip-x{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:38px;height:22px;border:1px solid #31483a;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#789080;background:rgba(0,0,0,.25);font-size:9px;line-height:1;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','SF Pro Display','Helvetica Neue',Arial,sans-serif;font-weight:700;letter-spacing:.04em}
-  .chip-x:active{border-color:#d4a017;color:#f0d070}
-  .custom-row{align-items:stretch}
-  .manual-mic{border-top:1px solid rgba(26,58,42,.45);padding-top:10px}
-  .lookup-note{font-size:10px;color:#607868;letter-spacing:.04em;line-height:1.4;margin-top:6px}
-  .range-read{font-size:11px;color:#dcebe4;line-height:1.55}
-  .range-read:empty{display:none}
-  .range-read b{color:#f0c85a}
-  .range-line{display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid rgba(26,58,42,.45);padding:5px 0}
-  .range-line:last-child{border-bottom:0}
-  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:#d4a017}
-
-  .or{display:flex;align-items:center;gap:8px;margin:10px 0 7px;color:#506860;font-size:9px;letter-spacing:.18em;text-transform:uppercase}
-  .or:before,.or:after{content:"";height:1px;background:rgba(26,58,42,.65);flex:1}
-  .msg{font-size:11px;line-height:1.45;color:#ff9060;margin-top:6px}
-  .msg.ok{color:#90c8a0}
-  .results{margin-top:7px;border:1px solid #1a3a2a;border-radius:5px;overflow:hidden}
-  .result{display:block;width:100%;text-align:left;background:transparent;border:0;border-bottom:1px solid rgba(26,58,42,.55);color:#c8d8cc;padding:9px 10px}
-  .result:last-child{border-bottom:0}
-  .rmain{font-size:12px;color:#e8f0e8}.rsub{font-size:10px;color:#7a8f80;margin-top:2px}
-  .cities{display:flex;flex-wrap:wrap;gap:6px}
-  .city{padding:6px 10px;border:1px solid #1a3a2a;border-radius:3px;background:transparent;color:#90a898;font-size:11px}
-
-  .err{color:#ffb0b0;border-color:#ff4040;background:rgba(60,10,10,.5);font-size:11px;line-height:1.45}
-  .planeList{display:grid;gap:6px}
-  .planeCard{border:1px solid #0e2418;border-left:3px solid #3a4850;border-radius:6px;background:rgba(10,20,15,.7);padding:9px 10px;font-size:11px}
-  .planeCard.audible{border-left-color:#ff4040;background:rgba(50,10,10,.5)}
-  .planeCard.approaching{border-left-color:#ffb020;background:rgba(40,25,0,.5)}
-  .planeCard.clear{border-left-color:#00d97a}
-  .planeHead{display:flex;justify-content:space-between;gap:8px;align-items:baseline;margin-bottom:5px}
-  .callsign{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:18px;color:#e0eae0}
-  .pill{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:10px;letter-spacing:.12em;padding:2px 8px;border-radius:3px;text-transform:uppercase;white-space:nowrap;background:#3a4850;color:#90a8b0}
-  .audible .pill{background:#ff4040;color:white}.approaching .pill{background:#ffb020;color:#1a0e00}.clear .pill{background:#00d97a;color:#001810}
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px}
-  .grid div{display:flex;justify-content:space-between;gap:8px}
-  .lbl{color:#607868}.val{color:#c8d8cc;font-weight:500}
-  .empty{text-align:center;padding:18px;color:#405850;font-size:11px;letter-spacing:.1em;text-transform:uppercase}
-
-  @media (max-width:520px){
-    .app{padding-left:4px;padding-right:4px;gap:5px}
-    .banner{padding:8px 10px}
-    .headline{font-size:clamp(25px,7.2vw,39px)}
-    .bigCount{font-size:clamp(52px,13vw,76px)}
-    .chips{grid-template-columns:1fr}
-    .tabs{gap:4px}
-  }
-  @media (max-height:740px){
-    .banner{padding:7px 10px}
-    .bigCount{font-size:clamp(46px,12vw,72px)}
-    .radar-wrap{min-height:240px}
-    .tab{padding:8px 3px}
-  }
-
-  .banner{grid-template-columns:1fr!important;}
-  .countBox{display:none!important;}
-  .headline{width:100%!important;max-width:100%!important;text-align:left;overflow:visible!important;text-overflow:clip!important;}
-  .banner.clear .headline{text-align:center;}
-
-  .banner{grid-template-columns:1fr!important;display:flex!important;align-items:center!important;justify-content:flex-start!important;}
-  .countBox{display:none!important;}
-  .headline{width:100%!important;max-width:100%!important;text-align:left;overflow:visible!important;text-overflow:clip!important;font-size:clamp(32px,7.4vw,88px)!important;line-height:.92!important;}
-  .banner.clear{justify-content:center!important;}
-  .banner.clear .headline{text-align:center;font-size:clamp(52px,9.8vw,104px)!important;}
-
-  .banner{
-    grid-template-columns:1fr!important;
-    display:flex!important;
-    align-items:center!important;
-    justify-content:center!important;
-    text-align:center!important;
-    overflow:hidden!important;
-  }
-  .countBox{display:none!important;}
-  .headline{
-    width:100%!important;
-    max-width:100%!important;
-    text-align:center!important;
-    overflow:visible!important;
-    text-overflow:clip!important;
-    white-space:nowrap!important;
-    line-height:.92!important;
-  }
-
-  .mic-spec-editor input{margin-bottom:6px}
-  .chip{padding-right:96px}
-  .chip.pending{opacity:.78}
-  .chip-edit{
-    position:absolute;right:48px;top:50%;transform:translateY(-50%);
-    width:42px;height:22px;border:1px solid #31483a;border-radius:12px;
-    display:flex;align-items:center;justify-content:center;
-    color:#789080;background:rgba(0,0,0,.25);font-size:9px;line-height:1;
-    font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','SF Pro Display','Helvetica Neue',Arial,sans-serif;font-weight:700;letter-spacing:.04em
-  }
-  .chip-edit:active{border-color:#d4a017;color:#f0d070}
-
-
-  /* PLANE SOUND UPPERCASE UI */
-  body, button, input, select, textarea, .headline, .app-title, .chip, .tab, .btn, .msg, .title {
-    text-transform: uppercase!important;
-  }
-
-  /* HIDE OLD MIC SEARCH */
-  #customMicName,
-  #customMicBtn,
-  #customMicMsg,
-  #results {
-    display:none!important;
-  }
-
-  .app-logo-wrap{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    height:116px;
-    padding:8px 0 6px;
-    box-sizing:border-box;
-  }
-
-  .app-logo{
-    display:block;
-    height:104px;
-    width:auto;
-    max-width:min(420px,82vw);
-    object-fit:contain;
-    filter:drop-shadow(0 0 12px rgba(0,217,122,.34));
-  }
-
-  @media (max-height:760px){
-    .app-logo-wrap{
-      height:82px;
-      padding:5px 0 4px;
-    }
-
-    .app-logo{
-      height:74px;
-      max-width:min(330px,76vw);
-    }
-  }
-
-.privacy-link{
-  position:absolute;
-  top:max(6px,env(safe-area-inset-top));
-  right:10px;
-  z-index:5;
-  font-size:11px;
-  line-height:14px;
-  opacity:.72;
+* {
+  box-sizing: border-box;
 }
-.privacy-link a{
-  color:#b8ccc2;
-  text-decoration:none;
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: #030c08;
+  color: #b8ccc2;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial,
+    sans-serif;
+  min-height: 100%;
+  overflow-x: hidden;
 }
-.privacy-link a:active{
-  color:#00d97a;
+body {
+  min-height: 100dvh;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+}
+button,
+input,
+select {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+}
+.app {
+  width: 100vw;
+  max-width: 980px;
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: max(6px, env(safe-area-inset-top)) 6px
+    max(6px, env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.meta {
+  display: none;
+}
+.app-title {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial,
+    sans-serif;
+  font-size: 17px;
+  line-height: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #eef7f1;
+  padding: 0 12px;
+  user-select: none;
 }
 
+.banner {
+  border: 1px solid #506070;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: rgba(30, 40, 50, 0.28);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  align-items: center;
+  min-height: clamp(74px, 10.5dvh, 104px);
+  animation: none !important;
+  transition: none !important;
+}
+.banner.clear {
+  border-color: #00d97a;
+  background: rgba(0, 60, 30, 0.24);
+}
+.banner.warning {
+  border-color: #ffb020;
+  background: rgba(88, 56, 0, 0.28);
+}
+.banner.bad {
+  border-color: #ff4040;
+  background: rgba(92, 10, 10, 0.36);
+}
+.banner.no-count {
+  grid-template-columns: 1fr;
+}
+.banner.no-count .headline {
+  text-align: center;
+  justify-self: center;
+  width: 100%;
+}
+.banner.no-count .countBox {
+  display: none;
+}
+.headline {
+  font-family:
+    -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+    "Helvetica Neue", Arial, sans-serif;
+  font-size: clamp(29px, 7.2vw, 54px);
+  font-weight: 800;
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+  margin: 0;
+  color: #90a0b0;
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+  min-width: 0;
+  align-self: center;
+}
+.clear .headline {
+  color: #00ff95;
+  text-shadow: none;
+}
+.warning .headline {
+  color: #ffcc44;
+  text-shadow: none;
+}
+.bad .headline {
+  color: #ff5858;
+  text-shadow: none;
+}
+.countBox {
+  text-align: right;
+  min-width: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  align-self: center;
+}
+.bigCount {
+  font-family:
+    -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+    "Helvetica Neue", Arial, sans-serif;
+  font-size: clamp(48px, 12.5vw, 86px);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: #e9f8ef;
+}
+.clear .bigCount {
+  color: #00ff95;
+}
+.warning .bigCount {
+  color: #ffcc44;
+}
+.bad .bigCount {
+  color: #ff5858;
+}
+.countLabel {
+  display: none;
+}
+.statusLine {
+  display: none;
+}
 
+.radar-wrap {
+  flex: 1;
+  min-height: 280px;
+  border: 1px solid #0e2418;
+  border-radius: 12px;
+  background: #020907;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+.tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px;
+}
+.tab {
+  border: 1px solid #1a3a2a;
+  border-radius: 5px;
+  background: transparent;
+  color: #90a898;
+  padding: 10px 4px;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial,
+    sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  font-size: clamp(10px, 2.2vw, 13px);
+}
+.tab.active {
+  border-color: #d4a017;
+  color: #f0d070;
+  background: rgba(212, 160, 23, 0.08);
+}
+.tab:active {
+  border-color: #d4a017;
+  color: #d4a017;
+}
+.panel {
+  border: 1px solid #0e2418;
+  border-radius: 10px;
+  background: rgba(10, 25, 18, 0.78);
+  padding: 12px;
+  max-height: 46dvh;
+  overflow: auto;
+}
+.hidden {
+  display: none !important;
+}
+.title {
+  font-family:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial,
+    sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #d4a017;
+  margin-bottom: 9px;
+}
+.sblock {
+  margin-bottom: 14px;
+}
+.sblock:last-child {
+  margin-bottom: 0;
+}
+.slabel {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  color: #8aa0a0;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+.slabel b {
+  color: #d4a017;
+}
+.select,
+.input {
+  width: 100%;
+  background: #050e08;
+  border: 1px solid #1a3a2a;
+  color: #dcebe4;
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 12px;
+}
+.input {
+  flex: 1;
+  min-width: 0;
+}
+.select:focus,
+.input:focus {
+  outline: none;
+  border-color: #d4a017;
+}
+.row {
+  display: flex;
+  gap: 6px;
+}
+.btn {
+  border: 1px solid #1a3a2a;
+  border-radius: 5px;
+  background: transparent;
+  color: #90a898;
+  padding: 9px 10px;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial,
+    sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+.btn.primary {
+  background: #d4a017;
+  border-color: #d4a017;
+  color: #06100a;
+}
+.btn.green {
+  border-color: #00d97a;
+  color: #00ff95;
+  background: rgba(0, 217, 122, 0.1);
+}
+.btn.red {
+  border-color: #ff4040;
+  color: #ff8080;
+}
+.btn:disabled {
+  opacity: 0.42;
+}
+.chips {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.chip {
+  text-align: left;
+  background: #050e08;
+  border: 1px solid #1a3a2a;
+  border-radius: 6px;
+  color: #9fb8a7;
+  padding: 8px 34px 8px 8px;
+  font-size: 10px;
+  line-height: 1.22;
+  min-height: 44px;
+  position: relative;
+  overflow: hidden;
+}
+.chip.active {
+  border-color: #d4a017;
+  color: #f0d070;
+  background: rgba(212, 160, 23, 0.13);
+}
+.chip small {
+  display: block;
+  color: #607868;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 2px;
+  font-size: 8px;
+}
+.chip-x {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 38px;
+  height: 22px;
+  border: 1px solid #31483a;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #789080;
+  background: rgba(0, 0, 0, 0.25);
+  font-size: 9px;
+  line-height: 1;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+    "Helvetica Neue", Arial, sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.chip-x:active {
+  border-color: #d4a017;
+  color: #f0d070;
+}
+.custom-row {
+  align-items: stretch;
+}
+.manual-mic {
+  border-top: 1px solid rgba(26, 58, 42, 0.45);
+  padding-top: 10px;
+}
+.lookup-note {
+  font-size: 10px;
+  color: #607868;
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+  margin-top: 6px;
+}
+.range-read {
+  font-size: 11px;
+  color: #dcebe4;
+  line-height: 1.55;
+}
+.range-read:empty {
+  display: none;
+}
+.range-read b {
+  color: #f0c85a;
+}
+.range-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px solid rgba(26, 58, 42, 0.45);
+  padding: 5px 0;
+}
+.range-line:last-child {
+  border-bottom: 0;
+}
+.dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+  background: #d4a017;
+}
+
+.or {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 7px;
+  color: #506860;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.or:before,
+.or:after {
+  content: "";
+  height: 1px;
+  background: rgba(26, 58, 42, 0.65);
+  flex: 1;
+}
+.msg {
+  font-size: 11px;
+  line-height: 1.45;
+  color: #ff9060;
+  margin-top: 6px;
+}
+.msg.ok {
+  color: #90c8a0;
+}
+.results {
+  margin-top: 7px;
+  border: 1px solid #1a3a2a;
+  border-radius: 5px;
+  overflow: hidden;
+}
+.result {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid rgba(26, 58, 42, 0.55);
+  color: #c8d8cc;
+  padding: 9px 10px;
+}
+.result:last-child {
+  border-bottom: 0;
+}
+.rmain {
+  font-size: 12px;
+  color: #e8f0e8;
+}
+.rsub {
+  font-size: 10px;
+  color: #7a8f80;
+  margin-top: 2px;
+}
+.cities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.city {
+  padding: 6px 10px;
+  border: 1px solid #1a3a2a;
+  border-radius: 3px;
+  background: transparent;
+  color: #90a898;
+  font-size: 11px;
+}
+
+.err {
+  color: #ffb0b0;
+  border-color: #ff4040;
+  background: rgba(60, 10, 10, 0.5);
+  font-size: 11px;
+  line-height: 1.45;
+}
+.planeList {
+  display: grid;
+  gap: 6px;
+}
+.planeCard {
+  border: 1px solid #0e2418;
+  border-left: 3px solid #3a4850;
+  border-radius: 6px;
+  background: rgba(10, 20, 15, 0.7);
+  padding: 9px 10px;
+  font-size: 11px;
+}
+.planeCard.audible {
+  border-left-color: #ff4040;
+  background: rgba(50, 10, 10, 0.5);
+}
+.planeCard.approaching {
+  border-left-color: #ffb020;
+  background: rgba(40, 25, 0, 0.5);
+}
+.planeCard.clear {
+  border-left-color: #00d97a;
+}
+.planeHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: baseline;
+  margin-bottom: 5px;
+}
+.callsign {
+  font-family:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial,
+    sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  color: #e0eae0;
+}
+.pill {
+  font-family:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial,
+    sans-serif;
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  padding: 2px 8px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  background: #3a4850;
+  color: #90a8b0;
+}
+.audible .pill {
+  background: #ff4040;
+  color: white;
+}
+.approaching .pill {
+  background: #ffb020;
+  color: #1a0e00;
+}
+.clear .pill {
+  background: #00d97a;
+  color: #001810;
+}
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 10px;
+}
+.grid div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.lbl {
+  color: #607868;
+}
+.val {
+  color: #c8d8cc;
+  font-weight: 500;
+}
+.empty {
+  text-align: center;
+  padding: 18px;
+  color: #405850;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 520px) {
+  .app {
+    padding-left: 4px;
+    padding-right: 4px;
+    gap: 5px;
+  }
+  .banner {
+    padding: 8px 10px;
+  }
+  .headline {
+    font-size: clamp(25px, 7.2vw, 39px);
+  }
+  .bigCount {
+    font-size: clamp(52px, 13vw, 76px);
+  }
+  .chips {
+    grid-template-columns: 1fr;
+  }
+  .tabs {
+    gap: 4px;
+  }
+}
+@media (max-height: 740px) {
+  .banner {
+    padding: 7px 10px;
+  }
+  .bigCount {
+    font-size: clamp(46px, 12vw, 72px);
+  }
+  .radar-wrap {
+    min-height: 240px;
+  }
+  .tab {
+    padding: 8px 3px;
+  }
+}
+
+.banner {
+  grid-template-columns: 1fr !important;
+}
+.countBox {
+  display: none !important;
+}
+.headline {
+  width: 100% !important;
+  max-width: 100% !important;
+  text-align: left;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+.banner.clear .headline {
+  text-align: center;
+}
+
+.banner {
+  grid-template-columns: 1fr !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+}
+.countBox {
+  display: none !important;
+}
+.headline {
+  width: 100% !important;
+  max-width: 100% !important;
+  text-align: left;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  font-size: clamp(32px, 7.4vw, 88px) !important;
+  line-height: 0.92 !important;
+}
+.banner.clear {
+  justify-content: center !important;
+}
+.banner.clear .headline {
+  text-align: center;
+  font-size: clamp(52px, 9.8vw, 104px) !important;
+}
+
+.banner {
+  grid-template-columns: 1fr !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  overflow: hidden !important;
+}
+.countBox {
+  display: none !important;
+}
+.headline {
+  width: 100% !important;
+  max-width: 100% !important;
+  text-align: center !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  white-space: nowrap !important;
+  line-height: 0.92 !important;
+}
+
+.mic-spec-editor input {
+  margin-bottom: 6px;
+}
+.chip {
+  padding-right: 96px;
+}
+.chip.pending {
+  opacity: 0.78;
+}
+.chip-edit {
+  position: absolute;
+  right: 48px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 42px;
+  height: 22px;
+  border: 1px solid #31483a;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #789080;
+  background: rgba(0, 0, 0, 0.25);
+  font-size: 9px;
+  line-height: 1;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+    "Helvetica Neue", Arial, sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.chip-edit:active {
+  border-color: #d4a017;
+  color: #f0d070;
+}
+
+/* PLANE SOUND UPPERCASE UI */
+body,
+button,
+input,
+select,
+textarea,
+.headline,
+.app-title,
+.chip,
+.tab,
+.btn,
+.msg,
+.title {
+  text-transform: uppercase !important;
+}
+
+/* HIDE OLD MIC SEARCH */
+#customMicName,
+#customMicBtn,
+#customMicMsg,
+#results {
+  display: none !important;
+}
+
+.app-logo-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 116px;
+  padding: 8px 0 6px;
+  box-sizing: border-box;
+}
+
+.app-logo {
+  display: block;
+  height: 104px;
+  width: auto;
+  max-width: min(420px, 82vw);
+  object-fit: contain;
+  filter: drop-shadow(0 0 12px rgba(0, 217, 122, 0.34));
+}
+
+@media (max-height: 760px) {
+  .app-logo-wrap {
+    height: 82px;
+    padding: 5px 0 4px;
+  }
+
+  .app-logo {
+    height: 74px;
+    max-width: min(330px, 76vw);
+  }
+}
+
+.privacy-link {
+  position: absolute;
+  top: max(6px, env(safe-area-inset-top));
+  right: 10px;
+  z-index: 5;
+  font-size: 11px;
+  line-height: 14px;
+  opacity: 0.72;
+}
+.privacy-link a {
+  color: #b8ccc2;
+  text-decoration: none;
+}
+.privacy-link a:active {
+  color: #00d97a;
+}
 
 /* MOBILE LAYOUT POLISH */
-@media (max-width:520px){
-  .app{
-    position:relative;
-    height:100dvh;
-    min-height:100dvh;
-    overflow:hidden;
-    gap:4px;
-    padding:max(4px,env(safe-area-inset-top)) 4px max(4px,env(safe-area-inset-bottom));
+@media (max-width: 520px) {
+  .app {
+    position: relative;
+    height: 100dvh;
+    min-height: 100dvh;
+    overflow: hidden;
+    gap: 4px;
+    padding: max(4px, env(safe-area-inset-top)) 4px
+      max(4px, env(safe-area-inset-bottom));
   }
 
-  .privacy-link{
-    top:max(4px,env(safe-area-inset-top));
-    right:8px;
-    font-size:10px;
-    line-height:12px;
+  .privacy-link {
+    top: max(4px, env(safe-area-inset-top));
+    right: 8px;
+    font-size: 10px;
+    line-height: 12px;
   }
 
-  .app-logo-wrap{
-    height:98px!important;
-    padding:3px 0 2px!important;
+  .app-logo-wrap {
+    height: 98px !important;
+    padding: 3px 0 2px !important;
   }
 
-  .app-logo{
-    height:94px!important;
-    max-width:min(440px,94vw)!important;
+  .app-logo {
+    height: 94px !important;
+    max-width: min(440px, 94vw) !important;
   }
 
-  .banner{
-    padding:5px 8px!important;
-    min-height:42px;
+  .banner {
+    padding: 5px 8px !important;
+    min-height: 42px;
   }
 
-  .headline{
-    font-size:clamp(29px,8vw,42px)!important;
-    line-height:.9!important;
+  .headline {
+    font-size: clamp(29px, 8vw, 42px) !important;
+    line-height: 0.9 !important;
   }
 
-  .banner.clear .headline{
-    font-size:clamp(42px,11vw,62px)!important;
+  .banner.clear .headline {
+    font-size: clamp(42px, 11vw, 62px) !important;
   }
 
-  .radar-wrap{
-    flex:1 1 auto;
-    min-height:0!important;
+  .radar-wrap {
+    flex: 1 1 auto;
+    min-height: 0 !important;
   }
 
-  .tabs{
-    gap:3px!important;
+  .tabs {
+    gap: 3px !important;
   }
 
-  .tab{
-    padding:6px 2px!important;
-    font-size:11px!important;
+  .tab {
+    padding: 6px 2px !important;
+    font-size: 11px !important;
   }
 
-  .panel{
-    flex:0 0 auto;
-    padding:8px!important;
-    max-height:24dvh!important;
+  .panel {
+    flex: 0 0 auto;
+    padding: 8px !important;
+    max-height: 24dvh !important;
   }
 
-  .sblock{
-    margin-bottom:8px!important;
+  .sblock {
+    margin-bottom: 8px !important;
   }
 
-  .btn{
-    padding:7px 8px!important;
+  .btn {
+    padding: 7px 8px !important;
   }
 }
 
-@media (max-height:700px){
-  .app-logo-wrap{
-    height:92px!important;
-    padding:2px 0!important;
+@media (max-height: 700px) {
+  .app-logo-wrap {
+    height: 92px !important;
+    padding: 2px 0 !important;
   }
 
-  .app-logo{
-    height:88px!important;
-    max-width:min(430px,94vw)!important;
+  .app-logo {
+    height: 88px !important;
+    max-width: min(430px, 94vw) !important;
   }
 
-  .banner{
-    padding:4px 8px!important;
-    min-height:38px;
+  .banner {
+    padding: 4px 8px !important;
+    min-height: 38px;
   }
 
-  .panel{
-    max-height:21dvh!important;
+  .panel {
+    max-height: 21dvh !important;
   }
 }
 
 /* GLOBAL READABILITY FONT LOCK */
-html, body, button, input, select, textarea, .app, .app *{
-  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','SF Pro Display','Helvetica Neue',Arial,sans-serif!important;
-  text-transform:uppercase!important;
-  -webkit-font-smoothing:antialiased;
-  text-rendering:geometricPrecision;
+html,
+body,
+button,
+input,
+select,
+textarea,
+.app,
+.app * {
+  font-family:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+    "Helvetica Neue", Arial, sans-serif !important;
+  text-transform: uppercase !important;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
 }
