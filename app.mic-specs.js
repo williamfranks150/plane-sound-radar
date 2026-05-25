@@ -43,10 +43,6 @@ function psMicRecordsMatch(a, b){
   return ak.some(k => bk.includes(k));
 }
 
-function findMicMatch(query){
-  return Object.entries(MICS).find(([id, m]) => psMicMatchesQuery(query, m)) || null;
-}
-
 function psExistingMicIdForRecord(record){
   for (const [id, m] of Object.entries(MICS)) {
     if (psMicRecordsMatch(record, m)) return id;
@@ -89,112 +85,6 @@ function psRemoveDuplicateCustomMics(){
   state.settings.active = (state.settings.active || []).filter(id => MICS[id]);
   write(STORE_SETTINGS, state.settings);
   saveCustomMics();
-}
-
-async function lookupFromSameOriginDatabase(query){
-  try {
-    const res = await fetch("mic-specs.json", { cache: "no-store" });
-    if (!res.ok) return null;
-
-    const list = await res.json();
-    if (!Array.isArray(list)) return null;
-
-    const raw = list.find(m => psMicMatchesQuery(query, m));
-    return raw ? normalizeMicRecord(raw) : null;
-  } catch {
-    return null;
-  }
-}
-
-async function lookupFromEndpoint(query){
-  if (!MIC_LOOKUP_ENDPOINT) return null;
-
-  try {
-    const res = await fetch(MIC_LOOKUP_ENDPOINT + "?model=" + encodeURIComponent(query), { cache: "no-store" });
-    if (!res.ok) return null;
-
-    const record = normalizeMicRecord(await res.json());
-    if (!record) return null;
-
-    return psMicMatchesQuery(query, record) ? record : null;
-  } catch {
-    return null;
-  }
-}
-
-async function lookupMicModel(query){
-  const local = findMicMatch(query);
-  if (local) {
-    const [id, m] = local;
-    psUnhideMic(id);
-    return [id, m];
-  }
-
-  const sameOrigin = await lookupFromSameOriginDatabase(query);
-  const endpoint = sameOrigin ? null : await lookupFromEndpoint(query);
-  const record = sameOrigin || endpoint;
-
-  if (!record) return null;
-
-  const existingId = psExistingMicIdForRecord(record);
-  if (existingId) {
-    psUnhideMic(existingId);
-    return [existingId, MICS[existingId]];
-  }
-
-  const id = "custom_" + psMicKey(record.name).slice(0, 28) + "_" + Date.now().toString(36);
-  MICS[id] = record;
-  saveCustomMics();
-
-  return [id, record];
-}
-
-async function addManualMic(){
-  const name = $("customMicName").value.trim();
-  const msg = $("customMicMsg");
-
-  msg.classList.remove("hidden");
-  msg.className = "msg";
-
-  if (!name) {
-    msg.textContent = "Enter a mic model.";
-    return;
-  }
-
-  $("customMicBtn").disabled = true;
-  $("customMicBtn").textContent = "Searching";
-
-  try {
-    const found = await lookupMicModel(name);
-
-    if (!found) {
-      msg.textContent = "mic unknown";
-      return;
-    }
-
-    const [id, m] = found;
-
-    psUnhideMic(id);
-    psRemoveDuplicateCustomMics();
-
-    const active = new Set(activeMicIds());
-    active.add(id);
-
-    state.settings.package = "custom";
-    state.settings.active = [...active];
-
-    write(STORE_SETTINGS, state.settings);
-
-    msg.className = "msg ok";
-    msg.textContent = "Added " + m.name + ".";
-    $("customMicName").value = "";
-
-    render();
-    if (state.loc) fetchFeed();
-  } finally {
-    $("customMicBtn").disabled = false;
-    $("customMicBtn").textContent = "Search";
-  }
 }
 
 function psMicHasUsableRange(m){
@@ -585,15 +475,6 @@ function psWireMicSpecEditor(){
   const save=$('micSpecSave');
   const cancel=$('micSpecCancel');
   const grid=$('chipGrid');
-
-  const oldSearch=$('customMicName');
-  if(oldSearch){
-    const row=oldSearch.closest('.row')||oldSearch.parentElement;
-    if(row)row.style.display='none';
-  }
-
-  if($('customMicMsg'))$('customMicMsg').style.display='none';
-  if($('results'))$('results').style.display='none';
 
   if(form && !form.dataset.initializedClosed){
     form.classList.add('hidden');

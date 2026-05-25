@@ -13,7 +13,5 @@ const STORE_SETTINGS='aircraftRadar.settings.v14';
 const STORE_UI='aircraftRadar.ui.v14';
 const STORE_CUSTOM='aircraftRadar.customMics.v14';
 const STORE_HIDDEN='aircraftRadar.hiddenMics.v28';
-const MIC_LOOKUP_ENDPOINT=(window.APP_CONFIG&&window.APP_CONFIG.MIC_LOOKUP_ENDPOINT)||'';
 const GEOCODE_ENDPOINT=(window.APP_CONFIG&&window.APP_CONFIG.GEOCODE_ENDPOINT)||'';
 const AIRCRAFT_ENDPOINT=(window.APP_CONFIG&&window.APP_CONFIG.AIRCRAFT_ENDPOINT)||'';
-const SAME_ORIGIN_MIC_DB='mic-specs.json';

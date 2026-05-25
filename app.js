@@ -71,9 +71,7 @@ function init(){
     if(b)setLoc(state.search.results[+b.dataset.i]);
   };
   $('gpsBtn').onclick=()=>gps(false);
-  $('customMicBtn').onclick=addManualMic;
   psWireMicSpecEditor();
-  $('customMicName').onkeydown=e=>{if(e.key==='Enter')addManualMic()};
 
   $('chipGrid').onclick=e=>{
     const del=e.target.closest('[data-delete-mic]');
