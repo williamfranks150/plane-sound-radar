@@ -33,8 +33,10 @@ function planeNow(ac) {
 
 function analyze(ac) {
   if (!state.loc || ac.lat == null || ac.lon == null) return null;
+
   const rs = rangeSettings();
   const altFt = typeof ac.alt_baro === "number" ? ac.alt_baro : null;
+
   if (altFt == null || altFt < 0) return null;
 
   const p = planeNow(ac);
@@ -42,23 +44,38 @@ function analyze(ac) {
   const h = Math.hypot(pos.x, pos.y);
   const altKm = altFt / FT_PER_M / 1000;
   const slant = Math.hypot(h, altKm);
-  const tooHigh = altFt > rs.ceil || rs.mic <= altKm;
+  const acoustic = psEstimateAircraftNoise(ac, {
+    aircraft: p,
+    horizontalKm: h,
+    slantKm: slant,
+    altKm,
+    altFt,
+    rangeSettings: rs,
+  });
 
-  let entry = null,
-    exit = null,
-    inMic = false;
-  if (!tooHigh) {
-    const hT = Math.sqrt(Math.max(0, rs.mic * rs.mic - altKm * altKm));
+  const acousticRadiusKm = acoustic.radiusKm;
+  const tooHigh = acoustic.tooHigh;
+
+  let entry = null;
+  let exit = null;
+  let inMic = false;
+
+  if (!tooHigh && acousticRadiusKm > 0) {
+    const hT = acousticRadiusKm;
     const v2 = p.vx * p.vx + p.vy * p.vy;
+
     inMic = h <= hT;
+
     if (v2 > 1e-9) {
       const b = 2 * (pos.x * p.vx + pos.y * p.vy);
       const c = h * h - hT * hT;
       const disc = b * b - 4 * v2 * c;
+
       if (disc >= 0) {
         const sq = Math.sqrt(disc);
         const t1 = (-b - sq) / (2 * v2);
         const t2 = (-b + sq) / (2 * v2);
+
         if (t2 >= 0) {
           entry = t1 > 0 ? t1 : 0;
           exit = t2 + rs.tail;
@@ -77,15 +94,17 @@ function analyze(ac) {
       : entry != null
         ? "approaching"
         : "clear";
+
   const typeFactor = aircraftTypeFactor(ac.t);
-  const altFactor = clamp(1.25 - altFt / rs.ceil, 0.28, 1.12);
-  const distFactor =
+  const marginFactor = clamp((acoustic.marginDba + 12) / 24, 0.1, 1.55);
+  const timeFactor =
     status === "audible"
-      ? clamp(1.2 - h / rs.mic, 0.2, 1.15)
+      ? 1.1
       : status === "approaching"
         ? clamp(1 - Math.max(0, entry) / 900, 0.15, 0.75)
         : 0.12;
-  const risk = clamp(typeFactor * altFactor * distFactor, 0.1, 1.55);
+
+  const risk = clamp(typeFactor * marginFactor * timeFactor, 0.1, 1.55);
 
   return {
     raw: ac,
@@ -109,5 +128,6 @@ function analyze(ac) {
     tooHigh,
     typeFactor,
     risk,
+    acoustic,
   };
 }
