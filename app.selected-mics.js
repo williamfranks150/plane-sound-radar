@@ -1,12 +1,35 @@
 "use strict";
 
 function psSelectedMicDisplayItems() {
-  const ids = typeof activeMicIds === "function" ? activeMicIds() : [];
+  const byId = new Map();
 
-  return ids
-    .map((id) => (typeof MICS === "object" && MICS ? MICS[id] : null))
-    .filter(Boolean)
-    .map((mic) => mic.short || mic.name || mic.displayName || "MIC");
+  function addMic(id, mic) {
+    if (!mic) return;
+
+    const label = mic.short || mic.name || mic.displayName || id || "MIC";
+
+    if (!label) return;
+
+    byId.set(String(id || label), String(label).toUpperCase());
+  }
+
+  if (typeof activeMicIds === "function") {
+    activeMicIds().forEach((id) => {
+      addMic(id, typeof MICS === "object" && MICS ? MICS[id] : null);
+    });
+  }
+
+  if (!byId.size && typeof rangeSettings === "function") {
+    const rs = rangeSettings();
+
+    if (rs && Array.isArray(rs.mics)) {
+      rs.mics.forEach((mic, index) => {
+        addMic(mic.id || index, mic);
+      });
+    }
+  }
+
+  return [...byId.values()];
 }
 
 function psRenderSelectedMicList() {
@@ -22,31 +45,26 @@ function psRenderSelectedMicList() {
 
   const items = psSelectedMicDisplayItems();
 
-  const list = items.length ? items : ["NO MICS SELECTED"];
+  if (!items.length) {
+    el.innerHTML =
+      '<div class="selected-mic-list-item selected-mic-list-empty">NO MICS SELECTED</div>';
+    return;
+  }
 
-  el.innerHTML = items.length
-    ? '<div class="selected-mic-list-title">SELECTED MICS</div>'
-    : "" +
-      list
-        .map((item) => {
-          const safe = String(item)
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;");
+  el.innerHTML =
+    '<div class="selected-mic-list-title">SELECTED MICS</div>' +
+    items
+      .map((item) => {
+        const safe = String(item)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
 
-          const emptyClass =
-            safe === "NO MICS SELECTED" ? " selected-mic-list-empty" : "";
-
-          return (
-            '<div class="selected-mic-list-item' +
-            emptyClass +
-            '">' +
-            safe +
-            "</div>"
-          );
-        })
-        .join("");
+        return '<div class="selected-mic-list-item">' + safe + "</div>";
+      })
+      .join("");
 }
 
 document.addEventListener("DOMContentLoaded", psRenderSelectedMicList);
-setInterval(psRenderSelectedMicList, 1000);
+window.addEventListener("storage", psRenderSelectedMicList);
+setInterval(psRenderSelectedMicList, 500);
