@@ -935,3 +935,18 @@ textarea,
   }
 }
 /* === End selected mic list overlay === */
+
+/* === Plane Sound yellow approaching banner === */
+.banner.warn {
+  border-color: rgba(255, 216, 74, 0.9);
+  background: rgba(70, 54, 0, 0.46);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 216, 74, 0.14),
+    0 0 18px rgba(255, 216, 74, 0.1);
+}
+
+.banner.warn #headline {
+  color: #ffd84a;
+  text-shadow: 0 0 18px rgba(255, 216, 74, 0.18);
+}
+/* === End yellow approaching banner === */
