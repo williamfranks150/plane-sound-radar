@@ -63,7 +63,8 @@ function analyze(ac) {
 
   acoustic.displayRadiusKm = acousticRadiusKm;
 
-  const tooHigh = acoustic.tooHigh || acousticRadiusKm <= 0;
+  const noSelectedMic = acoustic.noSelectedMic === true;
+  const tooHigh = !noSelectedMic && (acoustic.tooHigh || acousticRadiusKm <= 0);
 
   let entry = null;
   let exit = null;
@@ -96,13 +97,15 @@ function analyze(ac) {
     }
   }
 
-  const status = tooHigh
-    ? "high"
-    : inMic
-      ? "audible"
-      : entry != null
-        ? "approaching"
-        : "clear";
+  const status = noSelectedMic
+    ? "clear"
+    : tooHigh
+      ? "high"
+      : inMic
+        ? "audible"
+        : entry != null
+          ? "approaching"
+          : "clear";
 
   const typeFactor = aircraftTypeFactor(ac.t);
   const marginFactor = clamp((acoustic.marginDba + 12) / 24, 0.1, 1.55);

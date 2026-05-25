@@ -78,7 +78,7 @@ function drawRadar() {
     .sort((a, b) => b.mic - a.mic)
     .forEach((m, idx) => {
       const rr = m.mic * scale;
-      ctx.setLineDash([8, 6]);
+      ctx.setLineDash([]);
       ctx.strokeStyle = m.color;
       ctx.lineWidth = 2.2;
       ctx.beginPath();
@@ -222,7 +222,7 @@ function drawRadar() {
       );
       ctx.strokeStyle =
         p.status === "audible" ? "rgba(255,80,80,.35)" : "rgba(255,210,60,.3)";
-      ctx.setLineDash([4, 6]);
+      ctx.setLineDash([]);
       ctx.stroke();
       ctx.setLineDash([]);
     }

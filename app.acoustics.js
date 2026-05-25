@@ -186,9 +186,8 @@ function psMicAcousticProfile(mic) {
 
 function psActiveAcousticMics() {
   const ids = typeof activeMicIds === "function" ? activeMicIds() : [];
-  const selected = ids.map((id) => MICS[id]).filter(Boolean);
 
-  return selected.length ? selected : [HUMAN_BASELINE];
+  return ids.map((id) => MICS[id]).filter(Boolean);
 }
 
 function psAircraftSourceAdjustment(ac) {
@@ -230,11 +229,29 @@ function psThresholdRadiusKm(sourceDbaAt305m, thresholdDba, altKm) {
 }
 
 function psEstimateAircraftNoise(ac, context) {
+  const mics = psActiveAcousticMics();
+
+  if (!mics.length) {
+    return {
+      model: "no-selected-mic",
+      aircraftLabel: "Aircraft only",
+      sourceType: "none",
+      sourceDbaAt305m: null,
+      receiverDba: null,
+      micName: "",
+      thresholdDba: null,
+      marginDba: -Infinity,
+      radiusKm: 0,
+      confidence: 0,
+      tooHigh: false,
+      noSelectedMic: true,
+    };
+  }
+
   const profile = psAircraftNoiseProfile(ac.t);
   const sourceDbaAt305m = profile.dbaAt305m + psAircraftSourceAdjustment(ac);
   const distanceM = Math.max(1, context.slantKm * 1000);
   const receiverDba = psPropagatedDba(sourceDbaAt305m, distanceM);
-  const mics = psActiveAcousticMics();
 
   let best = null;
 

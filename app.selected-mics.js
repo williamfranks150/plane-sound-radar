@@ -22,7 +22,7 @@ function psRenderSelectedMicList() {
 
   const items = psSelectedMicDisplayItems();
 
-  const list = items.length ? items : ["NO MIC SELECTED"];
+  const list = items.length ? items : ["AIRCRAFT ONLY"];
 
   el.innerHTML =
     '<div class="selected-mic-list-title">SELECTED MICS</div>' +
@@ -34,7 +34,7 @@ function psRenderSelectedMicList() {
           .replace(/>/g, "&gt;");
 
         const emptyClass =
-          safe === "NO MIC SELECTED" ? " selected-mic-list-empty" : "";
+          safe === "AIRCRAFT ONLY" ? " selected-mic-list-empty" : "";
 
         return (
           '<div class="selected-mic-list-item' +
