@@ -879,3 +879,59 @@ textarea,
   -webkit-font-smoothing: antialiased;
   text-rendering: geometricPrecision;
 }
+
+/* === Plane Sound selected mic list overlay === */
+.selected-mic-list {
+  position: absolute;
+  top: 18px;
+  left: 22px;
+  z-index: 5;
+  min-width: 148px;
+  max-width: 240px;
+  padding: 10px 12px;
+  border: 1px solid rgba(0, 217, 122, 0.32);
+  border-radius: 10px;
+  background: rgba(0, 12, 8, 0.58);
+  box-shadow: 0 0 18px rgba(0, 217, 122, 0.08);
+  color: rgba(210, 238, 225, 0.86);
+  font-family: inherit;
+  pointer-events: none;
+  backdrop-filter: blur(2px);
+}
+
+.selected-mic-list-title {
+  margin-bottom: 7px;
+  color: #00d97a;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  opacity: 0.95;
+}
+
+.selected-mic-list-item {
+  color: rgba(210, 238, 225, 0.82);
+  font-size: 12px;
+  line-height: 1.25;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.selected-mic-list-empty {
+  color: rgba(210, 238, 225, 0.52);
+}
+
+@media (max-width: 720px) {
+  .selected-mic-list {
+    top: 12px;
+    left: 12px;
+    min-width: 128px;
+    padding: 8px 10px;
+  }
+
+  .selected-mic-list-item {
+    font-size: 10px;
+  }
+}
+/* === End selected mic list overlay === */

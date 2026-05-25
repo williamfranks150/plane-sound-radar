@@ -54,7 +54,14 @@
 
       <div id="err" class="panel err hidden"></div>
 
-      <div class="radar-wrap"><canvas id="radar"></canvas></div>
+      <div class="radar-wrap">
+        <canvas id="radar"></canvas>
+        <div
+          id="selectedMicList"
+          class="selected-mic-list"
+          aria-label="Selected microphones"
+        ></div>
+      </div>
 
       <div class="tabs">
         <button id="tabMics" class="tab">Mics</button>
@@ -151,6 +158,7 @@
     <script src="app.acoustics.js"></script>
     <script src="app.aircraft.js"></script>
     <script src="app.mics.js"></script>
+    <script src="app.selected-mics.js"></script>
     <script src="app.connection.js"></script>
     <script src="app.render.js"></script>
     <script src="app.radar.js"></script>
