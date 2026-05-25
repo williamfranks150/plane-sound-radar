@@ -61,7 +61,7 @@ function rangeSettings(){
   mics.forEach(m=>{mic=Math.max(mic,m.mic);hot=Math.max(hot,m.hot);tail=Math.max(tail,m.tail);ceil=Math.max(ceil,m.ceil)});
   // Keep extra radar space so aircraft about 60 seconds before mic-range entry remain visible.
   const oneMinuteLeadKm=18;
-  const radar=Math.max(12,Math.ceil(Math.max(mic*1.55,mic+oneMinuteLeadKm)/4)*4);
+  const radar=Math.max(12,Math.ceil(Math.max(mic*1.08,mic+(oneMinuteLeadKm*.25))/4)*4);
   return {mic,hot,tail,ceil,radar,mics,usingHuman:!activeMicIds().length};
 }
 
