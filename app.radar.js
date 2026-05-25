@@ -104,10 +104,25 @@ function psDrawRadarBackground(
     Math.round(Math.max(14, 14 * uiScale)) +
     "px -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText("N", cx, pad);
-  ctx.fillText("S", cx, H - pad + 4 * uiScale);
-  ctx.fillText("E", W - pad, cy + 4 * uiScale);
-  ctx.fillText("W", pad, cy + 4 * uiScale);
+  ctx.textBaseline = "middle";
+
+  // Bind cardinal labels to the visible outer radar circle.
+  // On tall/narrow mobile layouts, the full circle can extend beyond the visible canvas,
+  // so N/S need independent vertical clamping instead of one shared radius.
+  const labelInset = Math.max(14, 16 * uiScale);
+  const ringInset = Math.max(8, 10 * uiScale);
+
+  const westR = Math.min(gridR - ringInset, cx - labelInset);
+  const eastR = Math.min(gridR - ringInset, W - cx - labelInset);
+  const northR = Math.min(gridR - ringInset, cy - labelInset);
+  const southR = Math.min(gridR - ringInset, H - cy - labelInset);
+
+  ctx.fillText("N", cx, cy - Math.max(0, northR));
+  ctx.fillText("S", cx, cy + Math.max(0, southR));
+  ctx.fillText("E", cx + Math.max(0, eastR), cy);
+  ctx.fillText("W", cx - Math.max(0, westR), cy);
+
+  ctx.textBaseline = "alphabetic";
 }
 
 function psDrawSweep(ctx, cx, cy, effectR) {
