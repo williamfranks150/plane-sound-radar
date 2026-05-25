@@ -167,7 +167,7 @@ function drawRadar(){
       const tagFont=Math.round(Math.max(20,22*uiScale));
       const tagPad=7*uiScale;
       const tagH=Math.max(30,30*uiScale);
-      ctx.font=`800 ${tagFont}px ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace`;
+      ctx.font=`800 ${tagFont}px -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif`;
       ctx.textAlign='left';
       const w=ctx.measureText(tag).width+tagPad*2;
       let x=px+size*.7;

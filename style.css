@@ -96,7 +96,7 @@
   .chip{text-align:left;background:#050e08;border:1px solid #1a3a2a;border-radius:6px;color:#9fb8a7;padding:8px 34px 8px 8px;font-size:10px;line-height:1.22;min-height:44px;position:relative;overflow:hidden}
   .chip.active{border-color:#d4a017;color:#f0d070;background:rgba(212,160,23,.13)}
   .chip small{display:block;color:#607868;text-transform:uppercase;letter-spacing:.08em;margin-top:2px;font-size:8px}
-  .chip-x{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:38px;height:22px;border:1px solid #31483a;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#789080;background:rgba(0,0,0,.25);font-size:9px;line-height:1;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace;font-weight:700;letter-spacing:.04em}
+  .chip-x{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:38px;height:22px;border:1px solid #31483a;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#789080;background:rgba(0,0,0,.25);font-size:9px;line-height:1;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','SF Pro Display','Helvetica Neue',Arial,sans-serif;font-weight:700;letter-spacing:.04em}
   .chip-x:active{border-color:#d4a017;color:#f0d070}
   .custom-row{align-items:stretch}
   .manual-mic{border-top:1px solid rgba(26,58,42,.45);padding-top:10px}
@@ -187,7 +187,7 @@
     width:42px;height:22px;border:1px solid #31483a;border-radius:12px;
     display:flex;align-items:center;justify-content:center;
     color:#789080;background:rgba(0,0,0,.25);font-size:9px;line-height:1;
-    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace;font-weight:700;letter-spacing:.04em
+    font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','SF Pro Display','Helvetica Neue',Arial,sans-serif;font-weight:700;letter-spacing:.04em
   }
   .chip-edit:active{border-color:#d4a017;color:#f0d070}
 
@@ -344,4 +344,12 @@
   .panel{
     max-height:21dvh!important;
   }
+}
+
+/* GLOBAL READABILITY FONT LOCK */
+html, body, button, input, select, textarea, .app, .app *{
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','SF Pro Display','Helvetica Neue',Arial,sans-serif!important;
+  text-transform:uppercase!important;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:geometricPrecision;
 }
