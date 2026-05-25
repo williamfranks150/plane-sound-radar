@@ -1,0 +1,19 @@
+{
+  "name": "Plane Sound",
+  "short_name": "Plane Sound",
+  "description": "A location-based aircraft sound awareness tool for estimating aircraft audibility and microphone contamination risk.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#030c08",
+  "theme_color": "#00d97a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "assets/plane-sound-logo.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
