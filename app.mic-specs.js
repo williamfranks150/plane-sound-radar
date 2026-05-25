@@ -484,12 +484,7 @@ function psWireMicSpecEditor(){
   if(add && !add.dataset.specAddWired){
     add.dataset.specAddWired='1';
     add.onclick=()=>{
-      if(!form)return;
-      if(form.classList.contains('hidden')){
-        psOpenMicSpecForm('');
-      }else{
-        psCancelMicSpec();
-      }
+      psOpenMicSpecForm('');
     };
   }
 
