@@ -937,3 +937,52 @@ textarea,
   }
 }
 /* === End selected mic list overlay === */
+
+/* === Plane Sound listening source badge === */
+.audio-source-badge {
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  z-index: 50;
+  display: block;
+  min-width: 104px;
+  max-width: 150px;
+  padding: 9px 11px;
+  border: 1px solid rgba(0, 217, 122, 0.38);
+  border-radius: 10px;
+  background: rgba(0, 12, 8, 0.68);
+  box-shadow: 0 0 16px rgba(0, 217, 122, 0.1);
+  color: rgba(210, 238, 225, 0.92);
+  font-family: inherit;
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+  cursor: pointer;
+  backdrop-filter: blur(2px);
+}
+
+.audio-source-badge.mixer {
+  border-color: rgba(255, 216, 74, 0.58);
+  color: #ffd84a;
+  box-shadow: 0 0 16px rgba(255, 216, 74, 0.1);
+}
+
+.audio-source-badge.manual {
+  border-color: rgba(210, 238, 225, 0.22);
+  background: rgba(0, 12, 8, 0.48);
+  color: rgba(210, 238, 225, 0.62);
+}
+
+@media (max-width: 720px) {
+  .audio-source-badge {
+    top: 12px;
+    right: 12px;
+    min-width: 88px;
+    padding: 8px 9px;
+    font-size: 10px;
+  }
+}
+/* === End listening source badge === */
