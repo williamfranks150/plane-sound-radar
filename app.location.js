@@ -9,6 +9,13 @@ function setLoc(loc) {
   $("searchInput").value = "";
   render();
   startLoop();
+
+  if (typeof psPrimeWeatherForLocation === "function") {
+    psPrimeWeatherForLocation(loc).then(() => {
+      render();
+      if (state.loc) fetchFeed();
+    });
+  }
 }
 
 function gps(auto = false) {

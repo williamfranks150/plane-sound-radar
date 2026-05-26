@@ -1,0 +1,315 @@
+{
+  "schema": "plane-sound-aircraft-type-profiles-v1",
+  "notes": [
+    "Proxy profiles are for real-time production warning decisions.",
+    "Replace proxy dBA values with verified ANP/AEDT/NPD records as those records are imported."
+  ],
+  "profiles": [
+    {
+      "codes": [
+        "A388"
+      ],
+      "label": "Airbus A380",
+      "category": "super-heavy jet",
+      "engineClass": "widebody_turbofan_heavy",
+      "dbaAt305m": 96,
+      "confidence": 0.56
+    },
+    {
+      "codes": [
+        "B744",
+        "B748"
+      ],
+      "label": "Boeing 747",
+      "category": "heavy jet",
+      "engineClass": "widebody_turbofan_heavy",
+      "dbaAt305m": 94,
+      "confidence": 0.55
+    },
+    {
+      "codes": [
+        "B772",
+        "B77L",
+        "B77W",
+        "B773"
+      ],
+      "label": "Boeing 777",
+      "category": "heavy jet",
+      "engineClass": "widebody_turbofan_heavy",
+      "dbaAt305m": 92,
+      "confidence": 0.55
+    },
+    {
+      "codes": [
+        "B788",
+        "B789",
+        "B78X"
+      ],
+      "label": "Boeing 787",
+      "category": "heavy jet",
+      "engineClass": "widebody_turbofan_modern",
+      "dbaAt305m": 89,
+      "confidence": 0.54
+    },
+    {
+      "codes": [
+        "A332",
+        "A333",
+        "A339"
+      ],
+      "label": "Airbus A330",
+      "category": "heavy jet",
+      "engineClass": "widebody_turbofan",
+      "dbaAt305m": 90,
+      "confidence": 0.54
+    },
+    {
+      "codes": [
+        "A359",
+        "A35K"
+      ],
+      "label": "Airbus A350",
+      "category": "heavy jet",
+      "engineClass": "widebody_turbofan_modern",
+      "dbaAt305m": 88,
+      "confidence": 0.54
+    },
+    {
+      "codes": [
+        "B763",
+        "B764",
+        "B752",
+        "B753"
+      ],
+      "label": "Boeing 757/767",
+      "category": "medium jet",
+      "engineClass": "medium_turbofan",
+      "dbaAt305m": 89,
+      "confidence": 0.52
+    },
+    {
+      "codes": [
+        "A306",
+        "A310"
+      ],
+      "label": "Airbus A300/A310",
+      "category": "medium jet",
+      "engineClass": "medium_turbofan",
+      "dbaAt305m": 90,
+      "confidence": 0.5
+    },
+    {
+      "codes": [
+        "A319",
+        "A320",
+        "A321"
+      ],
+      "label": "Airbus A320 family",
+      "category": "narrowbody jet",
+      "engineClass": "narrowbody_turbofan",
+      "dbaAt305m": 86,
+      "confidence": 0.58
+    },
+    {
+      "codes": [
+        "A19N",
+        "A20N",
+        "A21N"
+      ],
+      "label": "Airbus A320neo family",
+      "category": "narrowbody jet",
+      "engineClass": "geared_turbofan",
+      "dbaAt305m": 83,
+      "confidence": 0.58
+    },
+    {
+      "codes": [
+        "B733",
+        "B734",
+        "B735"
+      ],
+      "label": "Boeing 737 Classic",
+      "category": "narrowbody jet",
+      "engineClass": "older_narrowbody_turbofan",
+      "dbaAt305m": 88,
+      "confidence": 0.52
+    },
+    {
+      "codes": [
+        "B736",
+        "B737",
+        "B738",
+        "B739"
+      ],
+      "label": "Boeing 737NG",
+      "category": "narrowbody jet",
+      "engineClass": "narrowbody_turbofan",
+      "dbaAt305m": 86,
+      "confidence": 0.58
+    },
+    {
+      "codes": [
+        "B38M",
+        "B39M",
+        "B37M"
+      ],
+      "label": "Boeing 737 MAX",
+      "category": "narrowbody jet",
+      "engineClass": "modern_narrowbody_turbofan",
+      "dbaAt305m": 84,
+      "confidence": 0.57
+    },
+    {
+      "codes": [
+        "BCS1",
+        "BCS3"
+      ],
+      "label": "Airbus A220",
+      "category": "narrowbody jet",
+      "engineClass": "geared_turbofan",
+      "dbaAt305m": 81,
+      "confidence": 0.56
+    },
+    {
+      "codes": [
+        "E190",
+        "E195",
+        "E290",
+        "E295"
+      ],
+      "label": "Embraer E-Jet",
+      "category": "regional jet",
+      "engineClass": "regional_jet",
+      "dbaAt305m": 80,
+      "confidence": 0.54
+    },
+    {
+      "codes": [
+        "E170",
+        "E175",
+        "E75L",
+        "E75S"
+      ],
+      "label": "Embraer E175",
+      "category": "regional jet",
+      "engineClass": "regional_jet",
+      "dbaAt305m": 79,
+      "confidence": 0.54
+    },
+    {
+      "codes": [
+        "CRJ2",
+        "CRJ7",
+        "CRJ9",
+        "CRJX"
+      ],
+      "label": "Bombardier CRJ",
+      "category": "regional jet",
+      "engineClass": "regional_jet",
+      "dbaAt305m": 81,
+      "confidence": 0.52
+    },
+    {
+      "codes": [
+        "DH8A",
+        "DH8B",
+        "DH8C",
+        "DH8D"
+      ],
+      "label": "De Havilland Dash 8",
+      "category": "turboprop",
+      "engineClass": "turboprop",
+      "dbaAt305m": 78,
+      "confidence": 0.52
+    },
+    {
+      "codes": [
+        "AT42",
+        "AT43",
+        "AT45",
+        "AT46",
+        "AT72",
+        "AT73",
+        "AT75",
+        "AT76"
+      ],
+      "label": "ATR turboprop",
+      "category": "turboprop",
+      "engineClass": "turboprop",
+      "dbaAt305m": 77,
+      "confidence": 0.52
+    },
+    {
+      "codes": [
+        "SF34",
+        "BE20",
+        "B350",
+        "C208"
+      ],
+      "label": "Small turboprop",
+      "category": "turboprop",
+      "engineClass": "small_turboprop",
+      "dbaAt305m": 74,
+      "confidence": 0.43
+    },
+    {
+      "codes": [
+        "C172",
+        "C182",
+        "C206",
+        "P28A",
+        "PA28",
+        "SR20",
+        "SR22",
+        "BE36"
+      ],
+      "label": "Light piston aircraft",
+      "category": "light aircraft",
+      "engineClass": "piston",
+      "dbaAt305m": 70,
+      "confidence": 0.4
+    },
+    {
+      "codes": [
+        "R44",
+        "R66"
+      ],
+      "label": "Robinson helicopter",
+      "category": "helicopter",
+      "engineClass": "light_helicopter",
+      "dbaAt305m": 78,
+      "confidence": 0.45
+    },
+    {
+      "codes": [
+        "B06",
+        "B407",
+        "EC35",
+        "EC45",
+        "H135",
+        "H145",
+        "AS50",
+        "AS55"
+      ],
+      "label": "Light turbine helicopter",
+      "category": "helicopter",
+      "engineClass": "light_turboshaft",
+      "dbaAt305m": 82,
+      "confidence": 0.46
+    },
+    {
+      "codes": [
+        "S76",
+        "S92",
+        "H60",
+        "A139",
+        "AW139"
+      ],
+      "label": "Medium helicopter",
+      "category": "helicopter",
+      "engineClass": "medium_turboshaft",
+      "dbaAt305m": 86,
+      "confidence": 0.46
+    }
+  ]
+}

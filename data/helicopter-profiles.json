@@ -1,0 +1,11 @@
+{
+  "schema": "plane-sound-helicopter-profiles-v1",
+  "notes": [
+    "Helicopter profiles are handled separately because rotor noise and directivity differ from fixed-wing aircraft."
+  ],
+  "classes": [
+    "light_helicopter",
+    "light_turboshaft",
+    "medium_turboshaft"
+  ]
+}

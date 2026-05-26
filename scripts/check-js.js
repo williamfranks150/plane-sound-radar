@@ -5,6 +5,9 @@ const files = [
   "app.constants.js",
   "app.data.js",
   "app.utils.js",
+  "app.aircraft-db.js",
+  "app.weather.js",
+  "app.audio-monitor.js",
   "app.acoustics.js",
   "app.aircraft.js",
   "app.mics.js",
@@ -45,3 +48,4 @@ if (failed) {
 }
 
 console.log("All JavaScript syntax checks passed.");
+

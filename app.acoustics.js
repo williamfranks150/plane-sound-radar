@@ -1,7 +1,7 @@
 "use strict";
 
 const PS_ACOUSTIC_REFERENCE_DISTANCE_M = 305;
-const PS_AIR_ABSORPTION_DB_PER_KM = 1.2;
+const PS_BASE_AIR_ABSORPTION_DB_PER_KM = 1.2;
 
 let PS_AIRCRAFT_NOISE_PROFILE_DATA = {
   schema: "plane-sound-aircraft-noise-profiles-v1",
@@ -28,6 +28,26 @@ async function psLoadAircraftNoiseProfiles() {
     PS_AIRCRAFT_NOISE_PROFILE_DATA = data;
   } catch (err) {
     console.warn("Aircraft noise profiles unavailable:", err.message);
+  }
+}
+
+async function psBootAcousticEngine() {
+  await Promise.allSettled([
+    psLoadAircraftNoiseProfiles(),
+    typeof psLoadAircraftProfileData === "function"
+      ? psLoadAircraftProfileData()
+      : null,
+  ]);
+
+  if (state.loc && typeof psPrimeWeatherForLocation === "function") {
+    psPrimeWeatherForLocation(state.loc).then(() => {
+      render();
+      if (state.loc) fetchFeed();
+    });
+  }
+
+  if (typeof psInitAudioMonitor === "function") {
+    psInitAudioMonitor();
   }
 }
 
@@ -69,39 +89,83 @@ function psFallbackAircraftNoiseProfile(type) {
   let dbaAt305m = 84;
   let label = "Estimated generic aircraft";
   let confidence = 0.25;
+  let engine = {
+    directivity: "generic",
+    climbDba: 2,
+    descentDba: 0.5,
+    speedDba: 1,
+  };
 
   if (t.includes("A388")) {
     dbaAt305m = 96;
     label = "Estimated super-heavy jet";
     confidence = 0.35;
+    engine = {
+      directivity: "jet",
+      climbDba: 3.5,
+      descentDba: 0.8,
+      speedDba: 2.2,
+    };
   } else if (/^(B74|B77|B78|A34|A35|A33|MD11|DC10)/.test(t)) {
-    dbaAt305m = 92;
+    dbaAt305m = 91;
     label = "Estimated heavy jet";
     confidence = 0.34;
+    engine = { directivity: "jet", climbDba: 3, descentDba: 0.7, speedDba: 2 };
   } else if (/^(B75|B76|A30|A31)/.test(t)) {
     dbaAt305m = 89;
     label = "Estimated medium jet";
     confidence = 0.33;
+    engine = { directivity: "jet", climbDba: 3, descentDba: 0.8, speedDba: 2 };
   } else if (/^(B73|B38|A32|A22|BCS|E19|E29)/.test(t)) {
-    dbaAt305m = 86;
+    dbaAt305m = 85;
     label = "Estimated narrowbody jet";
     confidence = 0.32;
+    engine = {
+      directivity: "jet",
+      climbDba: 2.4,
+      descentDba: 0.5,
+      speedDba: 1.6,
+    };
   } else if (/^(E17|E75|CRJ)/.test(t)) {
     dbaAt305m = 81;
     label = "Estimated regional jet";
     confidence = 0.28;
+    engine = {
+      directivity: "jet",
+      climbDba: 2.4,
+      descentDba: 0.6,
+      speedDba: 1.6,
+    };
   } else if (/^(DH8|AT4|AT7|SF3|BE9)/.test(t)) {
     dbaAt305m = 78;
     label = "Estimated turboprop";
     confidence = 0.26;
-  } else if (/^(H|R44|R66|B06|EC|AS|S76)/.test(t)) {
+    engine = {
+      directivity: "propeller",
+      climbDba: 2.8,
+      descentDba: 1.2,
+      speedDba: 1.3,
+    };
+  } else if (/^(H|R44|R66|B06|EC|AS|S76|S92|A139|AW139)/.test(t)) {
     dbaAt305m = 82;
     label = "Estimated helicopter";
     confidence = 0.24;
+    engine = {
+      directivity: "rotor",
+      climbDba: 2,
+      descentDba: 1.5,
+      speedDba: 1.2,
+    };
   } else if (/^(C1|C2|C3|P28|SR2|BE|PA)/.test(t)) {
-    dbaAt305m = 74;
+    dbaAt305m = 72;
     label = "Estimated light aircraft";
     confidence = 0.22;
+    engine = {
+      directivity: "propeller",
+      climbDba: 2,
+      descentDba: 0.5,
+      speedDba: 0.8,
+    };
   }
 
   return {
@@ -109,10 +173,13 @@ function psFallbackAircraftNoiseProfile(type) {
     label,
     dbaAt305m,
     confidence,
+    engine,
+    directivity: engine.directivity,
   };
 }
 
-function psAircraftNoiseProfile(type) {
+function psAircraftNoiseProfile(ac) {
+  const type = typeof ac === "object" ? ac.t : ac;
   const verified = psFindVerifiedAircraftNoiseProfile(type);
 
   if (verified) {
@@ -121,7 +188,24 @@ function psAircraftNoiseProfile(type) {
       label: verified.label || type,
       dbaAt305m: Number(verified.dbaAt305m),
       confidence: Number(verified.confidence || 0.85),
+      engine: verified.engine || {},
+      directivity: verified.directivity || "generic",
     };
+  }
+
+  if (typeof psAircraftProfileFor === "function" && typeof ac === "object") {
+    const profile = psAircraftProfileFor(ac);
+
+    if (profile) {
+      return {
+        sourceType: "proxy",
+        label: profile.label,
+        dbaAt305m: profile.dbaAt305m,
+        confidence: profile.confidence,
+        engine: profile.engine || {},
+        directivity: profile.directivity || "generic",
+      };
+    }
   }
 
   return psFallbackAircraftNoiseProfile(type);
@@ -135,12 +219,6 @@ function psParseSensitivityMvPa(value) {
 }
 
 function psMicAcousticProfile(mic) {
-  // This is a production contamination threshold, not a raw microphone audibility threshold.
-  // The earlier 28-32 dBA threshold made the calculated radius unrealistically huge.
-  // Microphone sensitivity affects output voltage, but it does not make distant aircraft
-  // magically contaminate dialogue at 25-100 km. The practical threshold is the aircraft SPL
-  // at the recording position becoming high enough to matter in production sound.
-
   if (!mic || mic.human) {
     return {
       name: "Human hearing",
@@ -164,8 +242,6 @@ function psMicAcousticProfile(mic) {
   if (pattern.includes("supercardioid") || pattern.includes("lob"))
     thresholdDba += 1;
 
-  // Keep sensitivity influence intentionally small.
-  // Large sensitivity corrections created unrealistic aircraft ranges.
   if (sensitivityMvPa) {
     const sensitivityAdjustment = clamp(
       20 * Math.log10(Math.max(0.1, sensitivityMvPa) / 10),
@@ -190,30 +266,65 @@ function psActiveAcousticMics() {
   return ids.map((id) => MICS[id]).filter(Boolean);
 }
 
-function psAircraftSourceAdjustment(ac) {
+function psAircraftSourceAdjustment(ac, profile, context) {
   const gs = Number(ac.gs || 0);
+  const engine = profile.engine || {};
   let adjustment = 0;
 
-  if (gs > 430) adjustment += 3;
-  else if (gs > 300) adjustment += 1.5;
-  else if (gs < 120) adjustment -= 2;
+  if (gs > 430) adjustment += Number(engine.speedDba || 1.8);
+  else if (gs > 300) adjustment += Number(engine.speedDba || 1.8) * 0.6;
+  else if (gs < 120) adjustment -= 1.5;
 
   const vr = Number(ac.baro_rate || ac.geom_rate || ac.vert_rate || 0);
 
-  if (vr > 900) adjustment += 2;
-  else if (vr < -900) adjustment += 1;
+  if (vr > 900) adjustment += Number(engine.climbDba || 2.4);
+  else if (vr < -900) adjustment += Number(engine.descentDba || 0.8);
+
+  adjustment += psAircraftDirectivityAdjustment(ac, profile, context);
 
   return adjustment;
 }
 
-function psPropagatedDba(dbaAt305m, distanceM) {
+function psAircraftDirectivityAdjustment(ac, profile, context) {
+  const directivity = String(
+    profile.directivity || profile.engine?.directivity || "generic",
+  );
+
+  if (!context || !Number.isFinite(context.x) || !Number.isFinite(context.y))
+    return 0;
+  if (directivity === "rotor") return 0.5;
+
+  const h = Math.max(0.001, Number(context.horizontalKm || 0));
+  const heading = Number(ac.track || 0) * D2R;
+  const noseX = Math.sin(heading);
+  const noseY = Math.cos(heading);
+  const listenerX = -Number(context.x || 0) / h;
+  const listenerY = -Number(context.y || 0) / h;
+  const dot = noseX * listenerX + noseY * listenerY;
+
+  if (directivity === "jet") {
+    if (dot < -0.45) return 2.8;
+    if (dot > 0.55) return -1.2;
+  }
+
+  if (directivity === "propeller") {
+    if (dot > 0.4) return 1.2;
+    if (dot < -0.55) return -0.4;
+  }
+
+  return 0;
+}
+
+function psPropagatedDba(dbaAt305m, distanceM, weatherCorrectionDba) {
   const d = Math.max(30, distanceM);
   const spreadingLoss = 20 * Math.log10(d / PS_ACOUSTIC_REFERENCE_DISTANCE_M);
   const airLoss =
     Math.max(0, (d - PS_ACOUSTIC_REFERENCE_DISTANCE_M) / 1000) *
-    PS_AIR_ABSORPTION_DB_PER_KM;
+    PS_BASE_AIR_ABSORPTION_DB_PER_KM;
 
-  return dbaAt305m - spreadingLoss - airLoss;
+  return (
+    dbaAt305m - spreadingLoss - airLoss + Number(weatherCorrectionDba || 0)
+  );
 }
 
 function psThresholdRadiusKm(sourceDbaAt305m, thresholdDba, altKm) {
@@ -245,32 +356,63 @@ function psEstimateAircraftNoise(ac, context) {
       confidence: 0,
       tooHigh: false,
       noSelectedMic: true,
+      reasonCodes: ["no_selected_mic"],
     };
   }
 
-  const profile = psAircraftNoiseProfile(ac.t);
-  const sourceDbaAt305m = profile.dbaAt305m + psAircraftSourceAdjustment(ac);
+  const profile = psAircraftNoiseProfile(ac);
+  const sourceDbaAt305m =
+    profile.dbaAt305m + psAircraftSourceAdjustment(ac, profile, context);
   const distanceM = Math.max(1, context.slantKm * 1000);
-  const receiverDba = psPropagatedDba(sourceDbaAt305m, distanceM);
+  const weather =
+    typeof psWeatherCorrectionForAircraft === "function"
+      ? psWeatherCorrectionForAircraft(context, profile)
+      : {
+          dbaCorrection: 0,
+          radiusCorrectionDba: 0,
+          confidence: 0.15,
+          reasonCodes: ["weather_unavailable"],
+        };
+  const audio =
+    typeof psAudioMonitorCorrection === "function"
+      ? psAudioMonitorCorrection(context)
+      : {
+          thresholdDbaAdjustment: 0,
+          confidenceBoost: 0,
+          reasonCodes: ["phone_mic_unavailable"],
+        };
+  const receiverDba = psPropagatedDba(
+    sourceDbaAt305m,
+    distanceM,
+    weather.dbaCorrection,
+  );
 
   let best = null;
 
   for (const mic of mics) {
     const micProfile = psMicAcousticProfile(mic);
-    const marginDba = receiverDba - micProfile.thresholdDba;
+    const thresholdDba =
+      micProfile.thresholdDba + Number(audio.thresholdDbaAdjustment || 0);
+    const marginDba = receiverDba - thresholdDba;
     const radiusKm = psThresholdRadiusKm(
-      sourceDbaAt305m,
-      micProfile.thresholdDba,
+      sourceDbaAt305m + Number(weather.radiusCorrectionDba || 0),
+      thresholdDba,
       context.altKm,
     );
 
     const result = {
       micName: micProfile.name,
-      thresholdDba: micProfile.thresholdDba,
+      thresholdDba,
       sensitivityMvPa: micProfile.sensitivityMvPa,
       marginDba,
       radiusKm,
-      confidence: Math.min(profile.confidence, micProfile.confidence),
+      confidence: clamp(
+        Math.min(profile.confidence, micProfile.confidence) +
+          Number(weather.confidence || 0) * 0.18 +
+          Number(audio.confidenceBoost || 0),
+        0,
+        0.92,
+      ),
       sourceType: profile.sourceType,
     };
 
@@ -282,18 +424,25 @@ function psEstimateAircraftNoise(ac, context) {
   const tooHigh = !best || best.radiusKm <= 0;
 
   return {
-    model: psHasVerifiedAircraftNoiseData()
-      ? "verified-aircraft-noise-profile"
-      : "estimated-aircraft-class-profile",
+    model: "acoustic-engine-v3",
     aircraftLabel: profile.label,
     sourceType: profile.sourceType,
     sourceDbaAt305m,
     receiverDba,
+    weatherCorrectionDba: weather.dbaCorrection,
+    windComponentKmh: weather.windComponentKmh,
+    absorptionDbPerKm: weather.absorptionDbPerKm,
+    audioEvidence: audio,
     micName: best ? best.micName : "Unknown",
     thresholdDba: best ? best.thresholdDba : 40,
     marginDba: best ? best.marginDba : -Infinity,
     radiusKm: best ? best.radiusKm : 0,
     confidence: best ? best.confidence : 0.2,
+    reasonCodes: [
+      "aircraft_profile_" + profile.sourceType,
+      ...(weather.reasonCodes || []),
+      ...(audio.reasonCodes || []),
+    ],
     tooHigh,
   };
 }

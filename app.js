@@ -52,7 +52,12 @@ function setPanel(name) {
 // === End manual mic spec editor ===
 
 function init() {
-  if (typeof psLoadAircraftNoiseProfiles === "function") {
+  if (typeof psBootAcousticEngine === "function") {
+    psBootAcousticEngine().then(() => {
+      render();
+      if (state.loc) fetchFeed();
+    });
+  } else if (typeof psLoadAircraftNoiseProfiles === "function") {
     psLoadAircraftNoiseProfiles().then(() => {
       render();
       if (state.loc) fetchFeed();

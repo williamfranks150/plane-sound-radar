@@ -1,0 +1,110 @@
+{
+  "schema": "plane-sound-aircraft-engine-profiles-v1",
+  "profiles": {
+    "widebody_turbofan_heavy": {
+      "label": "Heavy high-bypass turbofan",
+      "directivity": "jet",
+      "climbDba": 3.5,
+      "descentDba": 0.8,
+      "speedDba": 2.2
+    },
+    "widebody_turbofan_modern": {
+      "label": "Modern widebody turbofan",
+      "directivity": "jet",
+      "climbDba": 2.5,
+      "descentDba": 0.5,
+      "speedDba": 1.7
+    },
+    "widebody_turbofan": {
+      "label": "Widebody turbofan",
+      "directivity": "jet",
+      "climbDba": 3,
+      "descentDba": 0.7,
+      "speedDba": 2
+    },
+    "medium_turbofan": {
+      "label": "Medium turbofan",
+      "directivity": "jet",
+      "climbDba": 3,
+      "descentDba": 0.8,
+      "speedDba": 2
+    },
+    "narrowbody_turbofan": {
+      "label": "Narrowbody turbofan",
+      "directivity": "jet",
+      "climbDba": 2.6,
+      "descentDba": 0.6,
+      "speedDba": 1.8
+    },
+    "modern_narrowbody_turbofan": {
+      "label": "Modern narrowbody turbofan",
+      "directivity": "jet",
+      "climbDba": 2.2,
+      "descentDba": 0.5,
+      "speedDba": 1.5
+    },
+    "geared_turbofan": {
+      "label": "Geared turbofan",
+      "directivity": "jet",
+      "climbDba": 2,
+      "descentDba": 0.4,
+      "speedDba": 1.4
+    },
+    "older_narrowbody_turbofan": {
+      "label": "Older narrowbody turbofan",
+      "directivity": "jet",
+      "climbDba": 3.2,
+      "descentDba": 0.8,
+      "speedDba": 2.1
+    },
+    "regional_jet": {
+      "label": "Regional jet turbofan",
+      "directivity": "jet",
+      "climbDba": 2.4,
+      "descentDba": 0.6,
+      "speedDba": 1.6
+    },
+    "turboprop": {
+      "label": "Turboprop",
+      "directivity": "propeller",
+      "climbDba": 2.8,
+      "descentDba": 1.2,
+      "speedDba": 1.3
+    },
+    "small_turboprop": {
+      "label": "Small turboprop",
+      "directivity": "propeller",
+      "climbDba": 2.2,
+      "descentDba": 0.8,
+      "speedDba": 1
+    },
+    "piston": {
+      "label": "Piston propeller",
+      "directivity": "propeller",
+      "climbDba": 2,
+      "descentDba": 0.5,
+      "speedDba": 0.8
+    },
+    "light_helicopter": {
+      "label": "Light helicopter rotor/turboshaft",
+      "directivity": "rotor",
+      "climbDba": 1.8,
+      "descentDba": 1.3,
+      "speedDba": 1
+    },
+    "light_turboshaft": {
+      "label": "Light turbine helicopter",
+      "directivity": "rotor",
+      "climbDba": 2,
+      "descentDba": 1.5,
+      "speedDba": 1.1
+    },
+    "medium_turboshaft": {
+      "label": "Medium helicopter",
+      "directivity": "rotor",
+      "climbDba": 2.3,
+      "descentDba": 1.8,
+      "speedDba": 1.3
+    }
+  }
+}
