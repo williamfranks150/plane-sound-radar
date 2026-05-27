@@ -60,6 +60,42 @@ function psTimedPlaneSize(p, uiScale) {
   return psPlaneHasTimer(p) ? clamp(base * 1.5, 8, 34 * uiScale) : base;
 }
 
+function psDisplayPointForAircraft(px, py, size, isTimed, W, H, uiScale) {
+  const iconPad = Math.max(size + 8 * uiScale, 18 * uiScale);
+
+  if (isTimed) {
+    return {
+      visible: true,
+      x: clamp(px, iconPad, W - iconPad),
+      y: clamp(py, iconPad, H - iconPad),
+    };
+  }
+
+  const margin = 80 * uiScale;
+
+  if (px < -margin || px > W + margin || py < -margin || py > H + margin) {
+    return { visible: false, x: px, y: py };
+  }
+
+  return { visible: true, x: px, y: py };
+}
+
+function psRectOverlapsCircle(rect, circle) {
+  const nearestX = clamp(circle.x, rect.x, rect.x + rect.w);
+  const nearestY = clamp(circle.y, rect.y, rect.y + rect.h);
+  const dx = circle.x - nearestX;
+  const dy = circle.y - nearestY;
+
+  return dx * dx + dy * dy < circle.r * circle.r;
+}
+
+function psClampPointToCanvas(x, y, W, H, inset) {
+  return {
+    x: clamp(x, inset, W - inset),
+    y: clamp(y, inset, H - inset),
+  };
+}
+
 function psDrawRadarBackground(
   ctx,
   W,
@@ -149,12 +185,17 @@ function psDrawSweep(ctx, cx, cy, effectR) {
   ctx.stroke();
 }
 
-function psDrawAircraftPath(ctx, p, px, py, cx, cy, scale, col) {
+function psDrawAircraftPath(ctx, p, px, py, cx, cy, scale, col, W, H, uiScale) {
   if (p.entry == null && p.exit == null) return;
+
+  const endRawX = cx + (p.x + p.vx * 120) * scale;
+  const endRawY = cy - (p.y + p.vy * 120) * scale;
+  const inset = Math.max(6, 8 * uiScale);
+  const end = psClampPointToCanvas(endRawX, endRawY, W, H, inset);
 
   ctx.beginPath();
   ctx.moveTo(px, py);
-  ctx.lineTo(cx + (p.x + p.vx * 120) * scale, cy - (p.y + p.vy * 120) * scale);
+  ctx.lineTo(end.x, end.y);
   ctx.strokeStyle =
     p.status === "audible" ? "rgba(255,80,80,.35)" : "rgba(255,210,60,.3)";
   ctx.stroke();
@@ -238,6 +279,21 @@ function psDrawTimeTag(
 ) {
   if (!tag) return false;
 
+  function clampRect(rect) {
+    return {
+      x: Math.round(clamp(rect.x, 4, W - rect.w - 4)),
+      y: Math.round(clamp(rect.y, 4, H - rect.h - 4)),
+      w: rect.w,
+      h: rect.h,
+    };
+  }
+
+  function validRect(rect) {
+    if (psRectOverlapsCircle(rect, arrowBound)) return false;
+
+    return !placedLabels.some((label) => psLabelOverlaps(label, rect));
+  }
+
   const tagFont = Math.round(Math.max(18, 19 * uiScale));
   const tagPad = Math.max(7, 7 * uiScale);
   const tagH = Math.max(32, 32 * uiScale);
@@ -257,36 +313,109 @@ function psDrawTimeTag(
         Math.abs(metrics.actualBoundingBoxRight || 0),
     ),
   );
-
-  // Extra safety padding prevents the seconds from ever escaping the timer box.
   const tagW = Math.ceil(
     Math.max(measuredW + tagPad * 3.5 + 10 * uiScale, 82 * uiScale),
   );
 
+  const arrowBound = {
+    x: px,
+    y: py,
+    r: size * 1.2 + Math.max(6, 7 * uiScale),
+  };
   const heading = p.track * D2R;
   const forwardX = Math.sin(heading);
   const forwardY = -Math.cos(heading);
   const backX = -forwardX;
   const backY = -forwardY;
-  const gap = Math.max(2, 3 * uiScale);
-
-  let x;
-  let y;
-
-  if (Math.abs(backX) >= Math.abs(backY)) {
-    x = backX >= 0 ? px + size * 0.72 + gap : px - tagW - size * 0.72 - gap;
-    y = py - tagH / 2 + backY * size * 0.25;
-  } else {
-    x = px - tagW / 2 + backX * size * 0.25;
-    y = backY >= 0 ? py + size * 0.72 + gap : py - tagH - size * 0.72 - gap;
-  }
-
-  const placed = {
-    x: Math.round(clamp(x, 4, W - tagW - 4)),
-    y: Math.round(clamp(y, 4, H - tagH - 4)),
+  const gap = Math.max(8, 10 * uiScale);
+  const behindDistance = size + gap + Math.max(tagW, tagH) / 2;
+  const behind = {
+    x: px + backX * behindDistance - tagW / 2,
+    y: py + backY * behindDistance - tagH / 2,
     w: tagW,
     h: tagH,
   };
+  const right = { x: px + size + gap, y: py - tagH / 2, w: tagW, h: tagH };
+  const left = {
+    x: px - tagW - size - gap,
+    y: py - tagH / 2,
+    w: tagW,
+    h: tagH,
+  };
+  const top = { x: px - tagW / 2, y: py - tagH - size - gap, w: tagW, h: tagH };
+  const bottom = { x: px - tagW / 2, y: py + size + gap, w: tagW, h: tagH };
+
+  const candidates =
+    Math.abs(backX) >= Math.abs(backY)
+      ? [
+          behind,
+          backX >= 0 ? right : left,
+          top,
+          bottom,
+          backX >= 0 ? left : right,
+        ]
+      : [
+          behind,
+          backY >= 0 ? bottom : top,
+          right,
+          left,
+          backY >= 0 ? top : bottom,
+        ];
+
+  let placed = null;
+
+  for (const candidate of candidates) {
+    const clamped = clampRect(candidate);
+
+    if (validRect(clamped)) {
+      placed = clamped;
+      break;
+    }
+  }
+
+  if (!placed) {
+    const angleStep = Math.PI / 8;
+
+    for (let ring = 1; ring <= 5 && !placed; ring++) {
+      const distance =
+        size + gap + Math.max(tagW, tagH) / 2 + ring * 18 * uiScale;
+
+      for (let i = 0; i < 16; i++) {
+        const a = i * angleStep;
+        const candidate = clampRect({
+          x: px + Math.cos(a) * distance - tagW / 2,
+          y: py + Math.sin(a) * distance - tagH / 2,
+          w: tagW,
+          h: tagH,
+        });
+
+        if (validRect(candidate)) {
+          placed = candidate;
+          break;
+        }
+      }
+    }
+  }
+
+  if (!placed) {
+    const fallbackCandidates = [
+      { x: 4, y: 4, w: tagW, h: tagH },
+      { x: W - tagW - 4, y: 4, w: tagW, h: tagH },
+      { x: 4, y: H - tagH - 4, w: tagW, h: tagH },
+      { x: W - tagW - 4, y: H - tagH - 4, w: tagW, h: tagH },
+    ].map(clampRect);
+
+    placed =
+      fallbackCandidates.find((candidate) => validRect(candidate)) ||
+      fallbackCandidates
+        .map((candidate) => ({
+          candidate,
+          distance:
+            Math.pow(candidate.x + candidate.w / 2 - px, 2) +
+            Math.pow(candidate.y + candidate.h / 2 - py, 2),
+        }))
+        .sort((a, b) => b.distance - a.distance)[0].candidate;
+  }
 
   placedLabels.push(placed);
 
@@ -341,22 +470,30 @@ function drawRadar() {
   state.analyzed.forEach((p) => {
     if (p.status === "high" && p.h > rs.radar) return;
 
-    const px = cx + p.x * scale;
-    const py = cy - p.y * scale;
-    const margin = 80 * uiScale;
-
-    if (px < -margin || px > W + margin || py < -margin || py > H + margin) {
-      return;
-    }
-
+    const rawPx = cx + p.x * scale;
+    const rawPy = cy - p.y * scale;
+    const tag = psPlaneTimeTag(p);
+    const isTimed = tag !== "";
     const col = psPlaneColor(p);
     const size = psTimedPlaneSize(p, uiScale);
+    const displayPoint = psDisplayPointForAircraft(
+      rawPx,
+      rawPy,
+      size,
+      isTimed,
+      W,
+      H,
+      uiScale,
+    );
 
-    psDrawAircraftPath(ctx, p, px, py, cx, cy, scale, col);
-    const tag = psPlaneTimeTag(p);
+    if (!displayPoint.visible) return;
 
-    psDrawTimeTag(ctx, tag, p, px, py, size, col, placedLabels, W, H, uiScale);
+    const px = displayPoint.x;
+    const py = displayPoint.y;
+
+    psDrawAircraftPath(ctx, p, px, py, cx, cy, scale, col, W, H, uiScale);
     psDrawAircraftIcon(ctx, p, px, py, size, col);
+    psDrawTimeTag(ctx, tag, p, px, py, size, col, placedLabels, W, H, uiScale);
   });
 
   psDrawHomeMarker(ctx, cx, cy);
