@@ -40,10 +40,34 @@ function psMicKeys(m) {
     .filter(Boolean);
 }
 
+function psMicMatchesQuery(query, m) {
+  const q = psMicKey(query);
+  if (!q || !m) return false;
+  return psMicKeys(m).includes(q);
+}
+
 function psMicRecordsMatch(a, b) {
   const ak = psMicKeys(a);
   const bk = psMicKeys(b);
   return ak.some((k) => bk.includes(k));
+}
+
+function psExistingMicIdForRecord(record) {
+  for (const [id, m] of Object.entries(MICS)) {
+    if (psMicRecordsMatch(record, m)) return id;
+  }
+  return null;
+}
+
+function psUnhideMic(id) {
+  if (!id || !MICS[id]) return;
+
+  const hidden = new Set(state.hiddenMics || []);
+  if (hidden.has(id)) {
+    hidden.delete(id);
+    state.hiddenMics = [...hidden];
+    write(STORE_HIDDEN, state.hiddenMics);
+  }
 }
 
 function psRemoveDuplicateCustomMics() {
@@ -110,6 +134,10 @@ function psSpecMsg(text, ok = false) {
 function psShortFromModel(manufacturer, model) {
   const clean = String(model || "").trim();
   return clean.slice(0, 22) || String(manufacturer || "Mic").slice(0, 22);
+}
+
+function psModelFromMicRecord(m) {
+  return psSpecModel(m);
 }
 
 function psSpecValue(m, keys) {

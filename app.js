@@ -22,11 +22,34 @@ const state = {
   timer: null,
 };
 
+// === Plane Sound delayed connection lost logic ===
+// Do not show CONNECTION LOST for short feed hiccups.
+// Keep using last known aircraft state until the feed is stale enough that movement prediction is no longer trustworthy.
+// === End delayed connection lost logic ===
+
 function setPanel(name) {
   state.activePanel = state.activePanel === name ? null : name;
   write(STORE_UI, { activePanel: state.activePanel });
   render();
 }
+
+// === Plane Sound strict mic lookup override ===
+// Rules:
+// - Exact normalized model/name/alias match only.
+// - Unknown or unverified mic returns "mic unknown".
+// - Existing built-in mic is restored if previously hidden.
+// - Existing built-in mic is selected instead of duplicated.
+
+// === End strict mic lookup override ===
+
+// === Plane Sound manual mic spec editor ===
+// === Plane Sound mic spec prefill helpers ===
+// === End mic spec prefill helpers ===
+
+// === Plane Sound built-in mic spec preload ===
+// === End built-in mic spec preload ===
+
+// === End manual mic spec editor ===
 
 function init() {
   if (typeof psBootAcousticEngine === "function") {

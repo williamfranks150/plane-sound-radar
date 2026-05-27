@@ -51,6 +51,16 @@ async function psBootAcousticEngine() {
   }
 }
 
+function psHasVerifiedAircraftNoiseData() {
+  return (
+    PS_AIRCRAFT_NOISE_PROFILE_DATA &&
+    Array.isArray(PS_AIRCRAFT_NOISE_PROFILE_DATA.profiles) &&
+    PS_AIRCRAFT_NOISE_PROFILE_DATA.profiles.some(
+      (profile) => profile && profile.sourceType === "verified",
+    )
+  );
+}
+
 function psFindVerifiedAircraftNoiseProfile(type) {
   const t = String(type || "")
     .toUpperCase()
