@@ -27,18 +27,21 @@ function resizeCanvas() {
 function psPlaneColor(p) {
   if (p.status === "audible") return "#ff5050";
   if (p.status === "approaching") return "#ffd040";
-  if (p.status === "high") return "#607070";
+  if (p.status === "no-risk" || p.status === "high") return "#607070";
 
   return "#00ff8a";
 }
 
 function psPlaneAlpha(p) {
-  return p.status === "high" ? 0.55 : 1;
+  if (p.status === "no-risk" || p.status === "high") return 0.45;
+
+  return 1;
 }
 
 function psPlaneShadowBlur(p) {
   if (p.status === "audible") return 12;
   if (p.status === "approaching") return 10;
+  if (p.status === "no-risk" || p.status === "high") return 1;
 
   return 6;
 }
@@ -468,7 +471,8 @@ function drawRadar() {
   psDrawSweep(ctx, cx, cy, effectR);
 
   state.analyzed.forEach((p) => {
-    if (p.status === "high" && p.h > rs.radar) return;
+    if ((p.status === "high" || p.status === "no-risk") && p.h > rs.radar)
+      return;
 
     const rawPx = cx + p.x * scale;
     const rawPy = cy - p.y * scale;

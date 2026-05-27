@@ -51,10 +51,11 @@ function analyze(ac) {
     slantKm: slant,
     altKm,
     altFt,
+    x: pos.x,
+    y: pos.y,
     rangeSettings: rs,
   });
 
-  // Aircraft-specific acoustic threshold based on source level, altitude, distance, and selected mic.
   const acousticRadiusKm = Number.isFinite(Number(acoustic.radiusKm))
     ? Math.max(0, Number(acoustic.radiusKm))
     : 0;
@@ -62,13 +63,14 @@ function analyze(ac) {
   acoustic.displayRadiusKm = acousticRadiusKm;
 
   const noSelectedMic = acoustic.noSelectedMic === true;
-  const tooHigh = !noSelectedMic && (acoustic.tooHigh || acousticRadiusKm <= 0);
+  const belowAcousticThreshold =
+    !noSelectedMic && (acoustic.tooHigh || acousticRadiusKm <= 0);
 
   let entry = null;
   let exit = null;
   let inMic = false;
 
-  if (!tooHigh && acousticRadiusKm > 0) {
+  if (!belowAcousticThreshold && acousticRadiusKm > 0) {
     const hT = acousticRadiusKm;
     const v2 = p.vx * p.vx + p.vy * p.vy;
 
@@ -97,8 +99,8 @@ function analyze(ac) {
 
   const status = noSelectedMic
     ? "clear"
-    : tooHigh
-      ? "high"
+    : belowAcousticThreshold
+      ? "no-risk"
       : inMic
         ? "audible"
         : entry != null
@@ -106,13 +108,20 @@ function analyze(ac) {
           : "clear";
 
   const typeFactor = aircraftTypeFactor(ac.t);
-  const marginFactor = clamp((acoustic.marginDba + 12) / 24, 0.1, 1.55);
+  const safeMarginDba = Number.isFinite(Number(acoustic.marginDba))
+    ? Number(acoustic.marginDba)
+    : belowAcousticThreshold
+      ? -24
+      : -12;
+  const marginFactor = clamp((safeMarginDba + 12) / 24, 0.1, 1.55);
   const timeFactor =
     status === "audible"
       ? 1.1
       : status === "approaching"
         ? clamp(1 - Math.max(0, entry) / 900, 0.15, 0.75)
-        : 0.12;
+        : status === "clear"
+          ? 0.22
+          : 0.08;
 
   const risk = clamp(typeFactor * marginFactor * timeFactor, 0.1, 1.55);
 
@@ -135,7 +144,9 @@ function analyze(ac) {
     entry,
     exit,
     status,
-    tooHigh,
+    tooHigh: belowAcousticThreshold,
+    belowAcousticThreshold,
+    pollutesSound: status === "audible" || status === "approaching",
     typeFactor,
     risk,
     acoustic,
