@@ -49,7 +49,7 @@ function psAudioSourceBadgeText() {
   const mode = psAudioSourceBadgeMode();
 
   if (mode === "mixer") return "SOUND DEPT";
-  if (mode === "phone") return "IPHONE MIC";
+  if (mode === "phone") return "DEVICE MIC";
 
   return "NO MIC";
 }
