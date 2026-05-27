@@ -1,8 +1,8 @@
 "use strict";
 
-const STORE_AUDIO_SOURCE_MODE = "planeSound.audioSourceMode.v3";
-const STORE_AUDIO_DEVICE_ID = "planeSound.audioDeviceId.v3";
-const STORE_AUDIO_DEVICE_LABEL = "planeSound.audioDeviceLabel.v3";
+const STORE_AUDIO_SOURCE_MODE = "planeSound.audioSourceMode.v4";
+const STORE_AUDIO_DEVICE_ID = "planeSound.audioDeviceId.v4";
+const STORE_AUDIO_DEVICE_LABEL = "planeSound.audioDeviceLabel.v4";
 
 const PS_AUDIO_MONITOR = {
   available: false,
@@ -21,34 +21,42 @@ const PS_AUDIO_MONITOR = {
   devices: [],
   activeDeviceId: "",
   activeDeviceLabel: "",
-  activeSourceKind: "phone",
+  activeSourceKind: "device",
+  mixerDetected: false,
 };
 
 function psAudioSourceMode() {
   const value = localStorage.getItem(STORE_AUDIO_SOURCE_MODE);
 
-  return value === "manual" ? "manual" : "auto";
+  if (value === "mixer") return "mixer";
+  if (value === "manual") return "manual";
+
+  return "device";
 }
 
 function psIsManualAudioMode() {
   return psAudioSourceMode() === "manual";
 }
 
+function psRenderAudioSourceBadgeSafe() {
+  if (typeof psRenderAudioSourceBadge === "function") {
+    psRenderAudioSourceBadge();
+  }
+}
+
 function psSetAudioSourceMode(mode) {
-  const safe = mode === "manual" ? "manual" : "auto";
+  const safe = ["device", "mixer", "manual"].includes(mode) ? mode : "device";
 
   localStorage.setItem(STORE_AUDIO_SOURCE_MODE, safe);
 
-  if (safe === "manual") {
-    psStopAudioMonitor();
-  } else {
+  psStopAudioMonitor();
+
+  if (safe !== "manual") {
     PS_AUDIO_MONITOR.denied = false;
     psStartAudioMonitor();
   }
 
-  if (typeof psRenderAudioSourceBadge === "function") {
-    psRenderAudioSourceBadge();
-  }
+  psRenderAudioSourceBadgeSafe();
 }
 
 function psLikelySoundDeptAudioDevice(device) {
@@ -58,7 +66,6 @@ function psLikelySoundDeptAudioDevice(device) {
 
   if (!label) return false;
 
-  // These are normal device mics. They are equivalent to phone mic for this app.
   const consumerMicTerms = [
     "airpods",
     "bluetooth",
@@ -90,8 +97,6 @@ function psLikelySoundDeptAudioDevice(device) {
 
   if (consumerMicTerms.some((term) => label.includes(term))) return false;
 
-  // SOUND DEPT is reserved for likely production recorder / mixer / audio-interface feeds.
-  // Generic "USB audio" is not enough because many headsets expose that label.
   const productionAudioTerms = [
     "sound devices",
     "mixpre",
@@ -143,29 +148,25 @@ async function psListAudioInputDevices() {
   const inputs = devices.filter((device) => device.kind === "audioinput");
 
   PS_AUDIO_MONITOR.devices = inputs;
+  PS_AUDIO_MONITOR.mixerDetected = inputs.some(psLikelySoundDeptAudioDevice);
 
   return inputs;
 }
 
-function psBestAutoAudioDevice(devices) {
+function psBestDeviceMic(devices) {
   const inputs = Array.isArray(devices) ? devices : [];
-  const mixer = inputs.find(psLikelySoundDeptAudioDevice);
 
-  if (mixer) {
-    return {
-      sourceKind: "mixer",
-      deviceId: mixer.deviceId || "",
-      label: mixer.label || "External USB Audio",
-    };
-  }
+  return (
+    inputs.find((device) => !psLikelySoundDeptAudioDevice(device)) ||
+    inputs[0] ||
+    null
+  );
+}
 
-  const phone = inputs[0];
+function psBestMixerDevice(devices) {
+  const inputs = Array.isArray(devices) ? devices : [];
 
-  return {
-    sourceKind: "phone",
-    deviceId: phone ? phone.deviceId || "" : "",
-    label: phone && phone.label ? phone.label : "Phone Mic",
-  };
+  return inputs.find(psLikelySoundDeptAudioDevice) || null;
 }
 
 function psAudioConstraintsForDevice(deviceId) {
@@ -199,12 +200,10 @@ function psStopAudioMonitor() {
   PS_AUDIO_MONITOR.data = null;
   PS_AUDIO_MONITOR.activeDeviceId = "";
   PS_AUDIO_MONITOR.activeDeviceLabel = "";
-  PS_AUDIO_MONITOR.activeSourceKind = psIsManualAudioMode()
-    ? "manual"
-    : "phone";
+  PS_AUDIO_MONITOR.activeSourceKind =
+    psAudioSourceMode() === "mixer" ? "mixer" : "device";
 
-  if (typeof psRenderAudioSourceBadge === "function")
-    psRenderAudioSourceBadge();
+  psRenderAudioSourceBadgeSafe();
 }
 
 function psInitAudioMonitor() {
@@ -212,29 +211,36 @@ function psInitAudioMonitor() {
     !!navigator.mediaDevices && !!navigator.mediaDevices.getUserMedia;
 
   if (!PS_AUDIO_MONITOR.available) {
-    if (typeof psRenderAudioSourceBadge === "function")
-      psRenderAudioSourceBadge();
+    psRenderAudioSourceBadgeSafe();
     return;
   }
 
   if (navigator.mediaDevices.addEventListener) {
     navigator.mediaDevices.addEventListener("devicechange", () => {
-      if (!psIsManualAudioMode()) psStartAudioMonitor();
+      psListAudioInputDevices().then(() => {
+        if (!psIsManualAudioMode()) {
+          psSetAudioSourceMode(psAudioSourceMode());
+        }
+
+        psRenderAudioSourceBadgeSafe();
+      });
     });
   }
 
-  if (!psIsManualAudioMode()) {
-    psStartAudioMonitor();
-  }
+  psListAudioInputDevices().then(() => {
+    if (!psIsManualAudioMode()) {
+      psStartAudioMonitor();
+    }
 
-  if (typeof psRenderAudioSourceBadge === "function")
-    psRenderAudioSourceBadge();
+    psRenderAudioSourceBadgeSafe();
+  });
 }
 
 async function psStartAudioMonitor() {
-  if (psIsManualAudioMode()) return;
+  const mode = psAudioSourceMode();
+
+  if (mode === "manual") return;
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
-  if (PS_AUDIO_MONITOR.active) return;
 
   try {
     const permissionStream = await navigator.mediaDevices.getUserMedia(
@@ -244,26 +250,20 @@ async function psStartAudioMonitor() {
     permissionStream.getTracks().forEach((track) => track.stop());
 
     const devices = await psListAudioInputDevices();
-    const best = psBestAutoAudioDevice(devices);
-    const savedId = localStorage.getItem(STORE_AUDIO_DEVICE_ID) || "";
-    const savedLabel = localStorage.getItem(STORE_AUDIO_DEVICE_LABEL) || "";
+    const selected =
+      mode === "mixer" ? psBestMixerDevice(devices) : psBestDeviceMic(devices);
 
-    let selected = best;
-
-    if (savedId && devices.some((device) => device.deviceId === savedId)) {
-      const savedDevice = devices.find((device) => device.deviceId === savedId);
-
-      selected = {
-        sourceKind: psLikelySoundDeptAudioDevice(savedDevice)
-          ? "mixer"
-          : "phone",
-        deviceId: savedId,
-        label: savedDevice.label || savedLabel || best.label,
-      };
+    if (!selected) {
+      PS_AUDIO_MONITOR.active = false;
+      PS_AUDIO_MONITOR.activeSourceKind = mode === "mixer" ? "mixer" : "device";
+      psRenderAudioSourceBadgeSafe();
+      return;
     }
 
+    psStopAudioMonitor();
+
     const stream = await navigator.mediaDevices.getUserMedia(
-      psAudioConstraintsForDevice(selected.deviceId),
+      psAudioConstraintsForDevice(selected.deviceId || ""),
     );
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
     const context = new AudioContextClass();
@@ -283,23 +283,21 @@ async function psStartAudioMonitor() {
     PS_AUDIO_MONITOR.startedAt = Date.now();
     PS_AUDIO_MONITOR.activeDeviceId = selected.deviceId || "";
     PS_AUDIO_MONITOR.activeDeviceLabel = selected.label || "";
-    PS_AUDIO_MONITOR.activeSourceKind = selected.sourceKind || "phone";
+    PS_AUDIO_MONITOR.activeSourceKind = mode === "mixer" ? "mixer" : "device";
+    PS_AUDIO_MONITOR.mixerDetected = devices.some(psLikelySoundDeptAudioDevice);
 
     if (selected.deviceId) {
       localStorage.setItem(STORE_AUDIO_DEVICE_ID, selected.deviceId);
       localStorage.setItem(STORE_AUDIO_DEVICE_LABEL, selected.label || "");
     }
 
-    if (typeof psRenderAudioSourceBadge === "function")
-      psRenderAudioSourceBadge();
+    psRenderAudioSourceBadgeSafe();
     psAudioMonitorTick();
   } catch (err) {
     PS_AUDIO_MONITOR.denied = true;
     PS_AUDIO_MONITOR.active = false;
     console.warn("Audio monitor unavailable:", err.message || err);
-
-    if (typeof psRenderAudioSourceBadge === "function")
-      psRenderAudioSourceBadge();
+    psRenderAudioSourceBadgeSafe();
   }
 }
 
@@ -381,7 +379,7 @@ function psAudioMonitorCorrection() {
       detected ? "live_audio_aircraft_like_energy" : "live_audio_noise_floor",
       PS_AUDIO_MONITOR.activeSourceKind === "mixer"
         ? "sound_dept_feed"
-        : "phone_mic_feed",
+        : "device_mic_feed",
     ],
     dbfs: PS_AUDIO_MONITOR.dbfs,
     floorDbfs: PS_AUDIO_MONITOR.floorDbfs,

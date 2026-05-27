@@ -17,41 +17,45 @@ function psEnsureAudioSourceBadge() {
   el = document.createElement("button");
   el.id = "audioSourceBadge";
   el.type = "button";
-  el.className = "audio-source-badge manual";
+  el.className = "audio-source-badge unavailable";
   el.setAttribute("aria-label", "Audio source");
-  el.textContent = "NO MIC";
+  el.textContent = "DEVICE MIC";
 
   parent.appendChild(el);
 
   return el;
 }
 
-function psAudioSourceBadgeMode() {
+function psAudioBadgeMode() {
+  if (typeof psAudioSourceMode === "function") return psAudioSourceMode();
+
+  return "device";
+}
+
+function psAudioBadgeText(mode) {
+  if (mode === "mixer") return "SOUND DEPT";
+  if (mode === "manual") return "NO MIC";
+
+  return "DEVICE MIC";
+}
+
+function psAudioBadgeAvailable(mode) {
   const monitor =
     typeof PS_AUDIO_MONITOR === "object" && PS_AUDIO_MONITOR
       ? PS_AUDIO_MONITOR
       : null;
 
-  if (typeof psIsManualAudioMode === "function" && psIsManualAudioMode()) {
-    return "manual";
+  if (mode === "manual") return false;
+  if (!monitor || !monitor.available || monitor.denied || !monitor.active)
+    return false;
+
+  if (mode === "mixer") {
+    return (
+      monitor.activeSourceKind === "mixer" && monitor.mixerDetected === true
+    );
   }
 
-  if (!monitor || !monitor.available || monitor.denied || !monitor.active) {
-    return "manual";
-  }
-
-  if (monitor.activeSourceKind === "mixer") return "mixer";
-
-  return "phone";
-}
-
-function psAudioSourceBadgeText() {
-  const mode = psAudioSourceBadgeMode();
-
-  if (mode === "mixer") return "SOUND DEPT";
-  if (mode === "phone") return "DEVICE MIC";
-
-  return "NO MIC";
+  return monitor.activeSourceKind === "device";
 }
 
 function psRenderAudioSourceBadge() {
@@ -59,21 +63,31 @@ function psRenderAudioSourceBadge() {
 
   if (!el) return;
 
-  const mode = psAudioSourceBadgeMode();
+  const mode = psAudioBadgeMode();
+  const available = psAudioBadgeAvailable(mode);
 
-  el.className = "audio-source-badge " + mode;
-  el.textContent = psAudioSourceBadgeText();
+  el.className =
+    "audio-source-badge " +
+    mode +
+    " " +
+    (available ? "available" : "unavailable");
+
+  el.textContent = psAudioBadgeText(mode);
+}
+
+function psNextAudioSourceMode(mode) {
+  if (mode === "device") return "mixer";
+  if (mode === "mixer") return "manual";
+
+  return "device";
 }
 
 function psAudioSourceBadgePressed() {
-  const mode = psAudioSourceBadgeMode();
+  const current = psAudioBadgeMode();
+  const next = psNextAudioSourceMode(current);
 
-  if (mode === "manual") {
-    if (typeof psSetAudioSourceMode === "function")
-      psSetAudioSourceMode("auto");
-    if (typeof psStartAudioMonitor === "function") psStartAudioMonitor();
-  } else if (typeof psSetAudioSourceMode === "function") {
-    psSetAudioSourceMode("manual");
+  if (typeof psSetAudioSourceMode === "function") {
+    psSetAudioSourceMode(next);
   }
 
   psRenderAudioSourceBadge();
@@ -88,14 +102,6 @@ function psBootAudioSourceBadge() {
   }
 
   psRenderAudioSourceBadge();
-
-  if (
-    typeof psIsManualAudioMode === "function" &&
-    !psIsManualAudioMode() &&
-    typeof psStartAudioMonitor === "function"
-  ) {
-    psStartAudioMonitor();
-  }
 }
 
 document.addEventListener("DOMContentLoaded", psBootAudioSourceBadge);

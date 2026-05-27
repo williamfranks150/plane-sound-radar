@@ -966,13 +966,18 @@ textarea,
   backdrop-filter: blur(2px);
 }
 
-.audio-source-badge.mixer,
-.audio-source-badge.phone,
-.audio-source-badge.manual {
+.audio-source-badge.available {
   border-color: rgba(0, 217, 122, 0.38);
   background: rgba(0, 12, 8, 0.68);
   box-shadow: 0 0 16px rgba(0, 217, 122, 0.1);
-  color: rgba(210, 238, 225, 0.92);
+  color: #00d97a;
+}
+
+.audio-source-badge.unavailable {
+  border-color: rgba(130, 150, 145, 0.24);
+  background: rgba(0, 12, 8, 0.48);
+  box-shadow: none;
+  color: rgba(170, 188, 182, 0.5);
 }
 
 @media (max-width: 720px) {
