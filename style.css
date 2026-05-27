@@ -950,10 +950,10 @@ textarea,
   min-width: 104px;
   max-width: 150px;
   padding: 9px 11px;
-  border: 1px solid rgba(0, 217, 122, 0.42);
+  border: 1px solid rgba(0, 217, 122, 0.38);
   border-radius: 10px;
-  background: rgba(0, 12, 8, 0.74);
-  box-shadow: 0 0 16px rgba(0, 217, 122, 0.12);
+  background: rgba(0, 12, 8, 0.68);
+  box-shadow: 0 0 16px rgba(0, 217, 122, 0.1);
   color: rgba(210, 238, 225, 0.92);
   font-family: inherit;
   font-size: 11px;
@@ -966,21 +966,13 @@ textarea,
   backdrop-filter: blur(2px);
 }
 
-.audio-source-badge.mixer {
-  border-color: rgba(255, 216, 74, 0.58);
-  color: #ffd84a;
-  box-shadow: 0 0 16px rgba(255, 216, 74, 0.1);
-}
-
-.audio-source-badge.phone {
-  border-color: rgba(0, 217, 122, 0.48);
-  color: rgba(210, 238, 225, 0.96);
-}
-
+.audio-source-badge.mixer,
+.audio-source-badge.phone,
 .audio-source-badge.manual {
-  border-color: rgba(210, 238, 225, 0.24);
-  background: rgba(0, 12, 8, 0.52);
-  color: rgba(210, 238, 225, 0.62);
+  border-color: rgba(0, 217, 122, 0.38);
+  background: rgba(0, 12, 8, 0.68);
+  box-shadow: 0 0 16px rgba(0, 217, 122, 0.1);
+  color: rgba(210, 238, 225, 0.92);
 }
 
 @media (max-width: 720px) {

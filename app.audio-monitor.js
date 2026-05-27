@@ -58,19 +58,41 @@ function psLikelySoundDeptAudioDevice(device) {
 
   if (!label) return false;
 
-  const builtInTerms = [
+  // These are normal device mics. They are equivalent to phone mic for this app.
+  const consumerMicTerms = [
+    "airpods",
+    "bluetooth",
+    "headphone",
+    "headphones",
+    "headset",
+    "earbuds",
+    "earbud",
+    "hands-free",
+    "handsfree",
+    "wireless",
+    "webcam",
+    "camera",
+    "logitech",
+    "brio",
+    "c920",
+    "c922",
     "iphone microphone",
     "ipad microphone",
+    "macbook",
     "built-in",
     "built in",
     "internal microphone",
     "default - microphone",
+    "realtek",
+    "array",
+    "communications",
   ];
 
-  if (builtInTerms.some((term) => label.includes(term))) return false;
+  if (consumerMicTerms.some((term) => label.includes(term))) return false;
 
-  const externalTerms = [
-    "usb",
+  // SOUND DEPT is reserved for likely production recorder / mixer / audio-interface feeds.
+  // Generic "USB audio" is not enough because many headsets expose that label.
+  const productionAudioTerms = [
     "sound devices",
     "mixpre",
     "scorpio",
@@ -78,12 +100,17 @@ function psLikelySoundDeptAudioDevice(device) {
     "888",
     "688",
     "633",
-    "zoom",
-    "f8",
-    "f6",
-    "f4",
+    "664",
+    "552",
+    "442",
+    "302",
+    "zoom f8",
+    "zoom f6",
+    "zoom f4",
+    "f8n",
+    "f8n pro",
     "tascam",
-    "rode",
+    "rodecaster",
     "r�decaster",
     "focusrite",
     "scarlett",
@@ -95,16 +122,17 @@ function psLikelySoundDeptAudioDevice(device) {
     "audient",
     "steinberg",
     "roland",
+    "apollo",
+    "ua-",
+    "audio interface",
     "interface",
-    "audio codec",
-    "digital audio",
-    "external microphone",
-    "external mic",
     "mixer",
     "recorder",
+    "field recorder",
+    "multitrack",
   ];
 
-  return externalTerms.some((term) => label.includes(term));
+  return productionAudioTerms.some((term) => label.includes(term));
 }
 
 async function psListAudioInputDevices() {
