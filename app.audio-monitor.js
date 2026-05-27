@@ -362,6 +362,7 @@ function psAudioMonitorCorrection() {
     return {
       thresholdDbaAdjustment: 0,
       confidenceBoost: 0,
+      reliability: 0,
       reasonCodes: ["live_audio_inactive"],
     };
   }
@@ -371,15 +372,16 @@ function psAudioMonitorCorrection() {
     ? clamp((floor + 52) / 8, 0, 3)
     : 0;
   const detected = PS_AUDIO_MONITOR.aircraftLikeScore > 0.55;
+  const isSoundDept = PS_AUDIO_MONITOR.activeSourceKind === "mixer";
+  const reliability = isSoundDept ? 0.75 : 0.18;
 
   return {
     thresholdDbaAdjustment: highAmbient,
-    confidenceBoost: detected ? 0.12 : 0.04,
+    confidenceBoost: detected ? 0.14 : 0.04,
+    reliability,
     reasonCodes: [
       detected ? "live_audio_aircraft_like_energy" : "live_audio_noise_floor",
-      PS_AUDIO_MONITOR.activeSourceKind === "mixer"
-        ? "sound_dept_feed"
-        : "device_mic_feed",
+      isSoundDept ? "sound_dept_feed" : "device_mic_helper",
     ],
     dbfs: PS_AUDIO_MONITOR.dbfs,
     floorDbfs: PS_AUDIO_MONITOR.floorDbfs,

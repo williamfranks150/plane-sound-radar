@@ -381,6 +381,20 @@ function psEstimateAircraftNoise(ac, context) {
           confidenceBoost: 0,
           reasonCodes: ["phone_mic_unavailable"],
         };
+  const audioReliability = clamp(
+    Number(
+      audio.reliability ??
+        (audio.sourceKind === "mixer"
+          ? 0.75
+          : audio.sourceKind === "device"
+            ? 0.18
+            : 0),
+    ),
+    0,
+    1,
+  );
+  const audioThresholdAdjustmentDba =
+    Number(audio.thresholdDbaAdjustment || 0) * audioReliability;
   const receiverDba = psPropagatedDba(
     sourceDbaAt305m,
     distanceM,
@@ -391,8 +405,7 @@ function psEstimateAircraftNoise(ac, context) {
 
   for (const mic of mics) {
     const micProfile = psMicAcousticProfile(mic);
-    const thresholdDba =
-      micProfile.thresholdDba + Number(audio.thresholdDbaAdjustment || 0);
+    const thresholdDba = micProfile.thresholdDba + audioThresholdAdjustmentDba;
     const marginDba = receiverDba - thresholdDba;
     const radiusKm = psThresholdRadiusKm(
       sourceDbaAt305m + Number(weather.radiusCorrectionDba || 0),
@@ -409,7 +422,7 @@ function psEstimateAircraftNoise(ac, context) {
       confidence: clamp(
         Math.min(profile.confidence, micProfile.confidence) +
           Number(weather.confidence || 0) * 0.18 +
-          Number(audio.confidenceBoost || 0),
+          Number(audio.confidenceBoost || 0) * audioReliability,
         0,
         0.92,
       ),
@@ -432,7 +445,11 @@ function psEstimateAircraftNoise(ac, context) {
     weatherCorrectionDba: weather.dbaCorrection,
     windComponentKmh: weather.windComponentKmh,
     absorptionDbPerKm: weather.absorptionDbPerKm,
-    audioEvidence: audio,
+    audioEvidence: {
+      ...audio,
+      reliability: audioReliability,
+      appliedThresholdAdjustmentDba: audioThresholdAdjustmentDba,
+    },
     micName: best ? best.micName : "Unknown",
     thresholdDba: best ? best.thresholdDba : 40,
     marginDba: best ? best.marginDba : -Infinity,
