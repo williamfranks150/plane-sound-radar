@@ -92,20 +92,21 @@ function psCanvasDirectionForAircraft(p) {
 function psTimedDisplayRadius(p, gridR) {
   const seconds = psTimedDisplaySeconds(p);
 
-  if (seconds == null) return gridR;
+  if (seconds == null) return gridR * 0.72;
 
   const windowSeconds = p.status === "approaching" ? 420 : 300;
   const t = clamp(seconds / windowSeconds, 0, 1);
 
-  // Long time = close to outer radar circle.
-  // Short time = closer to home marker.
-  return gridR * (0.24 + Math.sqrt(t) * 0.8);
+  // Visual warning scale:
+  // long time = near outer radar ring
+  // short time = closer to mic/source centre
+  return gridR * (0.3 + Math.sqrt(t) * 0.6);
 }
 
 function psDisplayPointForAircraft(
   p,
-  px,
-  py,
+  rawPx,
+  rawPy,
   size,
   isTimed,
   W,
@@ -114,41 +115,62 @@ function psDisplayPointForAircraft(
   cx,
   cy,
   gridR,
+  protectedRects = [],
 ) {
   const iconPad = Math.max(size + 8 * uiScale, 18 * uiScale);
 
   if (isTimed) {
     const dir = psCanvasDirectionForAircraft(p);
-    const maxRadius = Math.max(
-      gridR * 0.55,
-      Math.min(
-        gridR * 1.04,
-        cx - iconPad,
-        W - cx - iconPad,
-        cy - iconPad,
-        H - cy - iconPad,
-      ),
-    );
+    const minRadius = gridR * 0.28;
+    const maxRadius = gridR * 0.9;
     const targetRadius = clamp(
       psTimedDisplayRadius(p, gridR),
-      gridR * 0.22,
+      minRadius,
       maxRadius,
     );
+    const boundR = size + Math.max(10, 12 * uiScale);
+
+    for (let i = 0; i <= 12; i++) {
+      const radius = clamp(
+        targetRadius - i * gridR * 0.045,
+        minRadius,
+        maxRadius,
+      );
+      const x = cx + dir.dx * radius;
+      const y = cy + dir.dy * radius;
+
+      if (
+        x >= iconPad &&
+        x <= W - iconPad &&
+        y >= iconPad &&
+        y <= H - iconPad &&
+        psPointAvoidsProtectedRects(x, y, boundR, protectedRects)
+      ) {
+        return { visible: true, x, y };
+      }
+    }
+
+    const fallbackRadius = gridR * 0.58;
 
     return {
       visible: true,
-      x: clamp(cx + dir.dx * targetRadius, iconPad, W - iconPad),
-      y: clamp(cy + dir.dy * targetRadius, iconPad, H - iconPad),
+      x: clamp(cx + dir.dx * fallbackRadius, iconPad, W - iconPad),
+      y: clamp(cy + dir.dy * fallbackRadius, iconPad, H - iconPad),
     };
   }
 
   const margin = 80 * uiScale;
 
-  if (px < -margin || px > W + margin || py < -margin || py > H + margin) {
-    return { visible: false, x: px, y: py };
+  if (
+    rawPx < -margin ||
+    rawPx > W + margin ||
+    rawPy < -margin ||
+    rawPy > H + margin
+  ) {
+    return { visible: false, x: rawPx, y: rawPy };
   }
 
-  return { visible: true, x: px, y: py };
+  return { visible: true, x: rawPx, y: rawPy };
 }
 
 function psRectOverlapsCircle(rect, circle) {
@@ -165,6 +187,44 @@ function psClampPointToCanvas(x, y, W, H, inset) {
     x: clamp(x, inset, W - inset),
     y: clamp(y, inset, H - inset),
   };
+}
+
+function psCanvasProtectedRects(canvas, uiScale) {
+  const canvasRect = canvas.getBoundingClientRect();
+  const ids = ["selectedMicList", "audioSourceBadge"];
+  const margin = Math.max(8, 10 * uiScale);
+
+  return ids
+    .map((id) => {
+      const el = document.getElementById(id);
+
+      if (!el) return null;
+
+      const r = el.getBoundingClientRect();
+
+      if (!r.width || !r.height) return null;
+
+      return {
+        x: r.left - canvasRect.left - margin,
+        y: r.top - canvasRect.top - margin,
+        w: r.width + margin * 2,
+        h: r.height + margin * 2,
+      };
+    })
+    .filter(Boolean);
+}
+
+function psCircleOverlapsRect(x, y, r, rect) {
+  const nearestX = clamp(x, rect.x, rect.x + rect.w);
+  const nearestY = clamp(y, rect.y, rect.y + rect.h);
+  const dx = x - nearestX;
+  const dy = y - nearestY;
+
+  return dx * dx + dy * dy < r * r;
+}
+
+function psPointAvoidsProtectedRects(x, y, r, protectedRects) {
+  return !protectedRects.some((rect) => psCircleOverlapsRect(x, y, r, rect));
 }
 
 function psDrawRadarBackground(
@@ -547,7 +607,8 @@ function drawRadar() {
   const uiScale = clamp(gridR / 420, 0.55, 1.12);
   const rs = rangeSettings();
   const scale = gridR / rs.radar;
-  const placedLabels = [];
+  const protectedRects = psCanvasProtectedRects(c, uiScale);
+  const placedLabels = [...protectedRects];
 
   ctx.clearRect(0, 0, c.width, c.height);
   ctx.save();
@@ -567,6 +628,7 @@ function drawRadar() {
     const col = psPlaneColor(p);
     const size = psTimedPlaneSize(p, uiScale);
     const displayPoint = psDisplayPointForAircraft(
+      p,
       rawPx,
       rawPy,
       size,
@@ -574,6 +636,10 @@ function drawRadar() {
       W,
       H,
       uiScale,
+      cx,
+      cy,
+      gridR,
+      protectedRects,
     );
 
     if (!displayPoint.visible) return;
