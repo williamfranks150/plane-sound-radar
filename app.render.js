@@ -1,14 +1,18 @@
 "use strict";
 
 function recompute() {
+  const order = {
+    audible: 0,
+    approaching: 1,
+    clear: 2,
+    "no-risk": 3,
+  };
+
   state.analyzed = state.adsb.planes
     .map(analyze)
     .filter(Boolean)
     .sort(
-      (a, b) =>
-        ({ audible: 0, approaching: 1, clear: 2, high: 3 })[a.status] -
-          { audible: 0, approaching: 1, clear: 2, high: 3 }[b.status] ||
-        a.h - b.h,
+      (a, b) => (order[a.status] ?? 9) - (order[b.status] ?? 9) || a.h - b.h,
     );
 }
 
@@ -189,7 +193,7 @@ function planeCard(p) {
         ? "Approaching"
         : p.status === "clear"
           ? "Tracked"
-          : "High";
+          : "Below threshold";
   const timing =
     p.status === "audible" && p.exit != null
       ? "-" + fmt(p.exit)

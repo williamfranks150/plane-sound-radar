@@ -27,13 +27,13 @@ function resizeCanvas() {
 function psPlaneColor(p) {
   if (p.status === "audible") return "#ff5050";
   if (p.status === "approaching") return "#ffd040";
-  if (p.status === "no-risk" || p.status === "high") return "#607070";
+  if (p.status === "no-risk") return "#607070";
 
   return "#00ff8a";
 }
 
 function psPlaneAlpha(p) {
-  if (p.status === "no-risk" || p.status === "high") return 0.45;
+  if (p.status === "no-risk") return 0.45;
 
   return 1;
 }
@@ -41,7 +41,7 @@ function psPlaneAlpha(p) {
 function psPlaneShadowBlur(p) {
   if (p.status === "audible") return 12;
   if (p.status === "approaching") return 10;
-  if (p.status === "no-risk" || p.status === "high") return 1;
+  if (p.status === "no-risk") return 1;
 
   return 6;
 }
@@ -375,42 +375,6 @@ function psLabelOverlaps(a, b) {
     a.y + a.h <= b.y ||
     b.y + b.h <= a.y
   );
-}
-
-function psPlaceTimeLabel(preferred, placedLabels, W, H, uiScale) {
-  const minX = 4;
-  const minY = 4;
-  const maxX = W - 4;
-  const maxY = H - 4;
-  const step = Math.max(24, 28 * uiScale);
-  const baseX = clamp(preferred.x, minX, maxX - preferred.w);
-  const baseY = clamp(preferred.y, minY, maxY - preferred.h);
-  const candidates = [{ x: baseX, y: baseY, w: preferred.w, h: preferred.h }];
-
-  for (let i = 1; i <= 10; i++) {
-    candidates.push({
-      x: baseX,
-      y: clamp(baseY + i * step, minY, maxY - preferred.h),
-      w: preferred.w,
-      h: preferred.h,
-    });
-    candidates.push({
-      x: baseX,
-      y: clamp(baseY - i * step, minY, maxY - preferred.h),
-      w: preferred.w,
-      h: preferred.h,
-    });
-  }
-
-  for (const candidate of candidates) {
-    if (!placedLabels.some((label) => psLabelOverlaps(label, candidate))) {
-      placedLabels.push(candidate);
-      return candidate;
-    }
-  }
-
-  placedLabels.push(candidates[0]);
-  return candidates[0];
 }
 
 function psDrawTimeTag(
