@@ -8,6 +8,7 @@ const files = [
   "app.aircraft-db.js",
   "app.weather.js",
   "app.audio-monitor.js",
+  "app.audio-source.js",
   "app.acoustics.js",
   "app.aircraft.js",
   "app.mics.js",

@@ -1,5 +1,9 @@
 "use strict";
 
+const STORE_AUDIO_SOURCE_MODE = "planeSound.audioSourceMode.v3";
+const STORE_AUDIO_DEVICE_ID = "planeSound.audioDeviceId.v3";
+const STORE_AUDIO_DEVICE_LABEL = "planeSound.audioDeviceLabel.v3";
+
 const PS_AUDIO_MONITOR = {
   available: false,
   active: false,
@@ -14,36 +18,225 @@ const PS_AUDIO_MONITOR = {
   context: null,
   analyser: null,
   data: null,
+  devices: [],
+  activeDeviceId: "",
+  activeDeviceLabel: "",
+  activeSourceKind: "phone",
 };
 
-function psInitAudioMonitor() {
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+function psAudioSourceMode() {
+  const value = localStorage.getItem(STORE_AUDIO_SOURCE_MODE);
 
-  PS_AUDIO_MONITOR.available = true;
+  return value === "manual" ? "manual" : "auto";
+}
 
-  const startOnce = () => {
+function psIsManualAudioMode() {
+  return psAudioSourceMode() === "manual";
+}
+
+function psSetAudioSourceMode(mode) {
+  const safe = mode === "manual" ? "manual" : "auto";
+
+  localStorage.setItem(STORE_AUDIO_SOURCE_MODE, safe);
+
+  if (safe === "manual") {
+    psStopAudioMonitor();
+  } else {
+    PS_AUDIO_MONITOR.denied = false;
     psStartAudioMonitor();
-    window.removeEventListener("pointerdown", startOnce);
-    window.removeEventListener("keydown", startOnce);
+  }
+
+  if (typeof psRenderAudioSourceBadge === "function") {
+    psRenderAudioSourceBadge();
+  }
+}
+
+function psLikelySoundDeptAudioDevice(device) {
+  const label = String(
+    device && device.label ? device.label : "",
+  ).toLowerCase();
+
+  if (!label) return false;
+
+  const builtInTerms = [
+    "iphone microphone",
+    "ipad microphone",
+    "built-in",
+    "built in",
+    "internal microphone",
+    "default - microphone",
+  ];
+
+  if (builtInTerms.some((term) => label.includes(term))) return false;
+
+  const externalTerms = [
+    "usb",
+    "sound devices",
+    "mixpre",
+    "scorpio",
+    "833",
+    "888",
+    "688",
+    "633",
+    "zoom",
+    "f8",
+    "f6",
+    "f4",
+    "tascam",
+    "rode",
+    "r�decaster",
+    "focusrite",
+    "scarlett",
+    "behringer",
+    "motu",
+    "presonus",
+    "ssl",
+    "m-audio",
+    "audient",
+    "steinberg",
+    "roland",
+    "interface",
+    "audio codec",
+    "digital audio",
+    "external microphone",
+    "external mic",
+    "mixer",
+    "recorder",
+  ];
+
+  return externalTerms.some((term) => label.includes(term));
+}
+
+async function psListAudioInputDevices() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices)
+    return [];
+
+  const devices = await navigator.mediaDevices.enumerateDevices();
+  const inputs = devices.filter((device) => device.kind === "audioinput");
+
+  PS_AUDIO_MONITOR.devices = inputs;
+
+  return inputs;
+}
+
+function psBestAutoAudioDevice(devices) {
+  const inputs = Array.isArray(devices) ? devices : [];
+  const mixer = inputs.find(psLikelySoundDeptAudioDevice);
+
+  if (mixer) {
+    return {
+      sourceKind: "mixer",
+      deviceId: mixer.deviceId || "",
+      label: mixer.label || "External USB Audio",
+    };
+  }
+
+  const phone = inputs[0];
+
+  return {
+    sourceKind: "phone",
+    deviceId: phone ? phone.deviceId || "" : "",
+    label: phone && phone.label ? phone.label : "Phone Mic",
+  };
+}
+
+function psAudioConstraintsForDevice(deviceId) {
+  const audio = {
+    echoCancellation: false,
+    noiseSuppression: false,
+    autoGainControl: false,
   };
 
-  window.addEventListener("pointerdown", startOnce, { once: true });
-  window.addEventListener("keydown", startOnce, { once: true });
+  if (deviceId) audio.deviceId = { exact: deviceId };
+
+  return {
+    audio,
+    video: false,
+  };
+}
+
+function psStopAudioMonitor() {
+  if (PS_AUDIO_MONITOR.stream) {
+    PS_AUDIO_MONITOR.stream.getTracks().forEach((track) => track.stop());
+  }
+
+  if (PS_AUDIO_MONITOR.context && PS_AUDIO_MONITOR.context.state !== "closed") {
+    PS_AUDIO_MONITOR.context.close();
+  }
+
+  PS_AUDIO_MONITOR.active = false;
+  PS_AUDIO_MONITOR.stream = null;
+  PS_AUDIO_MONITOR.context = null;
+  PS_AUDIO_MONITOR.analyser = null;
+  PS_AUDIO_MONITOR.data = null;
+  PS_AUDIO_MONITOR.activeDeviceId = "";
+  PS_AUDIO_MONITOR.activeDeviceLabel = "";
+  PS_AUDIO_MONITOR.activeSourceKind = psIsManualAudioMode()
+    ? "manual"
+    : "phone";
+
+  if (typeof psRenderAudioSourceBadge === "function")
+    psRenderAudioSourceBadge();
+}
+
+function psInitAudioMonitor() {
+  PS_AUDIO_MONITOR.available =
+    !!navigator.mediaDevices && !!navigator.mediaDevices.getUserMedia;
+
+  if (!PS_AUDIO_MONITOR.available) {
+    if (typeof psRenderAudioSourceBadge === "function")
+      psRenderAudioSourceBadge();
+    return;
+  }
+
+  if (navigator.mediaDevices.addEventListener) {
+    navigator.mediaDevices.addEventListener("devicechange", () => {
+      if (!psIsManualAudioMode()) psStartAudioMonitor();
+    });
+  }
+
+  if (!psIsManualAudioMode()) {
+    psStartAudioMonitor();
+  }
+
+  if (typeof psRenderAudioSourceBadge === "function")
+    psRenderAudioSourceBadge();
 }
 
 async function psStartAudioMonitor() {
-  if (PS_AUDIO_MONITOR.active || PS_AUDIO_MONITOR.denied) return;
+  if (psIsManualAudioMode()) return;
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+  if (PS_AUDIO_MONITOR.active) return;
 
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      audio: {
-        echoCancellation: false,
-        noiseSuppression: false,
-        autoGainControl: false,
-      },
-      video: false,
-    });
+    const permissionStream = await navigator.mediaDevices.getUserMedia(
+      psAudioConstraintsForDevice(""),
+    );
 
+    permissionStream.getTracks().forEach((track) => track.stop());
+
+    const devices = await psListAudioInputDevices();
+    const best = psBestAutoAudioDevice(devices);
+    const savedId = localStorage.getItem(STORE_AUDIO_DEVICE_ID) || "";
+    const savedLabel = localStorage.getItem(STORE_AUDIO_DEVICE_LABEL) || "";
+
+    let selected = best;
+
+    if (savedId && devices.some((device) => device.deviceId === savedId)) {
+      const savedDevice = devices.find((device) => device.deviceId === savedId);
+
+      selected = {
+        sourceKind: psLikelySoundDeptAudioDevice(savedDevice)
+          ? "mixer"
+          : "phone",
+        deviceId: savedId,
+        label: savedDevice.label || savedLabel || best.label,
+      };
+    }
+
+    const stream = await navigator.mediaDevices.getUserMedia(
+      psAudioConstraintsForDevice(selected.deviceId),
+    );
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
     const context = new AudioContextClass();
     const source = context.createMediaStreamSource(stream);
@@ -58,12 +251,27 @@ async function psStartAudioMonitor() {
     PS_AUDIO_MONITOR.analyser = analyser;
     PS_AUDIO_MONITOR.data = new Uint8Array(analyser.frequencyBinCount);
     PS_AUDIO_MONITOR.active = true;
+    PS_AUDIO_MONITOR.denied = false;
     PS_AUDIO_MONITOR.startedAt = Date.now();
+    PS_AUDIO_MONITOR.activeDeviceId = selected.deviceId || "";
+    PS_AUDIO_MONITOR.activeDeviceLabel = selected.label || "";
+    PS_AUDIO_MONITOR.activeSourceKind = selected.sourceKind || "phone";
 
+    if (selected.deviceId) {
+      localStorage.setItem(STORE_AUDIO_DEVICE_ID, selected.deviceId);
+      localStorage.setItem(STORE_AUDIO_DEVICE_LABEL, selected.label || "");
+    }
+
+    if (typeof psRenderAudioSourceBadge === "function")
+      psRenderAudioSourceBadge();
     psAudioMonitorTick();
   } catch (err) {
     PS_AUDIO_MONITOR.denied = true;
+    PS_AUDIO_MONITOR.active = false;
     console.warn("Audio monitor unavailable:", err.message || err);
+
+    if (typeof psRenderAudioSourceBadge === "function")
+      psRenderAudioSourceBadge();
   }
 }
 
@@ -121,13 +329,14 @@ function psAudioMonitorTick() {
 
 function psAudioMonitorCorrection() {
   if (
+    psIsManualAudioMode() ||
     !PS_AUDIO_MONITOR.active ||
     Date.now() - PS_AUDIO_MONITOR.lastUpdate > 2500
   ) {
     return {
       thresholdDbaAdjustment: 0,
       confidenceBoost: 0,
-      reasonCodes: ["phone_mic_inactive"],
+      reasonCodes: ["live_audio_inactive"],
     };
   }
 
@@ -141,10 +350,15 @@ function psAudioMonitorCorrection() {
     thresholdDbaAdjustment: highAmbient,
     confidenceBoost: detected ? 0.12 : 0.04,
     reasonCodes: [
-      detected ? "phone_mic_aircraft_like_energy" : "phone_mic_noise_floor",
+      detected ? "live_audio_aircraft_like_energy" : "live_audio_noise_floor",
+      PS_AUDIO_MONITOR.activeSourceKind === "mixer"
+        ? "sound_dept_feed"
+        : "phone_mic_feed",
     ],
     dbfs: PS_AUDIO_MONITOR.dbfs,
     floorDbfs: PS_AUDIO_MONITOR.floorDbfs,
     aircraftLikeScore: PS_AUDIO_MONITOR.aircraftLikeScore,
+    sourceKind: PS_AUDIO_MONITOR.activeSourceKind,
+    deviceLabel: PS_AUDIO_MONITOR.activeDeviceLabel,
   };
 }
