@@ -24,7 +24,6 @@ function counts() {
 function render() {
   recompute();
   renderMeta();
-  renderBanner();
   renderPanels();
   renderErr();
   renderAircraftList();
@@ -33,105 +32,6 @@ function render() {
 
 function renderMeta() {
   // intentionally hidden in the main interface
-}
-
-function fitHeadline() {
-  const h = $("headline");
-  const banner = $("banner");
-  if (!h || !banner) return;
-
-  const rect = banner.getBoundingClientRect();
-  const style = getComputedStyle(banner);
-  const padX = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
-  const padY = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
-
-  const availableW = Math.max(120, rect.width - padX - 16);
-  const availableH = Math.max(34, rect.height - padY - 4);
-  const label = h.textContent || "";
-  const isClear = label === "CLEAR";
-
-  h.style.setProperty("width", "100%", "important");
-  h.style.setProperty("max-width", "100%", "important");
-  h.style.setProperty("text-align", "center", "important");
-  h.style.setProperty("white-space", "nowrap", "important");
-  h.style.setProperty("overflow", "hidden", "important");
-  h.style.setProperty("text-overflow", "clip", "important");
-  h.style.setProperty("line-height", ".9", "important");
-
-  const canvas =
-    fitHeadline._canvas ||
-    (fitHeadline._canvas = document.createElement("canvas"));
-  const ctx = canvas.getContext("2d");
-
-  const maxSize = isClear ? 110 : 104;
-  const minSize = 16;
-  let chosen = minSize;
-
-  for (let s = maxSize; s >= minSize; s--) {
-    ctx.font =
-      "800 " +
-      s +
-      'px -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif';
-    const measured = ctx.measureText(label).width;
-    const fitsWidth = measured <= availableW;
-    const fitsHeight = s * 0.92 <= availableH;
-
-    if (fitsWidth && fitsHeight) {
-      chosen = s;
-      break;
-    }
-  }
-
-  h.style.setProperty("font-size", chosen + "px", "important");
-}
-
-function renderBanner() {
-  const c = counts();
-  const banner = $("banner");
-
-  banner.className = "banner no-count";
-  $("bigCount").textContent = "";
-  $("countLabel").textContent = "";
-  $("statusLeft").textContent = "";
-  $("statusRight").textContent = "";
-
-  if (!state.loc) {
-    $("headline").textContent = "NO LOCATION";
-    fitHeadline();
-    return;
-  }
-
-  if (
-    typeof psConnectionLostVisible === "function" &&
-    psConnectionLostVisible()
-  ) {
-    banner.className = "banner bad no-count";
-    $("headline").textContent = "CONNECTION LOST";
-    fitHeadline();
-    return;
-  }
-
-  const rs = typeof rangeSettings === "function" ? rangeSettings() : null;
-
-  if (rs && rs.noMicSelected) {
-    banner.className = "banner clear no-count";
-    $("headline").textContent = "";
-    fitHeadline();
-    return;
-  }
-
-  if (c.audible > 0) {
-    banner.className = "banner bad no-count";
-    $("headline").textContent = c.audible + " AIRCRAFT IN RANGE";
-  } else if (c.approaching > 0) {
-    banner.className = "banner warn no-count";
-    $("headline").textContent = "APPROACHING AIRCRAFT";
-  } else {
-    banner.className = "banner clear no-count";
-    $("headline").textContent = "CLEAR";
-  }
-
-  fitHeadline();
 }
 
 function renderPanels() {

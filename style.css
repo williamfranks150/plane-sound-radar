@@ -58,109 +58,9 @@ button {
   user-select: none;
 }
 
-.banner {
-  border: 1px solid #506070;
-  border-radius: 10px;
-  padding: 10px 12px;
-  background: rgba(30, 40, 50, 0.28);
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 4px 12px;
-  align-items: center;
-  min-height: clamp(74px, 10.5dvh, 104px);
-  animation: none !important;
-  transition: none !important;
-}
-.banner.clear {
-  border-color: #00d97a;
-  background: rgba(0, 60, 30, 0.24);
-}
-.banner.warning,
-.banner.warn {
-  border-color: #ffb020;
-  background: rgba(88, 56, 0, 0.28);
-}
-.banner.bad {
-  border-color: #ff4040;
-  background: rgba(92, 10, 10, 0.36);
-}
-.banner.no-count {
-  grid-template-columns: 1fr;
-}
-.banner.no-count .headline {
-  text-align: center;
-  justify-self: center;
-  width: 100%;
-}
-.banner.no-count .countBox {
-  display: none;
-}
-.headline {
-  font-family:
-    -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
-    "Helvetica Neue", Arial, sans-serif;
-  font-size: clamp(29px, 7.2vw, 54px);
-  font-weight: 800;
-  line-height: 1.04;
-  letter-spacing: -0.035em;
-  margin: 0;
-  color: #90a0b0;
-  white-space: nowrap;
-  overflow: visible;
-  text-overflow: clip;
-  min-width: 0;
-  align-self: center;
-}
-.clear .headline {
-  color: #00ff95;
-  text-shadow: none;
-}
-.warning .headline,
-.warn .headline {
-  color: #ffcc44;
-  text-shadow: none;
-}
-.bad .headline {
-  color: #ff5858;
-  text-shadow: none;
-}
-.countBox {
-  text-align: right;
-  min-width: 70px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  align-self: center;
-}
-.bigCount {
-  font-family:
-    -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
-    "Helvetica Neue", Arial, sans-serif;
-  font-size: clamp(48px, 12.5vw, 86px);
-  font-weight: 800;
-  line-height: 1;
-  letter-spacing: -0.04em;
-  color: #e9f8ef;
-}
-.clear .bigCount {
-  color: #00ff95;
-}
-.warning .bigCount {
-  color: #ffcc44;
-}
-.bad .bigCount {
-  color: #ff5858;
-}
-.countLabel {
-  display: none;
-}
-.statusLine {
-  display: none;
-}
-
 .radar-wrap {
-  flex: 1;
-  min-height: 280px;
+  flex: 1 1 auto;
+  min-height: 360px;
   border: 1px solid #0e2418;
   border-radius: 12px;
   background: #020907;
@@ -572,12 +472,6 @@ canvas {
     padding-right: 4px;
     gap: 5px;
   }
-  .banner {
-    padding: 8px 10px;
-  }
-  .headline {
-    font-size: clamp(25px, 7.2vw, 39px);
-  }
   .bigCount {
     font-size: clamp(52px, 13vw, 76px);
   }
@@ -589,9 +483,6 @@ canvas {
   }
 }
 @media (max-height: 740px) {
-  .banner {
-    padding: 7px 10px;
-  }
   .bigCount {
     font-size: clamp(46px, 12vw, 72px);
   }
@@ -602,69 +493,17 @@ canvas {
     padding: 8px 3px;
   }
 }
-
-.banner {
-  grid-template-columns: 1fr !important;
-}
 .countBox {
   display: none !important;
 }
-.headline {
-  width: 100% !important;
-  max-width: 100% !important;
-  text-align: left;
-  overflow: visible !important;
-  text-overflow: clip !important;
-}
-.banner.clear .headline {
-  text-align: center;
-}
-
-.banner {
-  grid-template-columns: 1fr !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: flex-start !important;
-}
 .countBox {
   display: none !important;
-}
-.headline {
-  width: 100% !important;
-  max-width: 100% !important;
-  text-align: left;
-  overflow: visible !important;
-  text-overflow: clip !important;
-  font-size: clamp(32px, 7.4vw, 88px) !important;
-  line-height: 0.92 !important;
 }
 .banner.clear {
   justify-content: center !important;
 }
-.banner.clear .headline {
-  text-align: center;
-  font-size: clamp(52px, 9.8vw, 104px) !important;
-}
-
-.banner {
-  grid-template-columns: 1fr !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  text-align: center !important;
-  overflow: hidden !important;
-}
 .countBox {
   display: none !important;
-}
-.headline {
-  width: 100% !important;
-  max-width: 100% !important;
-  text-align: center !important;
-  overflow: visible !important;
-  text-overflow: clip !important;
-  white-space: nowrap !important;
-  line-height: 0.92 !important;
 }
 
 .mic-spec-editor input {
@@ -709,7 +548,6 @@ button,
 input,
 select,
 textarea,
-.headline,
 .app-title,
 .chip,
 .tab,
@@ -803,20 +641,6 @@ textarea,
     max-width: min(440px, 94vw) !important;
   }
 
-  .banner {
-    padding: 5px 8px !important;
-    min-height: 42px;
-  }
-
-  .headline {
-    font-size: clamp(29px, 8vw, 42px) !important;
-    line-height: 0.9 !important;
-  }
-
-  .banner.clear .headline {
-    font-size: clamp(42px, 11vw, 62px) !important;
-  }
-
   .radar-wrap {
     flex: 1 1 auto;
     min-height: 0 !important;
@@ -855,11 +679,6 @@ textarea,
   .app-logo {
     height: 88px !important;
     max-width: min(430px, 94vw) !important;
-  }
-
-  .banner {
-    padding: 4px 8px !important;
-    min-height: 38px;
   }
 
   .panel {
