@@ -316,40 +316,6 @@ function psDrawSweep(ctx, cx, cy, effectR) {
   ctx.stroke();
 }
 
-function psDrawAircraftPath(ctx, p, px, py, cx, cy, scale, col, W, H, uiScale) {
-  if (p.entry == null && p.exit == null) return;
-
-  const heading = Number(p.track || 0) * D2R;
-  const forwardX = Math.sin(heading);
-  const forwardY = -Math.cos(heading);
-  const seconds = psTimedDisplaySeconds(p) ?? 120;
-  const urgency = clamp(1 - seconds / 300, 0, 1);
-  const backLen = (48 + urgency * 28) * uiScale;
-  const frontLen = (90 + urgency * 52) * uiScale;
-  const inset = Math.max(8, 10 * uiScale);
-  const start = psClampPointToCanvas(
-    px - forwardX * backLen,
-    py - forwardY * backLen,
-    W,
-    H,
-    inset,
-  );
-  const end = psClampPointToCanvas(
-    px + forwardX * frontLen,
-    py + forwardY * frontLen,
-    W,
-    H,
-    inset,
-  );
-
-  ctx.beginPath();
-  ctx.moveTo(start.x, start.y);
-  ctx.lineTo(end.x, end.y);
-  ctx.strokeStyle =
-    p.status === "audible" ? "rgba(255,80,80,.35)" : "rgba(255,210,60,.3)";
-  ctx.stroke();
-}
-
 function psDrawAircraftIcon(ctx, p, px, py, size, col) {
   ctx.save();
   ctx.translate(px, py);
@@ -646,8 +612,6 @@ function drawRadar() {
 
     const px = displayPoint.x;
     const py = displayPoint.y;
-
-    psDrawAircraftPath(ctx, p, px, py, cx, cy, scale, col, W, H, uiScale);
     psDrawAircraftIcon(ctx, p, px, py, size, col);
     psDrawTimeTag(ctx, tag, p, px, py, size, col, placedLabels, W, H, uiScale);
   });
