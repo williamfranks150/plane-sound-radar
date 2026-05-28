@@ -112,6 +112,43 @@ function planeNow(ac) {
   return { ...ac, lat, lon, vx, vy };
 }
 
+function psNumericAircraftAltitude(value) {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function psLikelyCommercialTransport(type) {
+  const t = String(type || "").toUpperCase();
+
+  return /^(A2|A3|B3|B7|B8|BCS|E1|E2|CRJ|MD|DC)/.test(t);
+}
+
+function psAircraftAltitudeInfo(ac, horizontalKm) {
+  const geomFt = psNumericAircraftAltitude(ac.alt_geom);
+  const baroFt = psNumericAircraftAltitude(ac.alt_baro);
+  const altFt = geomFt != null ? geomFt : baroFt;
+  const source = geomFt != null ? "GEOM" : baroFt != null ? "BARO" : "";
+  const commercial = psLikelyCommercialTransport(ac.t);
+  const disagreement =
+    geomFt != null && baroFt != null ? Math.abs(geomFt - baroFt) : 0;
+  const suspiciousLowBaro =
+    source === "BARO" &&
+    altFt != null &&
+    horizontalKm > 8 &&
+    commercial &&
+    altFt < 1500;
+  const lowConfidence =
+    source === "BARO" && (suspiciousLowBaro || disagreement > 1000);
+
+  return {
+    altFt,
+    source,
+    geomFt,
+    baroFt,
+    lowConfidence,
+    label: source ? source + " ALT" : "ALT",
+  };
+}
+
 function analyze(ac) {
   const now = Date.now();
 
@@ -120,13 +157,14 @@ function analyze(ac) {
   if (!state.loc || ac.lat == null || ac.lon == null) return null;
 
   const rs = rangeSettings();
-  const altFt = typeof ac.alt_baro === "number" ? ac.alt_baro : null;
-
-  if (altFt == null || altFt < 0) return null;
-
   const p = planeNow(ac);
   const pos = xy(p.lat, p.lon, state.loc.lat, state.loc.lon);
   const h = Math.hypot(pos.x, pos.y);
+  const altitude = psAircraftAltitudeInfo(ac, h);
+  const altFt = altitude.altFt;
+
+  if (altFt == null || altFt < 0) return null;
+
   const altKm = altFt / FT_PER_M / 1000;
   const slant = Math.hypot(h, altKm);
 
@@ -216,6 +254,11 @@ function analyze(ac) {
     callsign: (ac.flight || "").trim() || (ac.hex || "").toUpperCase(),
     type: ac.t || "?",
     altFt,
+    altSource: altitude.source,
+    altLabel: altitude.label,
+    altGeomFt: altitude.geomFt,
+    altBaroFt: altitude.baroFt,
+    altLowConfidence: altitude.lowConfidence,
     gs: ac.gs || 0,
     track: ac.track || 0,
     x: pos.x,

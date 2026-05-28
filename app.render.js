@@ -89,7 +89,9 @@ function planeCard(p) {
         ? "Approaching"
         : p.status === "clear"
           ? "Tracked"
-          : "High";
+          : p.status === "no-risk"
+            ? "Below threshold"
+            : "High";
   const timing =
     p.status === "audible" && p.exit != null
       ? "-" + fmt(p.exit)
@@ -101,7 +103,7 @@ function planeCard(p) {
     <div class="grid">
       <div><span class="lbl">DIST</span><span class="val">${p.h.toFixed(1)} km ${dir(p.bearing)}</span></div>
       <div><span class="lbl">TIME</span><span class="val">${timing}</span></div>
-      <div><span class="lbl">ALT</span><span class="val">${Math.round(p.altFt).toLocaleString()} ft</span></div>
+      <div><span class="lbl">${esc(p.altLabel || "ALT")}</span><span class="val">${Math.round(p.altFt).toLocaleString()} ft${p.altLowConfidence ? " LOW CONF" : ""}</span></div>
       <div><span class="lbl">TYPE</span><span class="val">${esc(p.type)}</span></div>
       <div><span class="lbl">SPD</span><span class="val">${Math.round(p.gs)} kt</span></div>
       <div><span class="lbl">HDG</span><span class="val">${Math.round(p.track)}° ${dir(p.track)}</span></div>
