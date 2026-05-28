@@ -15,7 +15,7 @@ function anim(ts) {
   if (Math.floor(ts / 1000) !== Math.floor((ts - dt * 1000) / 1000)) {
     recompute();
     renderMeta();
-    renderBanner();
+    if (typeof renderBanner === "function") renderBanner();
     if (state.activePanel === "aircraft") renderAircraftList();
   }
   drawRadar();

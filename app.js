@@ -111,11 +111,11 @@ function init() {
 
   window.addEventListener("resize", () => {
     resizeCanvas();
-    fitHeadline();
+    if (typeof fitHeadline === "function") fitHeadline();
   });
   window.visualViewport?.addEventListener("resize", () => {
     resizeCanvas();
-    fitHeadline();
+    if (typeof fitHeadline === "function") fitHeadline();
   });
 
   const q = new URLSearchParams(location.search);
