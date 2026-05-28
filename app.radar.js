@@ -1,5 +1,36 @@
 "use strict";
 
+const PS_RADAR_DISPLAY_CACHE = new Map();
+
+function psRadarCacheKey(p) {
+  return String(p && (p.icao || p.callsign || p.raw?.hex || "")).trim();
+}
+
+function psGetRadarDisplayCache(p) {
+  const key = psRadarCacheKey(p);
+
+  if (!key) return null;
+
+  if (!PS_RADAR_DISPLAY_CACHE.has(key)) {
+    PS_RADAR_DISPLAY_CACHE.set(key, {
+      dx: null,
+      dy: null,
+      radius: null,
+      lastSeen: 0,
+    });
+  }
+
+  return PS_RADAR_DISPLAY_CACHE.get(key);
+}
+
+function psPruneRadarDisplayCache(now) {
+  for (const [key, value] of PS_RADAR_DISPLAY_CACHE.entries()) {
+    if (!value || now - Number(value.lastSeen || 0) > 60000) {
+      PS_RADAR_DISPLAY_CACHE.delete(key);
+    }
+  }
+}
+
 function resizeCanvas() {
   const c = $("radar");
   const wrap = c.parentElement;
@@ -73,20 +104,48 @@ function psTimedDisplaySeconds(p) {
 
 function psCanvasDirectionForAircraft(p) {
   const h = Math.hypot(Number(p.x || 0), Number(p.y || 0));
+  let dx;
+  let dy;
 
   if (h > 0.001) {
-    return {
-      dx: Number(p.x || 0) / h,
-      dy: -Number(p.y || 0) / h,
-    };
+    dx = Number(p.x || 0) / h;
+    dy = -Number(p.y || 0) / h;
+  } else {
+    const heading = Number(p.track || 0) * D2R;
+
+    dx = Math.sin(heading);
+    dy = -Math.cos(heading);
   }
 
-  const heading = Number(p.track || 0) * D2R;
+  const cache = psGetRadarDisplayCache(p);
 
-  return {
-    dx: Math.sin(heading),
-    dy: -Math.cos(heading),
-  };
+  if (
+    !cache ||
+    !Number.isFinite(Number(cache.dx)) ||
+    !Number.isFinite(Number(cache.dy))
+  ) {
+    if (cache) {
+      cache.dx = dx;
+      cache.dy = dy;
+      cache.lastSeen = Date.now();
+    }
+
+    return { dx, dy };
+  }
+
+  const alpha = 0.14;
+  let sx = Number(cache.dx) * (1 - alpha) + dx * alpha;
+  let sy = Number(cache.dy) * (1 - alpha) + dy * alpha;
+  const len = Math.hypot(sx, sy) || 1;
+
+  sx /= len;
+  sy /= len;
+
+  cache.dx = sx;
+  cache.dy = sy;
+  cache.lastSeen = Date.now();
+
+  return { dx: sx, dy: sy };
 }
 
 function psTimedDisplayRadius(p, gridR) {
@@ -97,10 +156,7 @@ function psTimedDisplayRadius(p, gridR) {
   const windowSeconds = p.status === "approaching" ? 420 : 300;
   const t = clamp(seconds / windowSeconds, 0, 1);
 
-  // Visual warning scale:
-  // long time = near outer radar ring
-  // short time = closer to mic/source centre
-  return gridR * (0.3 + Math.sqrt(t) * 0.6);
+  return gridR * (0.3 + Math.sqrt(t) * 0.58);
 }
 
 function psDisplayPointForAircraft(
@@ -120,19 +176,32 @@ function psDisplayPointForAircraft(
   const iconPad = Math.max(size + 8 * uiScale, 18 * uiScale);
 
   if (isTimed) {
+    const cache = psGetRadarDisplayCache(p);
     const dir = psCanvasDirectionForAircraft(p);
     const minRadius = gridR * 0.28;
-    const maxRadius = gridR * 0.9;
+    const maxRadius = gridR * 0.86;
     const targetRadius = clamp(
       psTimedDisplayRadius(p, gridR),
       minRadius,
       maxRadius,
     );
+    let displayRadius =
+      cache && Number.isFinite(Number(cache.radius))
+        ? Number(cache.radius)
+        : targetRadius;
+
+    displayRadius = displayRadius * 0.86 + targetRadius * 0.14;
+
+    if (cache) {
+      cache.radius = displayRadius;
+      cache.lastSeen = Date.now();
+    }
+
     const boundR = size + Math.max(10, 12 * uiScale);
 
-    for (let i = 0; i <= 12; i++) {
+    for (let i = 0; i <= 10; i++) {
       const radius = clamp(
-        targetRadius - i * gridR * 0.045,
+        displayRadius - i * gridR * 0.035,
         minRadius,
         maxRadius,
       );
@@ -150,7 +219,7 @@ function psDisplayPointForAircraft(
       }
     }
 
-    const fallbackRadius = gridR * 0.58;
+    const fallbackRadius = clamp(displayRadius, minRadius, maxRadius);
 
     return {
       visible: true,
@@ -391,23 +460,10 @@ function psDrawTimeTag(
   W,
   H,
   uiScale,
+  cx,
+  cy,
 ) {
   if (!tag) return false;
-
-  function clampRect(rect) {
-    return {
-      x: Math.round(clamp(rect.x, 4, W - rect.w - 4)),
-      y: Math.round(clamp(rect.y, 4, H - rect.h - 4)),
-      w: rect.w,
-      h: rect.h,
-    };
-  }
-
-  function validRect(rect) {
-    if (psRectOverlapsCircle(rect, arrowBound)) return false;
-
-    return !placedLabels.some((label) => psLabelOverlaps(label, rect));
-  }
 
   const tagFont = Math.round(Math.max(18, 19 * uiScale));
   const tagPad = Math.max(7, 7 * uiScale);
@@ -432,107 +488,37 @@ function psDrawTimeTag(
     Math.max(measuredW + tagPad * 3.5 + 10 * uiScale, 82 * uiScale),
   );
 
+  const radialX = px - cx;
+  const radialY = py - cy;
+  const radialLen = Math.hypot(radialX, radialY) || 1;
+  const inwardX = -radialX / radialLen;
+  const inwardY = -radialY / radialLen;
+  const gap = Math.max(5, 6 * uiScale);
+  const centerDistance = size + gap + tagW / 2;
+
+  let x = px + inwardX * centerDistance - tagW / 2;
+  let y = py + inwardY * (size + gap + tagH / 2) - tagH / 2;
+
+  x = Math.round(clamp(x, 4, W - tagW - 4));
+  y = Math.round(clamp(y, 4, H - tagH - 4));
+
   const arrowBound = {
     x: px,
     y: py,
-    r: size * 1.2 + Math.max(6, 7 * uiScale),
+    r: size + Math.max(4, 5 * uiScale),
   };
-  const heading = p.track * D2R;
-  const forwardX = Math.sin(heading);
-  const forwardY = -Math.cos(heading);
-  const backX = -forwardX;
-  const backY = -forwardY;
-  const gap = Math.max(8, 10 * uiScale);
-  const behindDistance = size + gap + Math.max(tagW, tagH) / 2;
-  const behind = {
-    x: px + backX * behindDistance - tagW / 2,
-    y: py + backY * behindDistance - tagH / 2,
-    w: tagW,
-    h: tagH,
-  };
-  const right = { x: px + size + gap, y: py - tagH / 2, w: tagW, h: tagH };
-  const left = {
-    x: px - tagW - size - gap,
-    y: py - tagH / 2,
-    w: tagW,
-    h: tagH,
-  };
-  const top = { x: px - tagW / 2, y: py - tagH - size - gap, w: tagW, h: tagH };
-  const bottom = { x: px - tagW / 2, y: py + size + gap, w: tagW, h: tagH };
+  let placed = { x, y, w: tagW, h: tagH };
 
-  const candidates =
-    Math.abs(backX) >= Math.abs(backY)
-      ? [
-          behind,
-          backX >= 0 ? right : left,
-          top,
-          bottom,
-          backX >= 0 ? left : right,
-        ]
-      : [
-          behind,
-          backY >= 0 ? bottom : top,
-          right,
-          left,
-          backY >= 0 ? top : bottom,
-        ];
+  if (psRectOverlapsCircle(placed, arrowBound)) {
+    const nudge = size + tagH + gap * 2;
 
-  let placed = null;
-
-  for (const candidate of candidates) {
-    const clamped = clampRect(candidate);
-
-    if (validRect(clamped)) {
-      placed = clamped;
-      break;
-    }
+    placed = {
+      x: Math.round(clamp(x + inwardX * nudge, 4, W - tagW - 4)),
+      y: Math.round(clamp(y + inwardY * nudge, 4, H - tagH - 4)),
+      w: tagW,
+      h: tagH,
+    };
   }
-
-  if (!placed) {
-    const angleStep = Math.PI / 8;
-
-    for (let ring = 1; ring <= 5 && !placed; ring++) {
-      const distance =
-        size + gap + Math.max(tagW, tagH) / 2 + ring * 18 * uiScale;
-
-      for (let i = 0; i < 16; i++) {
-        const a = i * angleStep;
-        const candidate = clampRect({
-          x: px + Math.cos(a) * distance - tagW / 2,
-          y: py + Math.sin(a) * distance - tagH / 2,
-          w: tagW,
-          h: tagH,
-        });
-
-        if (validRect(candidate)) {
-          placed = candidate;
-          break;
-        }
-      }
-    }
-  }
-
-  if (!placed) {
-    const fallbackCandidates = [
-      { x: 4, y: 4, w: tagW, h: tagH },
-      { x: W - tagW - 4, y: 4, w: tagW, h: tagH },
-      { x: 4, y: H - tagH - 4, w: tagW, h: tagH },
-      { x: W - tagW - 4, y: H - tagH - 4, w: tagW, h: tagH },
-    ].map(clampRect);
-
-    placed =
-      fallbackCandidates.find((candidate) => validRect(candidate)) ||
-      fallbackCandidates
-        .map((candidate) => ({
-          candidate,
-          distance:
-            Math.pow(candidate.x + candidate.w / 2 - px, 2) +
-            Math.pow(candidate.y + candidate.h / 2 - py, 2),
-        }))
-        .sort((a, b) => b.distance - a.distance)[0].candidate;
-  }
-
-  placedLabels.push(placed);
 
   ctx.fillStyle = "rgba(0,0,0,.78)";
   ctx.fillRect(placed.x, placed.y, tagW, tagH);
@@ -573,6 +559,7 @@ function drawRadar() {
   const uiScale = clamp(gridR / 420, 0.55, 1.12);
   const rs = rangeSettings();
   const scale = gridR / rs.radar;
+  psPruneRadarDisplayCache(Date.now());
   const protectedRects = psCanvasProtectedRects(c, uiScale);
   const placedLabels = [...protectedRects];
 
@@ -613,7 +600,21 @@ function drawRadar() {
     const px = displayPoint.x;
     const py = displayPoint.y;
     psDrawAircraftIcon(ctx, p, px, py, size, col);
-    psDrawTimeTag(ctx, tag, p, px, py, size, col, placedLabels, W, H, uiScale);
+    psDrawTimeTag(
+      ctx,
+      tag,
+      p,
+      px,
+      py,
+      size,
+      col,
+      placedLabels,
+      W,
+      H,
+      uiScale,
+      cx,
+      cy,
+    );
   });
 
   psDrawHomeMarker(ctx, cx, cy);

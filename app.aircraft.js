@@ -1,5 +1,86 @@
 "use strict";
 
+const PS_AIRCRAFT_TIMING_CACHE = new Map();
+
+function psAircraftTimingKey(ac) {
+  return String(ac && (ac.hex || ac.flight || "")).trim();
+}
+
+function psPruneAircraftTimingCache(now) {
+  for (const [key, value] of PS_AIRCRAFT_TIMING_CACHE.entries()) {
+    if (!value || now - Number(value.updatedAt || 0) > 180000) {
+      PS_AIRCRAFT_TIMING_CACHE.delete(key);
+    }
+  }
+}
+
+function psApplyTimingContinuity(ac, result, now) {
+  const key = psAircraftTimingKey(ac);
+
+  if (!key || result.noSelectedMic || result.belowAcousticThreshold) {
+    if (key) PS_AIRCRAFT_TIMING_CACHE.delete(key);
+    return result;
+  }
+
+  const cached = PS_AIRCRAFT_TIMING_CACHE.get(key);
+
+  if (
+    result.status === "approaching" &&
+    result.entry != null &&
+    result.exit != null
+  ) {
+    PS_AIRCRAFT_TIMING_CACHE.set(key, {
+      entryAt: now + Math.max(0, result.entry) * 1000,
+      exitAt: now + Math.max(0, result.exit) * 1000,
+      updatedAt: now,
+    });
+
+    return result;
+  }
+
+  if (result.status === "audible" && result.exit != null) {
+    PS_AIRCRAFT_TIMING_CACHE.set(key, {
+      entryAt: cached?.entryAt ?? now,
+      exitAt: now + Math.max(0, result.exit) * 1000,
+      updatedAt: now,
+    });
+
+    return result;
+  }
+
+  if (!cached) return result;
+
+  const entryLeft = (Number(cached.entryAt || 0) - now) / 1000;
+  const exitLeft = (Number(cached.exitAt || 0) - now) / 1000;
+
+  if (exitLeft <= -5) {
+    PS_AIRCRAFT_TIMING_CACHE.delete(key);
+    return result;
+  }
+
+  if (entryLeft > 0) {
+    return {
+      ...result,
+      status: "approaching",
+      entry: entryLeft,
+      exit: Math.max(entryLeft, exitLeft),
+      pollutesSound: true,
+    };
+  }
+
+  if (exitLeft > 0) {
+    return {
+      ...result,
+      status: "audible",
+      entry: 0,
+      exit: exitLeft,
+      pollutesSound: true,
+    };
+  }
+
+  return result;
+}
+
 function aircraftTypeFactor(t) {
   t = String(t || "").toUpperCase();
   if (!t || t === "?") return 1;
@@ -32,6 +113,10 @@ function planeNow(ac) {
 }
 
 function analyze(ac) {
+  const now = Date.now();
+
+  psPruneAircraftTimingCache(now);
+
   if (!state.loc || ac.lat == null || ac.lon == null) return null;
 
   const rs = rangeSettings();
@@ -125,7 +210,7 @@ function analyze(ac) {
 
   const risk = clamp(typeFactor * marginFactor * timeFactor, 0.1, 1.55);
 
-  return {
+  const result = {
     raw: ac,
     icao: ac.hex || Math.random().toString(36),
     callsign: (ac.flight || "").trim() || (ac.hex || "").toUpperCase(),
@@ -146,9 +231,12 @@ function analyze(ac) {
     status,
     tooHigh: belowAcousticThreshold,
     belowAcousticThreshold,
+    noSelectedMic,
     pollutesSound: status === "audible" || status === "approaching",
     typeFactor,
     risk,
     acoustic,
   };
+
+  return psApplyTimingContinuity(ac, result, now);
 }
