@@ -1,7 +1,5 @@
 "use strict";
 
-const PS_RADAR_DISPLAY_CACHE = new Map();
-
 function resizeCanvas() {
   const c = $("radar");
   const wrap = c.parentElement;
@@ -24,34 +22,6 @@ function resizeCanvas() {
   c.height = Math.floor(h * dpr);
   c.style.width = w + "px";
   c.style.height = h + "px";
-}
-
-function psRadarCacheKey(p) {
-  return String(p.icao || p.callsign || p.raw?.hex || "");
-}
-
-function psGetRadarDisplayCache(p) {
-  const key = psRadarCacheKey(p);
-
-  if (!key) return null;
-
-  if (!PS_RADAR_DISPLAY_CACHE.has(key)) {
-    PS_RADAR_DISPLAY_CACHE.set(key, {
-      radius: null,
-      labelAnchor: null,
-      lastSeen: 0,
-    });
-  }
-
-  return PS_RADAR_DISPLAY_CACHE.get(key);
-}
-
-function psPruneRadarDisplayCache(now) {
-  for (const [key, value] of PS_RADAR_DISPLAY_CACHE.entries()) {
-    if (!value || now - Number(value.lastSeen || 0) > 45000) {
-      PS_RADAR_DISPLAY_CACHE.delete(key);
-    }
-  }
 }
 
 function psPlaneColor(p) {
@@ -150,7 +120,6 @@ function psDisplayPointForAircraft(
   const iconPad = Math.max(size + 8 * uiScale, 18 * uiScale);
 
   if (isTimed) {
-    const cache = psGetRadarDisplayCache(p);
     const dir = psCanvasDirectionForAircraft(p);
     const minRadius = gridR * 0.28;
     const maxRadius = gridR * 0.9;
@@ -161,23 +130,9 @@ function psDisplayPointForAircraft(
     );
     const boundR = size + Math.max(10, 12 * uiScale);
 
-    let displayRadius =
-      cache && Number.isFinite(Number(cache.radius))
-        ? Number(cache.radius)
-        : targetRadius;
-
-    // Smooth the representative timing position so arrows do not slide sideways
-    // or jump radially as ADS-B/acoustic estimates update.
-    displayRadius = displayRadius * 0.82 + targetRadius * 0.18;
-
-    if (cache) {
-      cache.radius = displayRadius;
-      cache.lastSeen = Date.now();
-    }
-
     for (let i = 0; i <= 12; i++) {
       const radius = clamp(
-        displayRadius - i * gridR * 0.045,
+        targetRadius - i * gridR * 0.045,
         minRadius,
         maxRadius,
       );
@@ -195,7 +150,7 @@ function psDisplayPointForAircraft(
       }
     }
 
-    const fallbackRadius = clamp(displayRadius, minRadius, maxRadius);
+    const fallbackRadius = gridR * 0.58;
 
     return {
       visible: true,
@@ -439,6 +394,21 @@ function psDrawTimeTag(
 ) {
   if (!tag) return false;
 
+  function clampRect(rect) {
+    return {
+      x: Math.round(clamp(rect.x, 4, W - rect.w - 4)),
+      y: Math.round(clamp(rect.y, 4, H - rect.h - 4)),
+      w: rect.w,
+      h: rect.h,
+    };
+  }
+
+  function validRect(rect) {
+    if (psRectOverlapsCircle(rect, arrowBound)) return false;
+
+    return !placedLabels.some((label) => psLabelOverlaps(label, rect));
+  }
+
   const tagFont = Math.round(Math.max(18, 19 * uiScale));
   const tagPad = Math.max(7, 7 * uiScale);
   const tagH = Math.max(32, 32 * uiScale);
@@ -462,103 +432,104 @@ function psDrawTimeTag(
     Math.max(measuredW + tagPad * 3.5 + 10 * uiScale, 82 * uiScale),
   );
 
+  const arrowBound = {
+    x: px,
+    y: py,
+    r: size * 1.2 + Math.max(6, 7 * uiScale),
+  };
   const heading = p.track * D2R;
   const forwardX = Math.sin(heading);
   const forwardY = -Math.cos(heading);
   const backX = -forwardX;
   const backY = -forwardY;
-  const gap = Math.max(4, 5 * uiScale);
-  const cache = psGetRadarDisplayCache(p);
-  const preferredAnchor =
-    Math.abs(backX) >= Math.abs(backY)
-      ? backX >= 0
-        ? "right"
-        : "left"
-      : backY >= 0
-        ? "bottom"
-        : "top";
-  const anchor = cache?.labelAnchor || preferredAnchor;
-
-  if (cache && !cache.labelAnchor) {
-    cache.labelAnchor = preferredAnchor;
-  }
-
-  function rectForAnchor(name) {
-    if (name === "left") {
-      return {
-        x: px - size - gap - tagW,
-        y: py - tagH / 2,
-        w: tagW,
-        h: tagH,
-      };
-    }
-
-    if (name === "right") {
-      return {
-        x: px + size + gap,
-        y: py - tagH / 2,
-        w: tagW,
-        h: tagH,
-      };
-    }
-
-    if (name === "top") {
-      return {
-        x: px - tagW / 2,
-        y: py - size - gap - tagH,
-        w: tagW,
-        h: tagH,
-      };
-    }
-
-    return {
-      x: px - tagW / 2,
-      y: py + size + gap,
-      w: tagW,
-      h: tagH,
-    };
-  }
-
-  function clampRect(rect) {
-    return {
-      x: Math.round(clamp(rect.x, 4, W - rect.w - 4)),
-      y: Math.round(clamp(rect.y, 4, H - rect.h - 4)),
-      w: rect.w,
-      h: rect.h,
-    };
-  }
-
-  // Stable attachment rule:
-  // The badge is fixed to its aircraft arrow using one cached anchor.
-  // It does not search around the screen every frame, so it cannot jump.
-  let placed = clampRect(rectForAnchor(anchor));
-  const arrowBound = {
-    x: px,
-    y: py,
-    r: size + Math.max(4, 5 * uiScale),
+  const gap = Math.max(8, 10 * uiScale);
+  const behindDistance = size + gap + Math.max(tagW, tagH) / 2;
+  const behind = {
+    x: px + backX * behindDistance - tagW / 2,
+    y: py + backY * behindDistance - tagH / 2,
+    w: tagW,
+    h: tagH,
   };
+  const right = { x: px + size + gap, y: py - tagH / 2, w: tagW, h: tagH };
+  const left = {
+    x: px - tagW - size - gap,
+    y: py - tagH / 2,
+    w: tagW,
+    h: tagH,
+  };
+  const top = { x: px - tagW / 2, y: py - tagH - size - gap, w: tagW, h: tagH };
+  const bottom = { x: px - tagW / 2, y: py + size + gap, w: tagW, h: tagH };
 
-  if (psRectOverlapsCircle(placed, arrowBound)) {
-    const fallbackOrder =
-      anchor === "left"
-        ? ["right", "top", "bottom"]
-        : anchor === "right"
-          ? ["left", "top", "bottom"]
-          : anchor === "top"
-            ? ["bottom", "left", "right"]
-            : ["top", "left", "right"];
+  const candidates =
+    Math.abs(backX) >= Math.abs(backY)
+      ? [
+          behind,
+          backX >= 0 ? right : left,
+          top,
+          bottom,
+          backX >= 0 ? left : right,
+        ]
+      : [
+          behind,
+          backY >= 0 ? bottom : top,
+          right,
+          left,
+          backY >= 0 ? top : bottom,
+        ];
 
-    for (const fallback of fallbackOrder) {
-      const candidate = clampRect(rectForAnchor(fallback));
+  let placed = null;
 
-      if (!psRectOverlapsCircle(candidate, arrowBound)) {
-        placed = candidate;
+  for (const candidate of candidates) {
+    const clamped = clampRect(candidate);
 
-        if (cache) cache.labelAnchor = fallback;
+    if (validRect(clamped)) {
+      placed = clamped;
+      break;
+    }
+  }
 
-        break;
+  if (!placed) {
+    const angleStep = Math.PI / 8;
+
+    for (let ring = 1; ring <= 5 && !placed; ring++) {
+      const distance =
+        size + gap + Math.max(tagW, tagH) / 2 + ring * 18 * uiScale;
+
+      for (let i = 0; i < 16; i++) {
+        const a = i * angleStep;
+        const candidate = clampRect({
+          x: px + Math.cos(a) * distance - tagW / 2,
+          y: py + Math.sin(a) * distance - tagH / 2,
+          w: tagW,
+          h: tagH,
+        });
+
+        if (validRect(candidate)) {
+          placed = candidate;
+          break;
+        }
       }
     }
+  }
+
+  if (!placed) {
+    const fallbackCandidates = [
+      { x: 4, y: 4, w: tagW, h: tagH },
+      { x: W - tagW - 4, y: 4, w: tagW, h: tagH },
+      { x: 4, y: H - tagH - 4, w: tagW, h: tagH },
+      { x: W - tagW - 4, y: H - tagH - 4, w: tagW, h: tagH },
+    ].map(clampRect);
+
+    placed =
+      fallbackCandidates.find((candidate) => validRect(candidate)) ||
+      fallbackCandidates
+        .map((candidate) => ({
+          candidate,
+          distance:
+            Math.pow(candidate.x + candidate.w / 2 - px, 2) +
+            Math.pow(candidate.y + candidate.h / 2 - py, 2),
+        }))
+        .sort((a, b) => b.distance - a.distance)[0].candidate;
   }
 
   placedLabels.push(placed);
@@ -602,7 +573,6 @@ function drawRadar() {
   const uiScale = clamp(gridR / 420, 0.55, 1.12);
   const rs = rangeSettings();
   const scale = gridR / rs.radar;
-  psPruneRadarDisplayCache(Date.now());
   const protectedRects = psCanvasProtectedRects(c, uiScale);
   const placedLabels = [...protectedRects];
 
