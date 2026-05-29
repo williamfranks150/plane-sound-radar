@@ -13,3 +13,18 @@ current-*.zip
 timed-*.zip
 aircraft-*.zip
 *.log
+
+# Local/generated files
+node_modules/
+_backup-*/
+*.zip
+_current-*.zip
+_debug_state.txt
+_v3_state.txt
+plane-sound-*.zip
+audio-badge-*.zip
+radar-*.zip
+current-*.zip
+timed-*.zip
+aircraft-*.zip
+*.log

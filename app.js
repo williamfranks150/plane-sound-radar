@@ -1,10 +1,10 @@
-"use strict";
+﻿"use strict";
 
 const state = {
   loc: null,
   savedLoc: null,
   activePanel: null,
-  settings: { package: "none", active: [] },
+  settings: { package: "none", active: [], scene: "exterior_dialogue" },
   hiddenMics: [],
   adsb: {
     state: "idle",

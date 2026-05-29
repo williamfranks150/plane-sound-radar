@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 const PS_AIRCRAFT_TIMING_CACHE = new Map();
 
@@ -81,20 +81,6 @@ function psApplyTimingContinuity(ac, result, now) {
   return result;
 }
 
-function aircraftTypeFactor(t) {
-  t = String(t || "").toUpperCase();
-  if (!t || t === "?") return 1;
-  if (t.includes("A388")) return 1.8;
-  if (t.includes("B748") || t.includes("B744")) return 1.65;
-  if (/^B77|^B78|^A35|^A34|^A33/.test(t)) return 1.45;
-  if (/^B76|^B75|^A30|^A31/.test(t)) return 1.3;
-  if (/^B73|^A32|^A22|^E19|^E29|^BCS/.test(t)) return 1.08;
-  if (/^E17|^E75|^CRJ|^DH8|^AT[47]/.test(t)) return 0.85;
-  if (/^C1|^C2|^P28|^SR2|^BE|^PA/.test(t)) return 0.65;
-  if (/^H|^R44|^R66/.test(t)) return 0.9;
-  return 1;
-}
-
 function planeNow(ac) {
   const dt = state.adsb.lastFetch
     ? (Date.now() - state.adsb.lastFetch) / 1000
@@ -103,13 +89,16 @@ function planeNow(ac) {
   const tr = (ac.track || 0) * D2R;
   const vx = gs * Math.sin(tr);
   const vy = gs * Math.cos(tr);
+  // Vertical rate (ft/min) -> km/s. Prefer geometric rate, then baro.
+  const vrFtMin = Number(ac.geom_rate ?? ac.baro_rate ?? ac.vert_rate ?? 0);
+  const vz = vrFtMin / FT_PER_M / 1000 / 60;
   let lat = ac.lat,
     lon = ac.lon;
   if (state.loc && dt > 0 && lat != null && lon != null) {
     lat += (vy * dt) / KM_PER_LAT;
     lon += (vx * dt) / (KM_PER_LAT * Math.cos(state.loc.lat * D2R));
   }
-  return { ...ac, lat, lon, vx, vy };
+  return { ...ac, lat, lon, vx, vy, vz };
 }
 
 function psNumericAircraftAltitude(value) {
@@ -149,6 +138,31 @@ function psAircraftAltitudeInfo(ac, horizontalKm) {
   };
 }
 
+// Solve |pos + v t|^2 = R^2 for t (seconds), pos/v in 3-D km / (km/s).
+// Returns { entry, exit } emitted-time crossings (entry <= exit) or null.
+function psSlantCrossings(pos, vel, R) {
+  const v2 = vel.x * vel.x + vel.y * vel.y + vel.z * vel.z;
+  const p2 = pos.x * pos.x + pos.y * pos.y + pos.z * pos.z;
+  const b = 2 * (pos.x * vel.x + pos.y * vel.y + pos.z * vel.z);
+  const c = p2 - R * R;
+
+  if (v2 < 1e-12) {
+    // Effectively stationary: inside forever or never.
+    if (c <= 0) return { entry: -Infinity, exit: Infinity };
+    return null;
+  }
+
+  const disc = b * b - 4 * v2 * c;
+
+  if (disc < 0) return null;
+
+  const sq = Math.sqrt(disc);
+  const t1 = (-b - sq) / (2 * v2);
+  const t2 = (-b + sq) / (2 * v2);
+
+  return { entry: Math.min(t1, t2), exit: Math.max(t1, t2) };
+}
+
 function analyze(ac) {
   const now = Date.now();
 
@@ -179,6 +193,9 @@ function analyze(ac) {
     rangeSettings: rs,
   });
 
+  const slantRadiusKm = Number.isFinite(Number(acoustic.slantRadiusKm))
+    ? Math.max(0, Number(acoustic.slantRadiusKm))
+    : 0;
   const acousticRadiusKm = Number.isFinite(Number(acoustic.radiusKm))
     ? Math.max(0, Number(acoustic.radiusKm))
     : 0;
@@ -187,36 +204,58 @@ function analyze(ac) {
 
   const noSelectedMic = acoustic.noSelectedMic === true;
   const belowAcousticThreshold =
-    !noSelectedMic && (acoustic.tooHigh || acousticRadiusKm <= 0);
+    !noSelectedMic && (acoustic.tooHigh || slantRadiusKm <= 0);
 
-  let entry = null;
-  let exit = null;
+  // Speed of sound along the path (m/s), and the propagation delay added at
+  // the threshold-crossing geometry (slant == slantRadiusKm there).
+  const soundSpeedMs = Number(acoustic.soundSpeedMs) || 343;
+  const crossingDelayS = (slantRadiusKm * 1000) / soundSpeedMs;
+  const nowDelayS = (slant * 1000) / soundSpeedMs;
+
+  let entry = null; // heard-time seconds until pollution begins
+  let exit = null; // heard-time seconds until pollution clears
   let inMic = false;
+  let entryBand = null;
+  let exitBand = null;
 
-  if (!belowAcousticThreshold && acousticRadiusKm > 0) {
-    const hT = acousticRadiusKm;
-    const v2 = p.vx * p.vx + p.vy * p.vy;
+  if (!belowAcousticThreshold && slantRadiusKm > 0) {
+    const pos3 = { x: pos.x, y: pos.y, z: altKm };
+    const vel3 = { x: p.vx, y: p.vy, z: p.vz || 0 };
+    const cross = psSlantCrossings(pos3, vel3, slantRadiusKm);
 
-    inMic = h <= hT;
+    if (cross) {
+      // Convert emitted-time crossings to heard (arrival) time by adding the
+      // propagation delay at the crossing geometry.
+      const heardEntry = cross.entry + crossingDelayS;
+      const heardExit = cross.exit + crossingDelayS;
 
-    if (v2 > 1e-9) {
-      const b = 2 * (pos.x * p.vx + pos.y * p.vy);
-      const c = h * h - hT * hT;
-      const disc = b * b - 4 * v2 * c;
-
-      if (disc >= 0) {
-        const sq = Math.sqrt(disc);
-        const t1 = (-b - sq) / (2 * v2);
-        const t2 = (-b + sq) / (2 * v2);
-
-        if (t2 >= 0) {
-          entry = t1 > 0 ? t1 : 0;
-          exit = t2 + rs.tail;
+      if (heardExit > 0) {
+        if (heardEntry <= 0) {
+          inMic = true;
+          entry = 0;
+          exit = heardExit;
+        } else {
+          entry = heardEntry;
+          exit = heardExit;
         }
+
+        // Timing uncertainty: a level swing of levelSwingDb maps to a slant
+        // radius uncertainty (spreading-dominated: dd/d ~ 10^(dL/20)-1), which
+        // maps to a time band via the radial closing speed.
+        const levelSwingDb = Number(acoustic.levelSwingDb) || 6;
+        const radiusFrac = Math.pow(10, levelSwingDb / 20) - 1;
+        const radiusBandKm = slantRadiusKm * clamp(radiusFrac, 0.05, 1.2);
+        const closingKmps = Math.max(
+          0.02,
+          Math.abs(pos3.x * vel3.x + pos3.y * vel3.y + pos3.z * vel3.z) /
+            Math.max(0.001, slant),
+        );
+        const windowS = entry > 0 ? Math.max(30, entry + exit) : exit;
+        const band = clamp(radiusBandKm / closingKmps, 3, windowS * 0.6);
+
+        entryBand = entry > 0 ? band : 0;
+        exitBand = band;
       }
-    } else if (inMic) {
-      entry = 0;
-      exit = rs.tail;
     }
   }
 
@@ -230,7 +269,6 @@ function analyze(ac) {
           ? "approaching"
           : "clear";
 
-  const typeFactor = aircraftTypeFactor(ac.t);
   const safeMarginDba = Number.isFinite(Number(acoustic.marginDba))
     ? Number(acoustic.marginDba)
     : belowAcousticThreshold
@@ -246,11 +284,20 @@ function analyze(ac) {
           ? 0.22
           : 0.08;
 
-  const risk = clamp(typeFactor * marginFactor * timeFactor, 0.1, 1.55);
+  // Risk now driven by the acoustic margin (real dB), not a type multiplier.
+  const risk = clamp(marginFactor * timeFactor * 1.05, 0.1, 1.55);
 
   const result = {
     raw: ac,
-    icao: ac.hex || Math.random().toString(36),
+    icao:
+      ac.hex ||
+      (ac.flight || "").trim() ||
+      "anon-" +
+        String(ac.t || "?") +
+        "-" +
+        Math.round((ac.lat || 0) * 100) +
+        "-" +
+        Math.round((ac.lon || 0) * 100),
     callsign: (ac.flight || "").trim() || (ac.hex || "").toUpperCase(),
     type: ac.t || "?",
     altFt,
@@ -265,18 +312,26 @@ function analyze(ac) {
     y: pos.y,
     vx: p.vx,
     vy: p.vy,
+    vz: p.vz || 0,
     h,
     slant,
+    slantRadiusKm,
     bearing: brg(state.loc.lat, state.loc.lon, p.lat, p.lon),
-    soundDelay: (slant * 1000) / SOUND_SPEED,
+    soundDelay: nowDelayS,
+    soundSpeedMs,
     entry,
     exit,
+    entryBand,
+    exitBand,
     status,
+    regime: acoustic.regime,
+    refractionRegime: acoustic.refractionRegime,
+    levelSwingDb: acoustic.levelSwingDb,
+    confidence: acoustic.confidence,
     tooHigh: belowAcousticThreshold,
     belowAcousticThreshold,
     noSelectedMic,
     pollutesSound: status === "audible" || status === "approaching",
-    typeFactor,
     risk,
     acoustic,
   };

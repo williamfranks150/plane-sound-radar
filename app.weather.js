@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 const PS_WEATHER_CACHE_MS = 20 * 60 * 1000;
 const PS_WEATHER_LEVELS_HPA = [1000, 925, 850, 700, 500, 300];
@@ -140,6 +140,10 @@ async function psPrimeWeatherForLocation(loc) {
   return PS_WEATHER_STATE.data;
 }
 
+function psWeatherSnapshot() {
+  return PS_WEATHER_STATE.data || null;
+}
+
 function psWeatherLayerForAltitudeFt(altFt) {
   const data = PS_WEATHER_STATE.data;
 
@@ -160,80 +164,95 @@ function psWeatherLayerForAltitudeFt(altFt) {
   }, usable[0]);
 }
 
-function psWindVectorToward(windSpeedKmh, windFromDeg) {
-  if (!Number.isFinite(windSpeedKmh) || !Number.isFinite(windFromDeg)) {
-    return { x: 0, y: 0 };
-  }
+// Path-averaged speed of sound (m/s) from ground to the aircraft, including
+// along-path wind advection. Used by the timing layer to convert geometric
+// crossing times into heard-by-the-mic times. Falls back to a 15 C standard
+// atmosphere value when no weather is loaded.
+function psSoundSpeedForContextMs(context) {
+  const data = PS_WEATHER_STATE.data;
 
-  const toward = (windFromDeg + 180) * D2R;
+  if (!data) return psSpeedOfSoundMs(15);
 
-  return {
-    x: windSpeedKmh * Math.sin(toward),
-    y: windSpeedKmh * Math.cos(toward),
-  };
+  return psPathAverageSoundSpeedMs(
+    context.altFt,
+    data.surface,
+    data.levels,
+    context,
+  );
 }
 
-function psWeatherAbsorptionDbPerKm(layer) {
-  if (!layer) return 1.2;
-
-  const temp = Number(layer.temperatureC);
-  const rh = Number(layer.humidityPct);
-  const pressure = Number(layer.pressureHpa || layer.hpa);
-
-  let value = 1.0;
-
-  if (Number.isFinite(temp)) {
-    if (temp < -10) value += 0.35;
-    else if (temp < 0) value += 0.2;
-    else if (temp > 25) value -= 0.1;
-  }
-
-  if (Number.isFinite(rh)) {
-    if (rh < 30) value += 0.25;
-    else if (rh > 75) value -= 0.12;
-  }
-
-  if (Number.isFinite(pressure) && pressure < 750) value -= 0.08;
-
-  return clamp(value, 0.45, 1.75);
-}
-
+// Weather correction for the acoustic engine. Now backed by ISO 9613-1
+// absorption and a refraction band derived from the vertical wind/temperature
+// profile, instead of bucketed heuristics. Return shape is a superset of the
+// previous version so the engine keeps working unchanged.
 function psWeatherCorrectionForAircraft(context, sourceProfile) {
-  const layer = psWeatherLayerForAltitudeFt(context.altFt);
+  const data = PS_WEATHER_STATE.data;
 
-  if (!layer) {
+  if (!data || !data.surface) {
     return {
       dbaCorrection: 0,
       radiusCorrectionDba: 0,
-      confidence: 0.15,
+      windComponentKmh: 0,
+      absorptionDbPerKm: 1.2,
+      refractionRegime: "calm",
+      refractionExcessDb: 0,
+      refractionSwingDb: 6,
+      soundSpeedMs: psSpeedOfSoundMs(15),
+      confidence: 0.12,
       reasonCodes: ["weather_unavailable"],
     };
   }
 
-  const distanceKm = Math.max(0, Number(context.slantKm || 0));
-  const absorptionDbPerKm = psWeatherAbsorptionDbPerKm(layer);
-  const absorptionDelta =
-    (1.2 - absorptionDbPerKm) * Math.max(0, distanceKm - 0.305);
-  const wind = psWindVectorToward(
-    Number(layer.windSpeedKmh),
-    Number(layer.windFromDeg),
+  const layer = psWeatherLayerForAltitudeFt(context.altFt) || data.surface;
+
+  // Absorption is now applied as a true dB/km over distance by the propagator
+  // and the threshold-distance solver. We pass the coefficient downstream and
+  // do NOT fold a distance-dependent offset into the correction here (doing so
+  // would double-count absorption).
+  const pressureKpa = Number.isFinite(Number(layer.pressureHpa))
+    ? Number(layer.pressureHpa) / 10
+    : Number.isFinite(Number(layer.hpa))
+      ? Number(layer.hpa) / 10
+      : PS_PRESSURE_REF_KPA;
+  const absorptionDbPerKm = psBroadbandAircraftAbsorptionDbPerKm(
+    layer.temperatureC,
+    layer.humidityPct,
+    pressureKpa,
   );
-  const h = Math.max(0.001, Number(context.horizontalKm || 0));
-  const toListenerX = -Number(context.x || 0) / h;
-  const toListenerY = -Number(context.y || 0) / h;
-  const windComponentKmh = wind.x * toListenerX + wind.y * toListenerY;
-  const windCorrection = clamp(windComponentKmh / 18, -4, 4);
-  const dbaCorrection = clamp(absorptionDelta + windCorrection, -6, 6);
+
+  const refraction = psRefractionBand(context, data.surface, data.levels);
+
+  const windComponentKmh = psWindTowardListenerKmh(
+    data.surface.windSpeedKmh,
+    data.surface.windFromDeg,
+    context,
+  );
+
+  // Correction carries only the refraction term (a level shift). Absorption is
+  // handled separately via absorptionDbPerKm.
+  const dbaCorrection = clamp(refraction.excessDb, -26, 8);
+
+  const soundSpeedMs = psPathAverageSoundSpeedMs(
+    context.altFt,
+    data.surface,
+    data.levels,
+    context,
+  );
 
   return {
     dbaCorrection,
-    radiusCorrectionDba: clamp(dbaCorrection, -4, 4),
+    radiusCorrectionDba: clamp(dbaCorrection, -26, 8),
     windComponentKmh,
     absorptionDbPerKm,
-    confidence: 0.58,
+    refractionRegime: refraction.regime,
+    refractionExcessDb: refraction.excessDb,
+    refractionSwingDb: refraction.swingDb,
+    soundSpeedMs,
+    confidence: clamp(0.5 * refraction.confidence + 0.3, 0.15, 0.75),
     reasonCodes: [
       "weather_aloft",
-      windCorrection >= 0 ? "downwind_sound_path" : "upwind_sound_path",
+      windComponentKmh >= 0 ? "downwind_sound_path" : "upwind_sound_path",
+      ...(refraction.reasonCodes || []),
     ],
   };
 }

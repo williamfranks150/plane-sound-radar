@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 const PS_ACOUSTIC_REFERENCE_DISTANCE_M = 305;
 const PS_BASE_AIR_ABSORPTION_DB_PER_KM = 1.2;
@@ -186,7 +186,10 @@ function psAircraftNoiseProfile(ac) {
     return {
       sourceType: "verified",
       label: verified.label || type,
-      dbaAt305m: Number(verified.dbaAt305m),
+      dbaAt305m: Number.isFinite(Number(verified.dbaAt305m))
+        ? Number(verified.dbaAt305m)
+        : null,
+      npd: verified.npd || null,
       confidence: Number(verified.confidence || 0.85),
       engine: verified.engine || {},
       directivity: verified.directivity || "generic",
@@ -266,19 +269,181 @@ function psActiveAcousticMics() {
   return ids.map((id) => MICS[id]).filter(Boolean);
 }
 
-function psAircraftSourceAdjustment(ac, profile, context) {
+// ---------------------------------------------------------------------------
+// NPD (Noise-Power-Distance) source model.
+//
+// When a profile carries real NPD curves (Lmax in dB-A vs slant distance at
+// discrete thrust settings, from ANP/AEDT data), we read the level directly by
+// log-distance interpolation at the regime-appropriate thrust column. This is
+// the precise path: it already includes spreading, emission angle and ANP's
+// reference atmospheric absorption, so we do NOT re-apply spreading on top of
+// it. Profiles without NPD fall back to the single-point + spreading model.
+//
+// Expected NPD shape on a profile:
+//   npd: {
+//     refMetric: "Lmax_dBA",
+//     thrust: [
+//       { setting: "departure"|"climb"|"cruise"|"approach"|"idle",
+//         points: [ { distM: 305, dba: 90.2 }, { distM: 610, dba: 84.1 }, ... ] }
+//     ]
+//   }
+// ---------------------------------------------------------------------------
+
+function psRegimeToThrustSetting(regime) {
+  switch (regime) {
+    case "departure":
+      return ["departure", "climb", "cruise"];
+    case "climb":
+      return ["climb", "departure", "cruise"];
+    case "approach":
+      return ["approach", "idle", "cruise"];
+    case "descent":
+      return ["approach", "idle", "cruise"];
+    case "cruise":
+      return ["cruise", "climb", "departure"];
+    default:
+      return ["cruise", "climb", "approach", "departure"];
+  }
+}
+
+function psSelectNpdThrustColumn(npd, regime) {
+  if (!npd || !Array.isArray(npd.thrust) || !npd.thrust.length) return null;
+
+  const prefs = psRegimeToThrustSetting(regime);
+  for (const want of prefs) {
+    const col = npd.thrust.find(
+      (t) => String(t.setting).toLowerCase() === want,
+    );
+    if (col && Array.isArray(col.points) && col.points.length) return col;
+  }
+
+  // Fall back to the first column with points.
+  return (
+    npd.thrust.find((t) => Array.isArray(t.points) && t.points.length) || null
+  );
+}
+
+// Interpolate Lmax (dB-A) at a slant distance from an NPD column, linear in
+// log10(distance) (the ANP convention). Clamps to the curve ends.
+function psNpdLevelAtDistance(column, distanceM) {
+  const pts = column.points
+    .filter(
+      (p) => Number.isFinite(Number(p.distM)) && Number.isFinite(Number(p.dba)),
+    )
+    .sort((a, b) => a.distM - b.distM);
+
+  if (!pts.length) return null;
+
+  const d = Math.max(1, distanceM);
+
+  if (d <= pts[0].distM) return pts[0].dba;
+  if (d >= pts[pts.length - 1].distM) {
+    // Extrapolate beyond the last point with spherical spreading only (the
+    // honest minimum), since ANP curves stop where data exists.
+    const last = pts[pts.length - 1];
+    return last.dba - 20 * Math.log10(d / last.distM);
+  }
+
+  for (let i = 0; i < pts.length - 1; i++) {
+    const a = pts[i];
+    const b = pts[i + 1];
+    if (d >= a.distM && d <= b.distM) {
+      const la = Math.log10(a.distM);
+      const lb = Math.log10(b.distM);
+      const f = (Math.log10(d) - la) / (lb - la || 1);
+      return a.dba + f * (b.dba - a.dba);
+    }
+  }
+
+  return pts[pts.length - 1].dba;
+}
+
+// Returns a verified NPD-based received level (dB-A) for the aircraft at the
+// current slant distance, or null when no NPD curve is available.
+function psNpdReceiverDba(profile, regime, slantM) {
+  const npd = profile && profile.npd;
+  const column = psSelectNpdThrustColumn(npd, regime);
+  if (!column) return null;
+
+  const dba = psNpdLevelAtDistance(column, slantM);
+  if (!Number.isFinite(dba)) return null;
+
+  return {
+    dba,
+    thrustSetting: column.setting,
+    refMetric: npd.refMetric || "Lmax_dBA",
+  };
+}
+
+// Invert an NPD curve: find the slant distance (km) at which the regime's NPD
+// level falls to the target threshold. Monotonic decreasing, so bisect.
+function psInvertNpdRadiusKm(profile, regime, targetDba) {
+  const npd = profile && profile.npd;
+  const column = psSelectNpdThrustColumn(npd, regime);
+  if (!column) return 0;
+
+  const levelAt = (dM) => psNpdLevelAtDistance(column, dM);
+
+  let lo = 30;
+  let hi = 200000;
+
+  if (!Number.isFinite(levelAt(lo)) || levelAt(lo) < targetDba) return 0;
+  if (levelAt(hi) > targetDba) return clamp(hi / 1000, 0, 200);
+
+  for (let i = 0; i < 40; i++) {
+    const mid = (lo + hi) / 2;
+    if (levelAt(mid) > targetDba) lo = mid;
+    else hi = mid;
+  }
+
+  return clamp((lo + hi) / 2 / 1000, 0, 200);
+}
+
+// Flight regime inferred from altitude, vertical rate and speed. Drives both
+// source level (thrust + airframe configuration) and a human-readable label.
+function psInferAircraftRegime(ac, context) {
+  const altFt = Number(context && context.altFt) || 0;
+  const gs = Number(ac.gs || 0);
+  const vr = Number(ac.geom_rate ?? ac.baro_rate ?? ac.vert_rate ?? 0);
+
+  if (altFt < 6000 && vr > 600 && gs > 110) {
+    return { regime: "departure", climbing: true, descending: false };
+  }
+  if (altFt < 7000 && vr < -350 && gs < 320) {
+    return { regime: "approach", climbing: false, descending: true };
+  }
+  if (vr > 900) return { regime: "climb", climbing: true, descending: false };
+  if (vr < -900)
+    return { regime: "descent", climbing: false, descending: true };
+  if (altFt > 24000)
+    return { regime: "cruise", climbing: false, descending: false };
+
+  return { regime: "level", climbing: false, descending: false };
+}
+
+function psAircraftSourceAdjustment(ac, profile, context, regimeInfo) {
   const gs = Number(ac.gs || 0);
   const engine = profile.engine || {};
+  const regime = regimeInfo ? regimeInfo.regime : "level";
   let adjustment = 0;
 
   if (gs > 430) adjustment += Number(engine.speedDba || 1.8);
   else if (gs > 300) adjustment += Number(engine.speedDba || 1.8) * 0.6;
   else if (gs < 120) adjustment -= 1.5;
 
-  const vr = Number(ac.baro_rate || ac.geom_rate || ac.vert_rate || 0);
-
-  if (vr > 900) adjustment += Number(engine.climbDba || 2.4);
-  else if (vr < -900) adjustment += Number(engine.descentDba || 0.8);
+  // Regime-specific thrust / airframe noise.
+  if (regime === "departure") {
+    adjustment += Number(engine.climbDba || 2.4) + 1.5; // high thrust, low alt
+  } else if (regime === "climb") {
+    adjustment += Number(engine.climbDba || 2.4);
+  } else if (regime === "approach") {
+    // Reduced thrust but gear/flaps add broadband airframe noise.
+    adjustment += Number(engine.descentDba || 0.8) + 2.0;
+  } else if (regime === "descent") {
+    adjustment += Number(engine.descentDba || 0.8);
+  } else if (regime === "cruise") {
+    adjustment -= 0.5;
+  }
 
   adjustment += psAircraftDirectivityAdjustment(ac, profile, context);
 
@@ -315,28 +480,57 @@ function psAircraftDirectivityAdjustment(ac, profile, context) {
   return 0;
 }
 
-function psPropagatedDba(dbaAt305m, distanceM, weatherCorrectionDba) {
+function psPropagatedDba(
+  dbaAt305m,
+  distanceM,
+  weatherCorrectionDba,
+  absorptionDbPerKm,
+) {
   const d = Math.max(30, distanceM);
+  const a = Number.isFinite(Number(absorptionDbPerKm))
+    ? Number(absorptionDbPerKm)
+    : PS_BASE_AIR_ABSORPTION_DB_PER_KM;
   const spreadingLoss = 20 * Math.log10(d / PS_ACOUSTIC_REFERENCE_DISTANCE_M);
   const airLoss =
-    Math.max(0, (d - PS_ACOUSTIC_REFERENCE_DISTANCE_M) / 1000) *
-    PS_BASE_AIR_ABSORPTION_DB_PER_KM;
+    Math.max(0, (d - PS_ACOUSTIC_REFERENCE_DISTANCE_M) / 1000) * a;
 
   return (
     dbaAt305m - spreadingLoss - airLoss + Number(weatherCorrectionDba || 0)
   );
 }
 
-function psThresholdRadiusKm(sourceDbaAt305m, thresholdDba, altKm) {
-  const rawDistanceM =
-    PS_ACOUSTIC_REFERENCE_DISTANCE_M *
-    Math.pow(10, (sourceDbaAt305m - thresholdDba) / 20);
+// Slant distance (km) at which the propagated level equals the threshold.
+// Solves spreading + air absorption (linear in distance) by bisection, instead
+// of inverting spreading only, so distant high-absorption cases are accurate.
+function psSolveThresholdSlantKm(sourceDba, thresholdDba, absorptionDbPerKm) {
+  const budget = sourceDba - thresholdDba;
 
-  const slantKm = clamp(rawDistanceM / 1000, 0, 120);
+  if (!Number.isFinite(budget) || budget <= 0) return 0;
 
-  if (slantKm <= altKm) return 0;
+  const a = Number.isFinite(Number(absorptionDbPerKm))
+    ? Math.max(0.05, Number(absorptionDbPerKm))
+    : PS_BASE_AIR_ABSORPTION_DB_PER_KM;
 
-  return Math.sqrt(Math.max(0, slantKm * slantKm - altKm * altKm));
+  const loss = (dM) => {
+    const d = Math.max(PS_ACOUSTIC_REFERENCE_DISTANCE_M, dM);
+    return (
+      20 * Math.log10(d / PS_ACOUSTIC_REFERENCE_DISTANCE_M) +
+      ((d - PS_ACOUSTIC_REFERENCE_DISTANCE_M) / 1000) * a
+    );
+  };
+
+  let lo = PS_ACOUSTIC_REFERENCE_DISTANCE_M;
+  let hi = 200000;
+
+  if (loss(hi) < budget) return clamp(hi / 1000, 0, 200);
+
+  for (let i = 0; i < 40; i++) {
+    const mid = (lo + hi) / 2;
+    if (loss(mid) < budget) lo = mid;
+    else hi = mid;
+  }
+
+  return clamp((lo + hi) / 2 / 1000, 0, 200);
 }
 
 function psEstimateAircraftNoise(ac, context) {
@@ -353,6 +547,10 @@ function psEstimateAircraftNoise(ac, context) {
       thresholdDba: null,
       marginDba: -Infinity,
       radiusKm: 0,
+      slantRadiusKm: 0,
+      regime: "level",
+      soundSpeedMs: psSpeedOfSoundMs(15),
+      levelSwingDb: 8,
       confidence: 0,
       tooHigh: false,
       noSelectedMic: true,
@@ -361,8 +559,12 @@ function psEstimateAircraftNoise(ac, context) {
   }
 
   const profile = psAircraftNoiseProfile(ac);
-  const sourceDbaAt305m =
-    profile.dbaAt305m + psAircraftSourceAdjustment(ac, profile, context);
+  const regimeInfo = psInferAircraftRegime(ac, context);
+  const hasSinglePoint = Number.isFinite(Number(profile.dbaAt305m));
+  const sourceDbaAt305m = hasSinglePoint
+    ? profile.dbaAt305m +
+      psAircraftSourceAdjustment(ac, profile, context, regimeInfo)
+    : null;
   const distanceM = Math.max(1, context.slantKm * 1000);
   const weather =
     typeof psWeatherCorrectionForAircraft === "function"
@@ -371,6 +573,10 @@ function psEstimateAircraftNoise(ac, context) {
           dbaCorrection: 0,
           radiusCorrectionDba: 0,
           confidence: 0.15,
+          absorptionDbPerKm: PS_BASE_AIR_ABSORPTION_DB_PER_KM,
+          refractionRegime: "calm",
+          refractionSwingDb: 6,
+          soundSpeedMs: psSpeedOfSoundMs(15),
           reasonCodes: ["weather_unavailable"],
         };
   const audio =
@@ -395,38 +601,91 @@ function psEstimateAircraftNoise(ac, context) {
   );
   const audioThresholdAdjustmentDba =
     Number(audio.thresholdDbaAdjustment || 0) * audioReliability;
-  const receiverDba = psPropagatedDba(
-    sourceDbaAt305m,
-    distanceM,
-    weather.dbaCorrection,
-  );
+  const absorptionDbPerKm = Number.isFinite(Number(weather.absorptionDbPerKm))
+    ? Number(weather.absorptionDbPerKm)
+    : PS_BASE_AIR_ABSORPTION_DB_PER_KM;
+
+  // Receiver level. Prefer a verified NPD curve (already includes spreading +
+  // emission angle + ANP reference absorption); only the refraction correction
+  // is added on top. Otherwise use the single-point source + spreading +
+  // weather-driven absorption model.
+  const npd = psNpdReceiverDba(profile, regimeInfo.regime, distanceM);
+  const usingNpd = !!npd;
+  const receiverDba = usingNpd
+    ? npd.dba + Number(weather.refractionExcessDb || weather.dbaCorrection || 0)
+    : psPropagatedDba(
+        sourceDbaAt305m,
+        distanceM,
+        weather.dbaCorrection,
+        absorptionDbPerKm,
+      );
 
   let best = null;
 
   for (const mic of mics) {
-    const micProfile = psMicAcousticProfile(mic);
-    const thresholdDba = micProfile.thresholdDba + audioThresholdAdjustmentDba;
+    // Scene-aware contamination threshold (protected noise floor) when the
+    // threshold module is present; otherwise the legacy mic-profile threshold.
+    let thresholdInfo = null;
+    let baseThreshold;
+    let micName;
+    let micThresholdConfidence;
+
+    if (typeof psContaminationThreshold === "function") {
+      thresholdInfo = psContaminationThreshold(mic);
+      baseThreshold = thresholdInfo.thresholdDba;
+      micName = mic.displayName || mic.name || mic.short || "Selected mic";
+      micThresholdConfidence = thresholdInfo.confidence;
+    } else {
+      const micProfile = psMicAcousticProfile(mic);
+      baseThreshold = micProfile.thresholdDba;
+      micName = micProfile.name;
+      micThresholdConfidence = micProfile.confidence;
+    }
+
+    const thresholdDba = baseThreshold + audioThresholdAdjustmentDba;
     const marginDba = receiverDba - thresholdDba;
-    const radiusKm = psThresholdRadiusKm(
-      sourceDbaAt305m + Number(weather.radiusCorrectionDba || 0),
-      thresholdDba,
-      context.altKm,
-    );
+
+    // Threshold radius. With NPD we invert the NPD curve numerically; without
+    // it we use the analytic spreading+absorption solver.
+    let slantRadiusKm;
+    if (usingNpd) {
+      slantRadiusKm = psInvertNpdRadiusKm(
+        profile,
+        regimeInfo.regime,
+        thresholdDba -
+          Number(weather.refractionExcessDb || weather.dbaCorrection || 0),
+      );
+    } else {
+      slantRadiusKm = psSolveThresholdSlantKm(
+        sourceDbaAt305m + Number(weather.radiusCorrectionDba || 0),
+        thresholdDba,
+        absorptionDbPerKm,
+      );
+    }
+
+    const altKm = Math.max(0, Number(context.altKm || 0));
+    const radiusKm =
+      slantRadiusKm > altKm
+        ? Math.sqrt(slantRadiusKm * slantRadiusKm - altKm * altKm)
+        : 0;
 
     const result = {
-      micName: micProfile.name,
+      micName,
       thresholdDba,
-      sensitivityMvPa: micProfile.sensitivityMvPa,
+      thresholdInfo,
       marginDba,
       radiusKm,
+      slantRadiusKm,
+      micConfidence: micThresholdConfidence,
       confidence: clamp(
-        Math.min(profile.confidence, micProfile.confidence) +
+        Math.min(profile.confidence, micThresholdConfidence) +
           Number(weather.confidence || 0) * 0.18 +
-          Number(audio.confidenceBoost || 0) * audioReliability,
+          Number(audio.confidenceBoost || 0) * audioReliability +
+          (usingNpd ? 0.12 : 0),
         0,
-        0.92,
+        0.95,
       ),
-      sourceType: profile.sourceType,
+      sourceType: usingNpd ? "verified-npd" : profile.sourceType,
     };
 
     if (!best || result.marginDba > best.marginDba) {
@@ -436,15 +695,39 @@ function psEstimateAircraftNoise(ac, context) {
 
   const tooHigh = !best || best.radiusKm <= 0;
 
+  // Level uncertainty band (dB) for the timing/confidence layer: combine the
+  // refraction swing, the source-level uncertainty (lower profile confidence
+  // -> wider), and a mic-threshold term, in quadrature.
+  const refractionSwing = Number(weather.refractionSwingDb || 5);
+  const sourceSwing = clamp((1 - profile.confidence) * 9, 1.5, 8);
+  const micSwing = clamp((1 - (best ? best.micConfidence : 0.4)) * 5, 1, 4);
+  const levelSwingDb = clamp(
+    Math.sqrt(
+      refractionSwing * refractionSwing +
+        sourceSwing * sourceSwing +
+        micSwing * micSwing,
+    ),
+    2,
+    18,
+  );
+
   return {
     model: "acoustic-engine-v3",
     aircraftLabel: profile.label,
-    sourceType: profile.sourceType,
+    sourceType: usingNpd ? "verified-npd" : profile.sourceType,
+    usingNpd,
+    npdThrustSetting: usingNpd ? npd.thrustSetting : null,
     sourceDbaAt305m,
     receiverDba,
     weatherCorrectionDba: weather.dbaCorrection,
     windComponentKmh: weather.windComponentKmh,
-    absorptionDbPerKm: weather.absorptionDbPerKm,
+    absorptionDbPerKm,
+    regime: regimeInfo.regime,
+    refractionRegime: weather.refractionRegime,
+    refractionSwingDb: weather.refractionSwingDb,
+    soundSpeedMs: weather.soundSpeedMs || psSpeedOfSoundMs(15),
+    levelSwingDb,
+    thresholdInfo: best ? best.thresholdInfo : null,
     audioEvidence: {
       ...audio,
       reliability: audioReliability,
@@ -454,9 +737,11 @@ function psEstimateAircraftNoise(ac, context) {
     thresholdDba: best ? best.thresholdDba : 40,
     marginDba: best ? best.marginDba : -Infinity,
     radiusKm: best ? best.radiusKm : 0,
+    slantRadiusKm: best ? best.slantRadiusKm : 0,
     confidence: best ? best.confidence : 0.2,
     reasonCodes: [
-      "aircraft_profile_" + profile.sourceType,
+      "aircraft_profile_" + (usingNpd ? "verified_npd" : profile.sourceType),
+      "regime_" + regimeInfo.regime,
       ...(weather.reasonCodes || []),
       ...(audio.reasonCodes || []),
     ],

@@ -1,6 +1,210 @@
-{
+﻿{
   "schema": "plane-sound-aircraft-noise-profiles-v1",
   "mode": "verified-data-required",
-  "sources": [],
-  "profiles": []
+  "sources": [
+    {
+      "name": "EUROCONTROL/EASA ANP (legacy) \u2014 NPD LAmax",
+      "metric": "LAmax",
+      "note": "Verified noise-power-distance curves. A320 (IAE V2527-A5) converted from ANP NPD_data via scripts/convert-anp-npd.js. Additional types added by running the converter on the full ANP dataset.",
+      "license": "EUROCONTROL ANP \u2014 see EASA ANP terms of use"
+    }
+  ],
+  "profiles": [
+    {
+      "sourceType": "verified",
+      "label": "V2527A",
+      "aircraftTypeCodes": [
+        "A320"
+      ],
+      "anpId": "V2527A",
+      "confidence": 0.85,
+      "npd": {
+        "refMetric": "Lmax_dBA",
+        "thrust": [
+          {
+            "setting": "departure",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 104
+              },
+              {
+                "distM": 122,
+                "dba": 96.9
+              },
+              {
+                "distM": 192,
+                "dba": 92.2
+              },
+              {
+                "distM": 305,
+                "dba": 87.3
+              },
+              {
+                "distM": 610,
+                "dba": 79.4
+              },
+              {
+                "distM": 1219,
+                "dba": 70.8
+              },
+              {
+                "distM": 1920,
+                "dba": 64.7
+              },
+              {
+                "distM": 3048,
+                "dba": 57.9
+              },
+              {
+                "distM": 4877,
+                "dba": 50.3
+              },
+              {
+                "distM": 7620,
+                "dba": 42
+              }
+            ]
+          },
+          {
+            "setting": "climb",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 104
+              },
+              {
+                "distM": 122,
+                "dba": 96.9
+              },
+              {
+                "distM": 192,
+                "dba": 92.2
+              },
+              {
+                "distM": 305,
+                "dba": 87.3
+              },
+              {
+                "distM": 610,
+                "dba": 79.4
+              },
+              {
+                "distM": 1219,
+                "dba": 70.8
+              },
+              {
+                "distM": 1920,
+                "dba": 64.7
+              },
+              {
+                "distM": 3048,
+                "dba": 57.9
+              },
+              {
+                "distM": 4877,
+                "dba": 50.3
+              },
+              {
+                "distM": 7620,
+                "dba": 42
+              }
+            ]
+          },
+          {
+            "setting": "cruise",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 104
+              },
+              {
+                "distM": 122,
+                "dba": 96.9
+              },
+              {
+                "distM": 192,
+                "dba": 92.2
+              },
+              {
+                "distM": 305,
+                "dba": 87.3
+              },
+              {
+                "distM": 610,
+                "dba": 79.4
+              },
+              {
+                "distM": 1219,
+                "dba": 70.8
+              },
+              {
+                "distM": 1920,
+                "dba": 64.7
+              },
+              {
+                "distM": 3048,
+                "dba": 57.9
+              },
+              {
+                "distM": 4877,
+                "dba": 50.3
+              },
+              {
+                "distM": 7620,
+                "dba": 42
+              }
+            ]
+          },
+          {
+            "setting": "approach",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 91.6
+              },
+              {
+                "distM": 122,
+                "dba": 84.7
+              },
+              {
+                "distM": 192,
+                "dba": 79.5
+              },
+              {
+                "distM": 305,
+                "dba": 74.2
+              },
+              {
+                "distM": 610,
+                "dba": 66.5
+              },
+              {
+                "distM": 1219,
+                "dba": 58
+              },
+              {
+                "distM": 1920,
+                "dba": 51.9
+              },
+              {
+                "distM": 3048,
+                "dba": 45
+              },
+              {
+                "distM": 4877,
+                "dba": 37.2
+              },
+              {
+                "distM": 7620,
+                "dba": 29.1
+              }
+            ]
+          }
+        ]
+      },
+      "engineLabel": "IAE V2527-A5",
+      "noiseIdentifier": "V2527A"
+    }
+  ]
 }
