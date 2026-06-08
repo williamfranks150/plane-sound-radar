@@ -58,8 +58,7 @@ function psIso9613AbsorptionDbPerKm(freqHz, tempC, rhPct, pressureKpa) {
   const h = rh * (psatOverPr / paOverPr);
 
   // Relaxation frequencies for oxygen and nitrogen.
-  const frO =
-    paOverPr * (24 + (4.04e4 * h * (0.02 + h)) / (0.391 + h));
+  const frO = paOverPr * (24 + (4.04e4 * h * (0.02 + h)) / (0.391 + h));
   const frN =
     paOverPr *
     Math.pow(Tratio, -0.5) *
@@ -225,8 +224,7 @@ function psEffectiveGradient(context, surface, layers) {
         z: Number(l.geopotentialM),
         c:
           psSpeedOfSoundMs(l.temperatureC) +
-          psWindTowardListenerKmh(l.windSpeedKmh, l.windFromDeg, context) /
-            3.6,
+          psWindTowardListenerKmh(l.windSpeedKmh, l.windFromDeg, context) / 3.6,
       });
     });
 

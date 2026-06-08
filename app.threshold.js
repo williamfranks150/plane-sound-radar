@@ -27,35 +27,35 @@ const PS_SCENE_PROFILES = {
     label: "Quiet exterior",
     ambientBedDba: 30,
     headroomDba: 4,
-    note: "Rural / night exterior, wild dialogue",
+    note: "",
   },
-  exterior_dialogue: {
-    label: "Exterior dialogue",
-    ambientBedDba: 40,
-    headroomDba: 5,
-    note: "Typical exterior with light ambience",
-  },
-  suburban: {
-    label: "Suburban / light traffic",
-    ambientBedDba: 48,
-    headroomDba: 6,
-    note: "Some traffic and wind bed",
-  },
-  urban: {
-    label: "Urban / busy",
+  loud_exterior: {
+    label: "Loud exterior",
     ambientBedDba: 58,
     headroomDba: 7,
-    note: "City street, heavy bed",
+    note: "",
   },
-  controlled_interior: {
-    label: "Controlled interior",
-    ambientBedDba: 28,
+  quiet_interior: {
+    label: "Quiet interior",
+    ambientBedDba: 32,
     headroomDba: 4,
-    note: "Quiet stage / interior, tight protection",
+    note: "",
+  },
+  loud_interior: {
+    label: "Loud interior",
+    ambientBedDba: 46,
+    headroomDba: 6,
+    note: "",
+  },
+  studio: {
+    label: "Studio",
+    ambientBedDba: 24,
+    headroomDba: 3,
+    note: "",
   },
 };
 
-const PS_DEFAULT_SCENE_KEY = "exterior_dialogue";
+const PS_DEFAULT_SCENE_KEY = "quiet_exterior";
 
 function psSceneProfile() {
   const key =
@@ -86,12 +86,7 @@ function psParseMicSelfNoiseDba(mic) {
     return { dba: Number(direct), confidence: 0.8, source: "spec-field" };
   }
 
-  const fields = [
-    mic.selfNoiseText,
-    mic.equivalentNoise,
-    mic.noise,
-    mic.notes,
-  ]
+  const fields = [mic.selfNoiseText, mic.equivalentNoise, mic.noise, mic.notes]
     .filter((v) => typeof v === "string")
     .join(" ");
 
@@ -199,7 +194,10 @@ function psMeasuredAmbientBed() {
   if (typeof psAudioMonitorAmbientBed === "function") {
     const m = psAudioMonitorAmbientBed();
     if (m && Number.isFinite(Number(m.dba))) {
-      return { dba: Number(m.dba), reliability: clamp(Number(m.reliability ?? 0.4), 0, 1) };
+      return {
+        dba: Number(m.dba),
+        reliability: clamp(Number(m.reliability ?? 0.4), 0, 1),
+      };
     }
   }
   return null;

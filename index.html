@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -29,7 +29,15 @@
   </head>
   <body>
     <div class="app">
-      <div class="privacy-link"><a href="privacy.html">Privacy</a></div>
+      <button
+        id="aboutBtn"
+        type="button"
+        class="about-icon"
+        aria-label="About Plane Sound"
+        title="How it works"
+      >
+        i
+      </button>
       <div class="meta">
         <span id="metaLoc">no location</span><span id="metaApi">â€”</span>
       </div>
@@ -40,6 +48,7 @@
           alt="Plane Sound"
         />
       </div>
+      <div id="forecastBar" class="forecast hidden"></div>
       <div id="err" class="panel err hidden"></div>
 
       <div class="radar-wrap">
@@ -54,6 +63,7 @@
           class="audio-source-badge unavailable"
           type="button"
           aria-label="Audio source"
+          style="display: none"
         >
           DEVICE MIC
         </button>
@@ -63,10 +73,14 @@
         <button id="tabMics" class="tab">Mics</button>
         <button id="tabAircraft" class="tab">Aircraft</button>
         <button id="tabLocation" class="tab">Location</button>
+        <button id="tabLog" class="tab">Log</button>
       </div>
 
       <div id="micPanel" class="panel hidden">
         <div class="sblock">
+          <label class="lbl" style="display: block; margin-bottom: 4px"
+            >RECORDING MIC</label
+          >
           <div id="chipGrid" class="chips"></div>
         </div>
         <div class="sblock mic-spec-editor">
@@ -145,6 +159,98 @@
         </button>
         <div id="gpsMsg" class="msg hidden"></div>
       </div>
+
+      <div id="logPanel" class="panel hidden">
+        <div class="log-actions">
+          <button id="logCopyBtn" class="btn primary">Copy summary</button>
+          <button id="logDownloadBtn" class="btn">Download report</button>
+          <button id="logClearBtn" class="btn">Clear</button>
+        </div>
+        <div id="logMsg" class="msg hidden"></div>
+        <div id="logList" class="planeList"></div>
+      </div>
+    </div>
+
+    <div id="aboutOverlay" class="about-overlay hidden">
+      <div class="about-card">
+        <h3>What it is</h3>
+        <p>
+          Plane Sound tracks and logs aircraft overhead and warns you when one
+          will interfere with your sound recording.
+        </p>
+
+        <h3>How it works</h3>
+        <p>
+          The app tracks aircraft using live position signals and knows how loud
+          they are, using published aircraft noise data and the physics of how
+          sound travels. Weather conditions like temperature, humidity and wind
+          are taken into account so Plane Sound can be as accurate as possible.
+        </p>
+        <p>
+          The result is knowing how long before the next aircraft will affect
+          your recordings and how long until the aircraft is clear.
+        </p>
+
+        <h3>What it's built on</h3>
+        <p>
+          Plane Sound combines EASA aircraft-noise data (the certified noise
+          figures used in aviation) with ISO 9613-1, the international standard
+          for how air absorbs sound over distance. It draws on live aircraft
+          tracking for real-time positions, speed and altitude, along with live
+          weather at your location.
+        </p>
+
+        <div class="about-privacy">
+          <button type="button" id="privacyBtn" class="about-privacy-link">
+            Privacy
+          </button>
+        </div>
+        <button id="aboutCloseBtn" type="button" class="about-close">
+          Close
+        </button>
+      </div>
+    </div>
+
+    <div id="privacyOverlay" class="about-overlay hidden">
+      <div class="about-card">
+        <h2>Privacy</h2>
+        <p>
+          Plane Sound runs on your device. There are no accounts, no sign-in,
+          and no advertising or behavioural tracking.
+        </p>
+
+        <h3>Location</h3>
+        <p>
+          Your location is used only to find nearby aircraft and show activity
+          around you. It is requested only when you choose current location,
+          enter coordinates, or search. It is never stored anywhere but on your
+          device.
+        </p>
+
+        <h3>On your device</h3>
+        <p>
+          Your settings, chosen location, microphones and contamination log are
+          saved locally in your browser so the app remembers them between
+          sessions. None of it leaves your device except as below.
+        </p>
+
+        <h3>Network</h3>
+        <p>
+          To work, the app sends your coordinates to its aircraft-tracking and
+          map-lookup services to get results back. That is the only data sent.
+        </p>
+
+        <h3>Microphone</h3>
+        <p>
+          If you turn on live sound input, audio is analysed in real time on
+          your device only. Nothing is recorded, saved, or sent anywhere.
+        </p>
+
+        <p class="about-muted">Plane Sound does not sell user data.</p>
+        <button id="privacyCloseBtn" type="button" class="about-close">
+          Close
+        </button>
+      </div>
     </div>
 
     <script src="config.js"></script>
@@ -153,6 +259,7 @@
     <script src="app.utils.js"></script>
     <script src="app.aircraft-db.js"></script>
     <script src="app.propagation.js"></script>
+    <script src="app.spectral.js"></script>
     <script src="app.weather.js"></script>
     <script src="app.audio-monitor.js"></script>
     <script src="app.audio-source.js?v=audio-cycle-current-1"></script>
@@ -163,6 +270,7 @@
     <script src="app.selected-mics.js"></script>
     <script src="app.connection.js"></script>
     <script src="app.render.js"></script>
+    <script src="app.forecast-log.js"></script>
     <script src="app.radar.js"></script>
     <script src="app.location.js"></script>
     <script src="app.loop.js"></script>

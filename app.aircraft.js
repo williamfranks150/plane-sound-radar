@@ -2,6 +2,47 @@
 
 const PS_AIRCRAFT_TIMING_CACHE = new Map();
 
+// Per-aircraft hysteresis on the "is this aircraft loud enough to matter"
+// decision. Any threshold detector dithers when the input sits right at the
+// line: an aircraft hovering at margin ~ 0 dB would flip audible/not-audible
+// every poll as its dead-reckoned position and the weather correction wobble,
+// making the arrow strobe in and out. We give the boundary a dead-band:
+//   - it must reach ENTER margin (>= 0 dB over the contamination threshold) to
+//     become active, and
+//   - it stays active until margin drops below EXIT margin (-1.5 dB),
+// so a take-relevant aircraft reads steadily instead of blinking. This errs
+// toward warning the recordist a couple of seconds longer at the edge, which
+// is the safe direction for this tool.
+const PS_AUDIBLE_ENTER_MARGIN_DB = 0;
+const PS_AUDIBLE_EXIT_MARGIN_DB = -1.5;
+const PS_AIRCRAFT_ACTIVE_CACHE = new Map();
+
+function psAircraftActiveHysteresis(key, marginDba, now) {
+  if (!key) return marginDba >= PS_AUDIBLE_ENTER_MARGIN_DB;
+
+  const prev = PS_AIRCRAFT_ACTIVE_CACHE.get(key);
+  const wasActive =
+    prev && now - Number(prev.updatedAt || 0) <= 180000 ? !!prev.active : false;
+
+  let active;
+  if (wasActive) {
+    active = marginDba >= PS_AUDIBLE_EXIT_MARGIN_DB;
+  } else {
+    active = marginDba >= PS_AUDIBLE_ENTER_MARGIN_DB;
+  }
+
+  PS_AIRCRAFT_ACTIVE_CACHE.set(key, { active, updatedAt: now });
+  return active;
+}
+
+function psPruneAircraftActiveCache(now) {
+  for (const [key, value] of PS_AIRCRAFT_ACTIVE_CACHE.entries()) {
+    if (!value || now - Number(value.updatedAt || 0) > 180000) {
+      PS_AIRCRAFT_ACTIVE_CACHE.delete(key);
+    }
+  }
+}
+
 function psAircraftTimingKey(ac) {
   return String(ac && (ac.hex || ac.flight || "")).trim();
 }
@@ -17,7 +58,12 @@ function psPruneAircraftTimingCache(now) {
 function psApplyTimingContinuity(ac, result, now) {
   const key = psAircraftTimingKey(ac);
 
-  if (!key || result.noSelectedMic || result.belowAcousticThreshold) {
+  // Only abandon continuity when there is genuinely nothing to track: no key,
+  // or no mic selected. A momentary below-threshold reading is NOT a reason to
+  // drop the cache - that is precisely the dropout this cache exists to bridge.
+  // (The stale-cleanup below, exitLeft <= -5, removes it once the timer truly
+  // expires.)
+  if (!key || result.noSelectedMic) {
     if (key) PS_AIRCRAFT_TIMING_CACHE.delete(key);
     return result;
   }
@@ -82,9 +128,13 @@ function psApplyTimingContinuity(ac, result, now) {
 }
 
 function planeNow(ac) {
-  const dt = state.adsb.lastFetch
-    ? (Date.now() - state.adsb.lastFetch) / 1000
-    : 0;
+  // Dead-reckon from when the aircraft set was last actually OBSERVED, not from
+  // the last poll attempt. When the feed is holding a last-good set through an
+  // empty/failed poll, lastGoodAt stays fixed so positions keep advancing
+  // smoothly by velocity instead of freezing. Falls back to lastFetch, then to
+  // no extrapolation.
+  const anchor = state.adsb.lastGoodAt || state.adsb.lastFetch;
+  const dt = anchor ? (Date.now() - anchor) / 1000 : 0;
   const gs = ((ac.gs || 0) * NM_TO_KM) / 3600;
   const tr = (ac.track || 0) * D2R;
   const vx = gs * Math.sin(tr);
@@ -167,6 +217,7 @@ function analyze(ac) {
   const now = Date.now();
 
   psPruneAircraftTimingCache(now);
+  psPruneAircraftActiveCache(now);
 
   if (!state.loc || ac.lat == null || ac.lon == null) return null;
 
@@ -203,8 +254,23 @@ function analyze(ac) {
   acoustic.displayRadiusKm = acousticRadiusKm;
 
   const noSelectedMic = acoustic.noSelectedMic === true;
-  const belowAcousticThreshold =
-    !noSelectedMic && (acoustic.tooHigh || slantRadiusKm <= 0);
+
+  // Hysteresis on the audibility boundary so an aircraft sitting at the
+  // threshold doesn't strobe in and out each poll. Based on the acoustic margin
+  // (received dB over the contamination threshold); the per-aircraft cache
+  // holds it active across a brief dip until it clearly drops out.
+  const acKey = psAircraftTimingKey(ac);
+  const rawMargin = Number.isFinite(Number(acoustic.marginDba))
+    ? Number(acoustic.marginDba)
+    : -Infinity;
+  const hasRadius =
+    slantRadiusKm > 0 || Number.isFinite(Number(acoustic.marginDba));
+  const active =
+    !noSelectedMic &&
+    hasRadius &&
+    psAircraftActiveHysteresis(acKey, rawMargin, now);
+
+  const belowAcousticThreshold = !noSelectedMic && !active;
 
   // Speed of sound along the path (m/s), and the propagation delay added at
   // the threshold-crossing geometry (slant == slantRadiusKm there).

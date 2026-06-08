@@ -37,6 +37,9 @@ async function psBootAcousticEngine() {
     typeof psLoadAircraftProfileData === "function"
       ? psLoadAircraftProfileData()
       : null,
+    typeof psLoadSpectralClasses === "function"
+      ? psLoadSpectralClasses()
+      : null,
   ]);
 
   if (state.loc && typeof psPrimeWeatherForLocation === "function") {
@@ -193,6 +196,8 @@ function psAircraftNoiseProfile(ac) {
       confidence: Number(verified.confidence || 0.85),
       engine: verified.engine || {},
       directivity: verified.directivity || "generic",
+      spectralApproachClass: verified.spectralApproachClass,
+      spectralDepartureClass: verified.spectralDepartureClass,
     };
   }
 
@@ -560,6 +565,7 @@ function psEstimateAircraftNoise(ac, context) {
 
   const profile = psAircraftNoiseProfile(ac);
   const regimeInfo = psInferAircraftRegime(ac, context);
+  if (profile) profile.regime = regimeInfo.regime;
   const hasSinglePoint = Number.isFinite(Number(profile.dbaAt305m));
   const sourceDbaAt305m = hasSinglePoint
     ? profile.dbaAt305m +

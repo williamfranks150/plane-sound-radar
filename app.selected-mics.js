@@ -47,11 +47,14 @@ function psRenderSelectedMicList() {
   const items = psSelectedMicDisplayItems();
 
   if (!items.length) {
-    el.innerHTML =
-      '<div class="selected-mic-list-item selected-mic-list-empty">NO MICS SELECTED</div>';
+    // No mic models chosen: hide the box entirely (don't show a placeholder),
+    // so the top-left of the radar is clean until the user selects a mic.
+    el.style.display = "none";
+    el.innerHTML = "";
     return;
   }
 
+  el.style.display = "";
   el.innerHTML =
     '<div class="selected-mic-list-title">SELECTED MICS</div>' +
     items

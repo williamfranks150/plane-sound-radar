@@ -1,4 +1,4 @@
-// Aircraft Radar backend starter.
+﻿// Aircraft Radar backend starter.
 // Endpoints:
 //   GET /mic?model=Sennheiser%20MKH%20416
 //   GET /geocode?q=2-150%20Wallace%20Ave%20Toronto
@@ -224,7 +224,15 @@ async function handleAircraft(request) {
     },
   ];
 
+  // Try sources in order. CRITICAL: a 200 with an EMPTY aircraft list is NOT
+  // treated as success here \u2014 if a source returns zero aircraft we fall
+  // through to the next source, which may have coverage this one lacks. Only
+  // if a source returns actual traffic do we return immediately. This stops the
+  // client from flickering empty just because the first upstream had a momentary
+  // gap or thinner coverage. If every source is reachable but all empty, we
+  // return the empty set (genuinely no traffic) with a flag.
   const errors = [];
+  let sawEmptyOk = false;
   for (const source of sources) {
     try {
       const res = await fetch(source.url, {
@@ -232,16 +240,23 @@ async function handleAircraft(request) {
       });
       if (!res.ok) throw new Error(String(res.status));
       const data = source.normalize(await res.json());
-      return json(
-        { source: source.name, ...(data.ac ? data : { ac: [] }) },
-        200,
-        {
+      const ac = Array.isArray(data.ac) ? data.ac : [];
+      if (ac.length > 0) {
+        return json({ source: source.name, ac }, 200, {
           "Cache-Control": "public, max-age=5",
-        },
-      );
+        });
+      }
+      sawEmptyOk = true;
     } catch (err) {
       errors.push(`${source.name}:${err.message}`);
     }
+  }
+
+  if (sawEmptyOk) {
+    // All reachable sources agree there is no traffic right now. Honest empty.
+    return json({ source: "none", ac: [], empty: true }, 200, {
+      "Cache-Control": "public, max-age=5",
+    });
   }
 
   return json({ error: "aircraft_feeds_failed", details: errors }, 502);

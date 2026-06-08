@@ -8,6 +8,11 @@ function recompute() {
     .sort(
       (a, b) => (order[a.status] ?? 5) - (order[b.status] ?? 5) || a.h - b.h,
     );
+
+  // Record contamination events as the live analysis updates.
+  if (typeof psUpdateContaminationLog === "function") {
+    psUpdateContaminationLog(Date.now());
+  }
 }
 
 function counts() {
@@ -42,9 +47,11 @@ function renderPanels() {
     "hidden",
     state.activePanel !== "location",
   );
+  $("logPanel").classList.toggle("hidden", state.activePanel !== "log");
   $("tabMics").classList.toggle("active", state.activePanel === "mics");
   $("tabAircraft").classList.toggle("active", state.activePanel === "aircraft");
   $("tabLocation").classList.toggle("active", state.activePanel === "location");
+  $("tabLog").classList.toggle("active", state.activePanel === "log");
 
   const active = new Set(activeMicIds());
 
@@ -72,6 +79,10 @@ function renderPanels() {
 
   if (typeof psWireMicSpecEditor === "function") psWireMicSpecEditor();
   psRenderSceneSelector();
+  if (typeof psRenderLiveInputControl === "function")
+    psRenderLiveInputControl();
+  if (state.activePanel === "log" && typeof psRenderLog === "function")
+    psRenderLog();
 }
 
 // Inject a scene-tolerance selector into the mic panel once, and keep it in
@@ -89,14 +100,11 @@ function psRenderSceneSelector() {
     host.className = "sblock";
     host.style.marginBottom = "10px";
     const options = Object.entries(PS_SCENE_PROFILES)
-      .map(
-        ([key, p]) =>
-          `<option value="${key}">${esc(p.label)} (${Math.round(p.ambientBedDba)} dBA)</option>`,
-      )
+      .filter(([, p]) => !p.hidden)
+      .map(([key, p]) => `<option value="${key}">${esc(p.label)}</option>`)
       .join("");
-    host.innerHTML = `<label class="lbl" for="sceneSelect" style="display:block;margin-bottom:4px">SCENE / PROTECTED FLOOR</label>
-      <select id="sceneSelect" class="input" style="width:100%">${options}</select>
-      <div id="sceneNote" class="planeNote" style="margin-top:4px"></div>`;
+    host.innerHTML = `<label class="lbl" for="sceneSelect" style="display:block;margin-bottom:4px">AMBIENT NOISE FLOOR</label>
+      <select id="sceneSelect" class="input" style="width:100%">${options}</select>`;
     panel.insertBefore(host, panel.firstChild);
 
     $("sceneSelect").addEventListener("change", (e) => {
@@ -107,17 +115,9 @@ function psRenderSceneSelector() {
     });
   }
 
-  const current =
-    (state.settings && state.settings.scene) || "exterior_dialogue";
+  const current = (state.settings && state.settings.scene) || "quiet_exterior";
   const sel = $("sceneSelect");
   if (sel && sel.value !== current) sel.value = current;
-
-  const note = $("sceneNote");
-  const profile = PS_SCENE_PROFILES[current];
-  if (note && profile) {
-    note.textContent =
-      profile.note + " · floor " + Math.round(profile.ambientBedDba) + " dBA";
-  }
 }
 
 function renderErr() {
@@ -213,7 +213,7 @@ function planeCard(p) {
   const ti = ac.thresholdInfo;
   const thrNote =
     showTiming && ti
-      ? `<div class="planeNote">${esc(ti.sceneKey)} · floor ${Math.round(ti.protectedFloorDba)} dBA (${esc(ti.bound)})</div>`
+      ? `<div class="planeNote">${esc(ti.sceneKey)} · noise floor ${Math.round(ti.protectedFloorDba)} dBA (${esc(ti.bound)})</div>`
       : "";
 
   return `<div class="planeCard ${p.status}">

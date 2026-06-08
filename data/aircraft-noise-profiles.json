@@ -1,15 +1,2804 @@
-﻿{
+{
   "schema": "plane-sound-aircraft-noise-profiles-v1",
   "mode": "verified-data-required",
   "sources": [
     {
-      "name": "EUROCONTROL/EASA ANP (legacy) \u2014 NPD LAmax",
+      "name": "EASA Aircraft Noise and Performance (ANP) database v9 - NPD LAmax",
       "metric": "LAmax",
-      "note": "Verified noise-power-distance curves. A320 (IAE V2527-A5) converted from ANP NPD_data via scripts/convert-anp-npd.js. Additional types added by running the converter on the full ANP dataset.",
-      "license": "EUROCONTROL ANP \u2014 see EASA ANP terms of use"
+      "note": "Certified noise-power-distance curves. Loudest power setting per operating mode (worst case). Converted by scripts/convert-easa-anp-xlsx.py.",
+      "license": "EASA ANP - see EASA ANP terms of use"
+    },
+    {
+      "name": "EUROCONTROL/EASA ANP (legacy) - retained types not present in v9",
+      "metric": "LAmax",
+      "note": "Earlier verified curves kept for aircraft the v9 set does not cover (e.g. A320ceo)."
     }
   ],
   "profiles": [
+    {
+      "sourceType": "verified",
+      "label": "747400RN",
+      "aircraftTypeCodes": [
+        "B744"
+      ],
+      "anpId": "747400RN",
+      "confidence": 0.85,
+      "npd": {
+        "refMetric": "Lmax_dBA",
+        "thrust": [
+          {
+            "setting": "departure",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 105.5
+              },
+              {
+                "distM": 122,
+                "dba": 98.3
+              },
+              {
+                "distM": 192,
+                "dba": 94.6
+              },
+              {
+                "distM": 305,
+                "dba": 88.7
+              },
+              {
+                "distM": 610,
+                "dba": 80.6
+              },
+              {
+                "distM": 1219,
+                "dba": 71.8
+              },
+              {
+                "distM": 1920,
+                "dba": 65.6
+              },
+              {
+                "distM": 3048,
+                "dba": 58.5
+              },
+              {
+                "distM": 4877,
+                "dba": 51.9
+              },
+              {
+                "distM": 7620,
+                "dba": 45.4
+              }
+            ]
+          },
+          {
+            "setting": "climb",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 105.5
+              },
+              {
+                "distM": 122,
+                "dba": 98.3
+              },
+              {
+                "distM": 192,
+                "dba": 94.6
+              },
+              {
+                "distM": 305,
+                "dba": 88.7
+              },
+              {
+                "distM": 610,
+                "dba": 80.6
+              },
+              {
+                "distM": 1219,
+                "dba": 71.8
+              },
+              {
+                "distM": 1920,
+                "dba": 65.6
+              },
+              {
+                "distM": 3048,
+                "dba": 58.5
+              },
+              {
+                "distM": 4877,
+                "dba": 51.9
+              },
+              {
+                "distM": 7620,
+                "dba": 45.4
+              }
+            ]
+          },
+          {
+            "setting": "cruise",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 105.5
+              },
+              {
+                "distM": 122,
+                "dba": 98.3
+              },
+              {
+                "distM": 192,
+                "dba": 94.6
+              },
+              {
+                "distM": 305,
+                "dba": 88.7
+              },
+              {
+                "distM": 610,
+                "dba": 80.6
+              },
+              {
+                "distM": 1219,
+                "dba": 71.8
+              },
+              {
+                "distM": 1920,
+                "dba": 65.6
+              },
+              {
+                "distM": 3048,
+                "dba": 58.5
+              },
+              {
+                "distM": 4877,
+                "dba": 51.9
+              },
+              {
+                "distM": 7620,
+                "dba": 45.4
+              }
+            ]
+          },
+          {
+            "setting": "approach",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 93.9
+              },
+              {
+                "distM": 122,
+                "dba": 86.7
+              },
+              {
+                "distM": 192,
+                "dba": 82.0
+              },
+              {
+                "distM": 305,
+                "dba": 77.0
+              },
+              {
+                "distM": 610,
+                "dba": 69.0
+              },
+              {
+                "distM": 1219,
+                "dba": 60.3
+              },
+              {
+                "distM": 1920,
+                "dba": 54.1
+              },
+              {
+                "distM": 3048,
+                "dba": 47.4
+              },
+              {
+                "distM": 4877,
+                "dba": 40.7
+              },
+              {
+                "distM": 7620,
+                "dba": 34.3
+              }
+            ]
+          }
+        ]
+      },
+      "engineLabel": "Boeing 747400RN / PW4062A",
+      "noiseIdentifier": "747400RN",
+      "mappingNote": "747-400",
+      "spectralApproachClass": 245,
+      "spectralDepartureClass": 145
+    },
+    {
+      "sourceType": "verified",
+      "label": "7673ER",
+      "aircraftTypeCodes": [
+        "B763"
+      ],
+      "anpId": "7673ER",
+      "confidence": 0.85,
+      "npd": {
+        "refMetric": "Lmax_dBA",
+        "thrust": [
+          {
+            "setting": "departure",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 110.1
+              },
+              {
+                "distM": 122,
+                "dba": 103.6
+              },
+              {
+                "distM": 192,
+                "dba": 99.2
+              },
+              {
+                "distM": 305,
+                "dba": 94.5
+              },
+              {
+                "distM": 610,
+                "dba": 86.9
+              },
+              {
+                "distM": 1219,
+                "dba": 78.8
+              },
+              {
+                "distM": 1920,
+                "dba": 73.2
+              },
+              {
+                "distM": 3048,
+                "dba": 67.0
+              },
+              {
+                "distM": 4877,
+                "dba": 60.8
+              },
+              {
+                "distM": 7620,
+                "dba": 55.0
+              }
+            ]
+          },
+          {
+            "setting": "climb",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 110.1
+              },
+              {
+                "distM": 122,
+                "dba": 103.6
+              },
+              {
+                "distM": 192,
+                "dba": 99.2
+              },
+              {
+                "distM": 305,
+                "dba": 94.5
+              },
+              {
+                "distM": 610,
+                "dba": 86.9
+              },
+              {
+                "distM": 1219,
+                "dba": 78.8
+              },
+              {
+                "distM": 1920,
+                "dba": 73.2
+              },
+              {
+                "distM": 3048,
+                "dba": 67.0
+              },
+              {
+                "distM": 4877,
+                "dba": 60.8
+              },
+              {
+                "distM": 7620,
+                "dba": 55.0
+              }
+            ]
+          },
+          {
+            "setting": "cruise",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 110.1
+              },
+              {
+                "distM": 122,
+                "dba": 103.6
+              },
+              {
+                "distM": 192,
+                "dba": 99.2
+              },
+              {
+                "distM": 305,
+                "dba": 94.5
+              },
+              {
+                "distM": 610,
+                "dba": 86.9
+              },
+              {
+                "distM": 1219,
+                "dba": 78.8
+              },
+              {
+                "distM": 1920,
+                "dba": 73.2
+              },
+              {
+                "distM": 3048,
+                "dba": 67.0
+              },
+              {
+                "distM": 4877,
+                "dba": 60.8
+              },
+              {
+                "distM": 7620,
+                "dba": 55.0
+              }
+            ]
+          },
+          {
+            "setting": "approach",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 97.6
+              },
+              {
+                "distM": 122,
+                "dba": 90.2
+              },
+              {
+                "distM": 192,
+                "dba": 85.3
+              },
+              {
+                "distM": 305,
+                "dba": 80.0
+              },
+              {
+                "distM": 610,
+                "dba": 71.9
+              },
+              {
+                "distM": 1219,
+                "dba": 63.0
+              },
+              {
+                "distM": 1920,
+                "dba": 56.7
+              },
+              {
+                "distM": 3048,
+                "dba": 49.9
+              },
+              {
+                "distM": 4877,
+                "dba": 42.9
+              },
+              {
+                "distM": 7620,
+                "dba": 36.3
+              }
+            ]
+          }
+        ]
+      },
+      "engineLabel": "Boeing 767-300ER / CF6-80C2B6F",
+      "noiseIdentifier": "7673ER",
+      "mappingNote": "767-300ER",
+      "spectralApproachClass": 205,
+      "spectralDepartureClass": 105
+    },
+    {
+      "sourceType": "verified",
+      "label": "7773ER",
+      "aircraftTypeCodes": [
+        "B77W"
+      ],
+      "anpId": "7773ER",
+      "confidence": 0.85,
+      "npd": {
+        "refMetric": "Lmax_dBA",
+        "thrust": [
+          {
+            "setting": "departure",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 112.5
+              },
+              {
+                "distM": 122,
+                "dba": 105.8
+              },
+              {
+                "distM": 192,
+                "dba": 101.2
+              },
+              {
+                "distM": 305,
+                "dba": 96.3
+              },
+              {
+                "distM": 610,
+                "dba": 88.4
+              },
+              {
+                "distM": 1219,
+                "dba": 79.6
+              },
+              {
+                "distM": 1920,
+                "dba": 73.4
+              },
+              {
+                "distM": 3048,
+                "dba": 66.3
+              },
+              {
+                "distM": 4877,
+                "dba": 59.3
+              },
+              {
+                "distM": 7620,
+                "dba": 52.1
+              }
+            ]
+          },
+          {
+            "setting": "climb",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 112.5
+              },
+              {
+                "distM": 122,
+                "dba": 105.8
+              },
+              {
+                "distM": 192,
+                "dba": 101.2
+              },
+              {
+                "distM": 305,
+                "dba": 96.3
+              },
+              {
+                "distM": 610,
+                "dba": 88.4
+              },
+              {
+                "distM": 1219,
+                "dba": 79.6
+              },
+              {
+                "distM": 1920,
+                "dba": 73.4
+              },
+              {
+                "distM": 3048,
+                "dba": 66.3
+              },
+              {
+                "distM": 4877,
+                "dba": 59.3
+              },
+              {
+                "distM": 7620,
+                "dba": 52.1
+              }
+            ]
+          },
+          {
+            "setting": "cruise",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 112.5
+              },
+              {
+                "distM": 122,
+                "dba": 105.8
+              },
+              {
+                "distM": 192,
+                "dba": 101.2
+              },
+              {
+                "distM": 305,
+                "dba": 96.3
+              },
+              {
+                "distM": 610,
+                "dba": 88.4
+              },
+              {
+                "distM": 1219,
+                "dba": 79.6
+              },
+              {
+                "distM": 1920,
+                "dba": 73.4
+              },
+              {
+                "distM": 3048,
+                "dba": 66.3
+              },
+              {
+                "distM": 4877,
+                "dba": 59.3
+              },
+              {
+                "distM": 7620,
+                "dba": 52.1
+              }
+            ]
+          },
+          {
+            "setting": "approach",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 98.6
+              },
+              {
+                "distM": 122,
+                "dba": 91.3
+              },
+              {
+                "distM": 192,
+                "dba": 86.4
+              },
+              {
+                "distM": 305,
+                "dba": 81.3
+              },
+              {
+                "distM": 610,
+                "dba": 73.2
+              },
+              {
+                "distM": 1219,
+                "dba": 64.4
+              },
+              {
+                "distM": 1920,
+                "dba": 58.1
+              },
+              {
+                "distM": 3048,
+                "dba": 51.2
+              },
+              {
+                "distM": 4877,
+                "dba": 44.3
+              },
+              {
+                "distM": 7620,
+                "dba": 37.7
+              }
+            ]
+          }
+        ]
+      },
+      "engineLabel": "Boeing 777-300ER / GE90-115B",
+      "noiseIdentifier": "7773ER",
+      "mappingNote": "777-300ER",
+      "spectralApproachClass": 241,
+      "spectralDepartureClass": 141
+    },
+    {
+      "sourceType": "verified",
+      "label": "7879",
+      "aircraftTypeCodes": [
+        "B789"
+      ],
+      "anpId": "7879",
+      "confidence": 0.85,
+      "npd": {
+        "refMetric": "Lmax_dBA",
+        "thrust": [
+          {
+            "setting": "departure",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 105.5
+              },
+              {
+                "distM": 122,
+                "dba": 98.3
+              },
+              {
+                "distM": 192,
+                "dba": 94.6
+              },
+              {
+                "distM": 305,
+                "dba": 88.7
+              },
+              {
+                "distM": 610,
+                "dba": 80.6
+              },
+              {
+                "distM": 1219,
+                "dba": 71.8
+              },
+              {
+                "distM": 1920,
+                "dba": 65.6
+              },
+              {
+                "distM": 3048,
+                "dba": 58.5
+              },
+              {
+                "distM": 4877,
+                "dba": 51.9
+              },
+              {
+                "distM": 7620,
+                "dba": 45.4
+              }
+            ]
+          },
+          {
+            "setting": "climb",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 105.5
+              },
+              {
+                "distM": 122,
+                "dba": 98.3
+              },
+              {
+                "distM": 192,
+                "dba": 94.6
+              },
+              {
+                "distM": 305,
+                "dba": 88.7
+              },
+              {
+                "distM": 610,
+                "dba": 80.6
+              },
+              {
+                "distM": 1219,
+                "dba": 71.8
+              },
+              {
+                "distM": 1920,
+                "dba": 65.6
+              },
+              {
+                "distM": 3048,
+                "dba": 58.5
+              },
+              {
+                "distM": 4877,
+                "dba": 51.9
+              },
+              {
+                "distM": 7620,
+                "dba": 45.4
+              }
+            ]
+          },
+          {
+            "setting": "cruise",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 105.5
+              },
+              {
+                "distM": 122,
+                "dba": 98.3
+              },
+              {
+                "distM": 192,
+                "dba": 94.6
+              },
+              {
+                "distM": 305,
+                "dba": 88.7
+              },
+              {
+                "distM": 610,
+                "dba": 80.6
+              },
+              {
+                "distM": 1219,
+                "dba": 71.8
+              },
+              {
+                "distM": 1920,
+                "dba": 65.6
+              },
+              {
+                "distM": 3048,
+                "dba": 58.5
+              },
+              {
+                "distM": 4877,
+                "dba": 51.9
+              },
+              {
+                "distM": 7620,
+                "dba": 45.4
+              }
+            ]
+          },
+          {
+            "setting": "approach",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 93.9
+              },
+              {
+                "distM": 122,
+                "dba": 86.7
+              },
+              {
+                "distM": 192,
+                "dba": 82.0
+              },
+              {
+                "distM": 305,
+                "dba": 77.0
+              },
+              {
+                "distM": 610,
+                "dba": 69.0
+              },
+              {
+                "distM": 1219,
+                "dba": 60.3
+              },
+              {
+                "distM": 1920,
+                "dba": 54.1
+              },
+              {
+                "distM": 3048,
+                "dba": 47.4
+              },
+              {
+                "distM": 4877,
+                "dba": 40.7
+              },
+              {
+                "distM": 7620,
+                "dba": 34.3
+              }
+            ]
+          }
+        ]
+      },
+      "engineLabel": "Boeing 787-9 / Genx-1B76A",
+      "noiseIdentifier": "7879",
+      "mappingNote": "787-9",
+      "spectralApproachClass": 243,
+      "spectralDepartureClass": 143
+    },
+    {
+      "sourceType": "verified",
+      "label": "A320-250N",
+      "aircraftTypeCodes": [],
+      "anpId": "A320-250N",
+      "confidence": 0.85,
+      "npd": {
+        "refMetric": "Lmax_dBA",
+        "thrust": [
+          {
+            "setting": "departure",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 99.6
+              },
+              {
+                "distM": 122,
+                "dba": 93.79
+              },
+              {
+                "distM": 192,
+                "dba": 89.4
+              },
+              {
+                "distM": 305,
+                "dba": 84.61
+              },
+              {
+                "distM": 610,
+                "dba": 76.63
+              },
+              {
+                "distM": 1219,
+                "dba": 67.71
+              },
+              {
+                "distM": 1920,
+                "dba": 61.23
+              },
+              {
+                "distM": 3048,
+                "dba": 54.05
+              },
+              {
+                "distM": 4877,
+                "dba": 46.2
+              },
+              {
+                "distM": 7620,
+                "dba": 38.36
+              }
+            ]
+          },
+          {
+            "setting": "climb",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 99.6
+              },
+              {
+                "distM": 122,
+                "dba": 93.79
+              },
+              {
+                "distM": 192,
+                "dba": 89.4
+              },
+              {
+                "distM": 305,
+                "dba": 84.61
+              },
+              {
+                "distM": 610,
+                "dba": 76.63
+              },
+              {
+                "distM": 1219,
+                "dba": 67.71
+              },
+              {
+                "distM": 1920,
+                "dba": 61.23
+              },
+              {
+                "distM": 3048,
+                "dba": 54.05
+              },
+              {
+                "distM": 4877,
+                "dba": 46.2
+              },
+              {
+                "distM": 7620,
+                "dba": 38.36
+              }
+            ]
+          },
+          {
+            "setting": "cruise",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 99.6
+              },
+              {
+                "distM": 122,
+                "dba": 93.79
+              },
+              {
+                "distM": 192,
+                "dba": 89.4
+              },
+              {
+                "distM": 305,
+                "dba": 84.61
+              },
+              {
+                "distM": 610,
+                "dba": 76.63
+              },
+              {
+                "distM": 1219,
+                "dba": 67.71
+              },
+              {
+                "distM": 1920,
+                "dba": 61.23
+              },
+              {
+                "distM": 3048,
+                "dba": 54.05
+              },
+              {
+                "distM": 4877,
+                "dba": 46.2
+              },
+              {
+                "distM": 7620,
+                "dba": 38.36
+              }
+            ]
+          },
+          {
+            "setting": "approach",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 89.32
+              },
+              {
+                "distM": 122,
+                "dba": 82.89
+              },
+              {
+                "distM": 192,
+                "dba": 78.18
+              },
+              {
+                "distM": 305,
+                "dba": 73.16
+              },
+              {
+                "distM": 610,
+                "dba": 65.29
+              },
+              {
+                "distM": 1219,
+                "dba": 56.77
+              },
+              {
+                "distM": 1920,
+                "dba": 50.58
+              },
+              {
+                "distM": 3048,
+                "dba": 43.63
+              },
+              {
+                "distM": 4877,
+                "dba": 35.87
+              },
+              {
+                "distM": 7620,
+                "dba": 27.91
+              }
+            ]
+          }
+        ]
+      },
+      "engineLabel": "Airbus A320-250N / LEAP-1A20",
+      "noiseIdentifier": "A320-250N",
+      "mappingNote": "A320neo (LEAP-1A); A20N assigned to the louder A320-270N curve",
+      "spectralApproachClass": 249,
+      "spectralDepartureClass": 149
+    },
+    {
+      "sourceType": "verified",
+      "label": "A320-270N",
+      "aircraftTypeCodes": [
+        "A20N"
+      ],
+      "anpId": "A320-270N",
+      "confidence": 0.85,
+      "npd": {
+        "refMetric": "Lmax_dBA",
+        "thrust": [
+          {
+            "setting": "departure",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 104.9
+              },
+              {
+                "distM": 122,
+                "dba": 97.5
+              },
+              {
+                "distM": 192,
+                "dba": 92.7
+              },
+              {
+                "distM": 305,
+                "dba": 87.5
+              },
+              {
+                "distM": 610,
+                "dba": 79.0
+              },
+              {
+                "distM": 1219,
+                "dba": 70.4
+              },
+              {
+                "distM": 1920,
+                "dba": 63.9
+              },
+              {
+                "distM": 3048,
+                "dba": 56.7
+              },
+              {
+                "distM": 4877,
+                "dba": 48.5
+              },
+              {
+                "distM": 7620,
+                "dba": 39.8
+              }
+            ]
+          },
+          {
+            "setting": "climb",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 104.9
+              },
+              {
+                "distM": 122,
+                "dba": 97.5
+              },
+              {
+                "distM": 192,
+                "dba": 92.7
+              },
+              {
+                "distM": 305,
+                "dba": 87.5
+              },
+              {
+                "distM": 610,
+                "dba": 79.0
+              },
+              {
+                "distM": 1219,
+                "dba": 70.4
+              },
+              {
+                "distM": 1920,
+                "dba": 63.9
+              },
+              {
+                "distM": 3048,
+                "dba": 56.7
+              },
+              {
+                "distM": 4877,
+                "dba": 48.5
+              },
+              {
+                "distM": 7620,
+                "dba": 39.8
+              }
+            ]
+          },
+          {
+            "setting": "cruise",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 104.9
+              },
+              {
+                "distM": 122,
+                "dba": 97.5
+              },
+              {
+                "distM": 192,
+                "dba": 92.7
+              },
+              {
+                "distM": 305,
+                "dba": 87.5
+              },
+              {
+                "distM": 610,
+                "dba": 79.0
+              },
+              {
+                "distM": 1219,
+                "dba": 70.4
+              },
+              {
+                "distM": 1920,
+                "dba": 63.9
+              },
+              {
+                "distM": 3048,
+                "dba": 56.7
+              },
+              {
+                "distM": 4877,
+                "dba": 48.5
+              },
+              {
+                "distM": 7620,
+                "dba": 39.8
+              }
+            ]
+          },
+          {
+            "setting": "approach",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 94.4
+              },
+              {
+                "distM": 122,
+                "dba": 87.4
+              },
+              {
+                "distM": 192,
+                "dba": 82.5
+              },
+              {
+                "distM": 305,
+                "dba": 77.6
+              },
+              {
+                "distM": 610,
+                "dba": 69.7
+              },
+              {
+                "distM": 1219,
+                "dba": 60.9
+              },
+              {
+                "distM": 1920,
+                "dba": 54.4
+              },
+              {
+                "distM": 3048,
+                "dba": 46.8
+              },
+              {
+                "distM": 4877,
+                "dba": 38.0
+              },
+              {
+                "distM": 7620,
+                "dba": 29.1
+              }
+            ]
+          }
+        ]
+      },
+      "engineLabel": "Airbus A320-270N / PW1120G-JM",
+      "noiseIdentifier": "A320-270N",
+      "mappingNote": "A320neo (PW1100G); louder of the two A320neo curves -> carries A20N",
+      "spectralApproachClass": 201,
+      "spectralDepartureClass": 107
+    },
+    {
+      "sourceType": "verified",
+      "label": "A321-270N",
+      "aircraftTypeCodes": [
+        "A21N"
+      ],
+      "anpId": "A321-270N",
+      "confidence": 0.85,
+      "npd": {
+        "refMetric": "Lmax_dBA",
+        "thrust": [
+          {
+            "setting": "departure",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 99.47
+              },
+              {
+                "distM": 122,
+                "dba": 93.44
+              },
+              {
+                "distM": 192,
+                "dba": 88.99
+              },
+              {
+                "distM": 305,
+                "dba": 84.23
+              },
+              {
+                "distM": 610,
+                "dba": 76.33
+              },
+              {
+                "distM": 1219,
+                "dba": 67.66
+              },
+              {
+                "distM": 1920,
+                "dba": 61.26
+              },
+              {
+                "distM": 3048,
+                "dba": 53.96
+              },
+              {
+                "distM": 4877,
+                "dba": 45.77
+              },
+              {
+                "distM": 7620,
+                "dba": 37.48
+              }
+            ]
+          },
+          {
+            "setting": "climb",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 99.47
+              },
+              {
+                "distM": 122,
+                "dba": 93.44
+              },
+              {
+                "distM": 192,
+                "dba": 88.99
+              },
+              {
+                "distM": 305,
+                "dba": 84.23
+              },
+              {
+                "distM": 610,
+                "dba": 76.33
+              },
+              {
+                "distM": 1219,
+                "dba": 67.66
+              },
+              {
+                "distM": 1920,
+                "dba": 61.26
+              },
+              {
+                "distM": 3048,
+                "dba": 53.96
+              },
+              {
+                "distM": 4877,
+                "dba": 45.77
+              },
+              {
+                "distM": 7620,
+                "dba": 37.48
+              }
+            ]
+          },
+          {
+            "setting": "cruise",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 99.47
+              },
+              {
+                "distM": 122,
+                "dba": 93.44
+              },
+              {
+                "distM": 192,
+                "dba": 88.99
+              },
+              {
+                "distM": 305,
+                "dba": 84.23
+              },
+              {
+                "distM": 610,
+                "dba": 76.33
+              },
+              {
+                "distM": 1219,
+                "dba": 67.66
+              },
+              {
+                "distM": 1920,
+                "dba": 61.26
+              },
+              {
+                "distM": 3048,
+                "dba": 53.96
+              },
+              {
+                "distM": 4877,
+                "dba": 45.77
+              },
+              {
+                "distM": 7620,
+                "dba": 37.48
+              }
+            ]
+          },
+          {
+            "setting": "approach",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 93.08
+              },
+              {
+                "distM": 122,
+                "dba": 86.98
+              },
+              {
+                "distM": 192,
+                "dba": 82.25
+              },
+              {
+                "distM": 305,
+                "dba": 77.21
+              },
+              {
+                "distM": 610,
+                "dba": 69.19
+              },
+              {
+                "distM": 1219,
+                "dba": 60.37
+              },
+              {
+                "distM": 1920,
+                "dba": 54.05
+              },
+              {
+                "distM": 3048,
+                "dba": 46.92
+              },
+              {
+                "distM": 4877,
+                "dba": 38.97
+              },
+              {
+                "distM": 7620,
+                "dba": 30.96
+              }
+            ]
+          }
+        ]
+      },
+      "engineLabel": "Airbus A321-270N / PW1130G-JM",
+      "noiseIdentifier": "A321-270N",
+      "mappingNote": "A321neo",
+      "spectralApproachClass": 242,
+      "spectralDepartureClass": 142
+    },
+    {
+      "sourceType": "verified",
+      "label": "A330-743L",
+      "aircraftTypeCodes": [
+        "A333"
+      ],
+      "anpId": "A330-743L",
+      "confidence": 0.85,
+      "npd": {
+        "refMetric": "Lmax_dBA",
+        "thrust": [
+          {
+            "setting": "departure",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 107.42
+              },
+              {
+                "distM": 122,
+                "dba": 101.61
+              },
+              {
+                "distM": 192,
+                "dba": 97.47
+              },
+              {
+                "distM": 305,
+                "dba": 92.9
+              },
+              {
+                "distM": 610,
+                "dba": 85.23
+              },
+              {
+                "distM": 1219,
+                "dba": 76.57
+              },
+              {
+                "distM": 1920,
+                "dba": 70.22
+              },
+              {
+                "distM": 3048,
+                "dba": 63.18
+              },
+              {
+                "distM": 4877,
+                "dba": 55.35
+              },
+              {
+                "distM": 7620,
+                "dba": 47.39
+              }
+            ]
+          },
+          {
+            "setting": "climb",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 107.42
+              },
+              {
+                "distM": 122,
+                "dba": 101.61
+              },
+              {
+                "distM": 192,
+                "dba": 97.47
+              },
+              {
+                "distM": 305,
+                "dba": 92.9
+              },
+              {
+                "distM": 610,
+                "dba": 85.23
+              },
+              {
+                "distM": 1219,
+                "dba": 76.57
+              },
+              {
+                "distM": 1920,
+                "dba": 70.22
+              },
+              {
+                "distM": 3048,
+                "dba": 63.18
+              },
+              {
+                "distM": 4877,
+                "dba": 55.35
+              },
+              {
+                "distM": 7620,
+                "dba": 47.39
+              }
+            ]
+          },
+          {
+            "setting": "cruise",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 107.42
+              },
+              {
+                "distM": 122,
+                "dba": 101.61
+              },
+              {
+                "distM": 192,
+                "dba": 97.47
+              },
+              {
+                "distM": 305,
+                "dba": 92.9
+              },
+              {
+                "distM": 610,
+                "dba": 85.23
+              },
+              {
+                "distM": 1219,
+                "dba": 76.57
+              },
+              {
+                "distM": 1920,
+                "dba": 70.22
+              },
+              {
+                "distM": 3048,
+                "dba": 63.18
+              },
+              {
+                "distM": 4877,
+                "dba": 55.35
+              },
+              {
+                "distM": 7620,
+                "dba": 47.39
+              }
+            ]
+          },
+          {
+            "setting": "approach",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 94.56
+              },
+              {
+                "distM": 122,
+                "dba": 88.18
+              },
+              {
+                "distM": 192,
+                "dba": 83.67
+              },
+              {
+                "distM": 305,
+                "dba": 78.81
+              },
+              {
+                "distM": 610,
+                "dba": 71.03
+              },
+              {
+                "distM": 1219,
+                "dba": 62.46
+              },
+              {
+                "distM": 1920,
+                "dba": 56.22
+              },
+              {
+                "distM": 3048,
+                "dba": 49.27
+              },
+              {
+                "distM": 4877,
+                "dba": 41.61
+              },
+              {
+                "distM": 7620,
+                "dba": 33.96
+              }
+            ]
+          }
+        ]
+      },
+      "engineLabel": "Airbus A330-743L / RR Trent 772B",
+      "noiseIdentifier": "A330-743L",
+      "mappingNote": "A330 w/ RR Trent 772B (ceo engine); mapped to A330-300 as the most common A330ceo - VERIFY",
+      "spectralApproachClass": 244,
+      "spectralDepartureClass": 144
+    },
+    {
+      "sourceType": "verified",
+      "label": "A330-941",
+      "aircraftTypeCodes": [
+        "A339"
+      ],
+      "anpId": "A330-941",
+      "confidence": 0.85,
+      "npd": {
+        "refMetric": "Lmax_dBA",
+        "thrust": [
+          {
+            "setting": "departure",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 102.64
+              },
+              {
+                "distM": 122,
+                "dba": 96.5
+              },
+              {
+                "distM": 192,
+                "dba": 92.05
+              },
+              {
+                "distM": 305,
+                "dba": 87.03
+              },
+              {
+                "distM": 610,
+                "dba": 79.01
+              },
+              {
+                "distM": 1219,
+                "dba": 70.41
+              },
+              {
+                "distM": 1920,
+                "dba": 64.18
+              },
+              {
+                "distM": 3048,
+                "dba": 57.2
+              },
+              {
+                "distM": 4877,
+                "dba": 49.4
+              },
+              {
+                "distM": 7620,
+                "dba": 41.26
+              }
+            ]
+          },
+          {
+            "setting": "climb",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 102.64
+              },
+              {
+                "distM": 122,
+                "dba": 96.5
+              },
+              {
+                "distM": 192,
+                "dba": 92.05
+              },
+              {
+                "distM": 305,
+                "dba": 87.03
+              },
+              {
+                "distM": 610,
+                "dba": 79.01
+              },
+              {
+                "distM": 1219,
+                "dba": 70.41
+              },
+              {
+                "distM": 1920,
+                "dba": 64.18
+              },
+              {
+                "distM": 3048,
+                "dba": 57.2
+              },
+              {
+                "distM": 4877,
+                "dba": 49.4
+              },
+              {
+                "distM": 7620,
+                "dba": 41.26
+              }
+            ]
+          },
+          {
+            "setting": "cruise",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 102.64
+              },
+              {
+                "distM": 122,
+                "dba": 96.5
+              },
+              {
+                "distM": 192,
+                "dba": 92.05
+              },
+              {
+                "distM": 305,
+                "dba": 87.03
+              },
+              {
+                "distM": 610,
+                "dba": 79.01
+              },
+              {
+                "distM": 1219,
+                "dba": 70.41
+              },
+              {
+                "distM": 1920,
+                "dba": 64.18
+              },
+              {
+                "distM": 3048,
+                "dba": 57.2
+              },
+              {
+                "distM": 4877,
+                "dba": 49.4
+              },
+              {
+                "distM": 7620,
+                "dba": 41.26
+              }
+            ]
+          },
+          {
+            "setting": "approach",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 95.73
+              },
+              {
+                "distM": 122,
+                "dba": 89.15
+              },
+              {
+                "distM": 192,
+                "dba": 84.44
+              },
+              {
+                "distM": 305,
+                "dba": 79.59
+              },
+              {
+                "distM": 610,
+                "dba": 71.68
+              },
+              {
+                "distM": 1219,
+                "dba": 63.12
+              },
+              {
+                "distM": 1920,
+                "dba": 57.05
+              },
+              {
+                "distM": 3048,
+                "dba": 50.26
+              },
+              {
+                "distM": 4877,
+                "dba": 42.4
+              },
+              {
+                "distM": 7620,
+                "dba": 34.58
+              }
+            ]
+          }
+        ]
+      },
+      "engineLabel": "Airbus A330-941 / RR Trent 7000",
+      "noiseIdentifier": "A330-941",
+      "mappingNote": "A330-900neo",
+      "spectralApproachClass": 248,
+      "spectralDepartureClass": 148
+    },
+    {
+      "sourceType": "verified",
+      "label": "A350-1041",
+      "aircraftTypeCodes": [
+        "A35K"
+      ],
+      "anpId": "A350-1041",
+      "confidence": 0.85,
+      "npd": {
+        "refMetric": "Lmax_dBA",
+        "thrust": [
+          {
+            "setting": "departure",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 105.27
+              },
+              {
+                "distM": 122,
+                "dba": 99.78
+              },
+              {
+                "distM": 192,
+                "dba": 95.43
+              },
+              {
+                "distM": 305,
+                "dba": 90.7
+              },
+              {
+                "distM": 610,
+                "dba": 83.02
+              },
+              {
+                "distM": 1219,
+                "dba": 74.51
+              },
+              {
+                "distM": 1920,
+                "dba": 68.36
+              },
+              {
+                "distM": 3048,
+                "dba": 61.54
+              },
+              {
+                "distM": 4877,
+                "dba": 53.86
+              },
+              {
+                "distM": 7620,
+                "dba": 45.85
+              }
+            ]
+          },
+          {
+            "setting": "climb",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 105.27
+              },
+              {
+                "distM": 122,
+                "dba": 99.78
+              },
+              {
+                "distM": 192,
+                "dba": 95.43
+              },
+              {
+                "distM": 305,
+                "dba": 90.7
+              },
+              {
+                "distM": 610,
+                "dba": 83.02
+              },
+              {
+                "distM": 1219,
+                "dba": 74.51
+              },
+              {
+                "distM": 1920,
+                "dba": 68.36
+              },
+              {
+                "distM": 3048,
+                "dba": 61.54
+              },
+              {
+                "distM": 4877,
+                "dba": 53.86
+              },
+              {
+                "distM": 7620,
+                "dba": 45.85
+              }
+            ]
+          },
+          {
+            "setting": "cruise",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 105.27
+              },
+              {
+                "distM": 122,
+                "dba": 99.78
+              },
+              {
+                "distM": 192,
+                "dba": 95.43
+              },
+              {
+                "distM": 305,
+                "dba": 90.7
+              },
+              {
+                "distM": 610,
+                "dba": 83.02
+              },
+              {
+                "distM": 1219,
+                "dba": 74.51
+              },
+              {
+                "distM": 1920,
+                "dba": 68.36
+              },
+              {
+                "distM": 3048,
+                "dba": 61.54
+              },
+              {
+                "distM": 4877,
+                "dba": 53.86
+              },
+              {
+                "distM": 7620,
+                "dba": 45.85
+              }
+            ]
+          },
+          {
+            "setting": "approach",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 94.32
+              },
+              {
+                "distM": 122,
+                "dba": 87.88
+              },
+              {
+                "distM": 192,
+                "dba": 83.33
+              },
+              {
+                "distM": 305,
+                "dba": 78.51
+              },
+              {
+                "distM": 610,
+                "dba": 70.74
+              },
+              {
+                "distM": 1219,
+                "dba": 62.16
+              },
+              {
+                "distM": 1920,
+                "dba": 55.98
+              },
+              {
+                "distM": 3048,
+                "dba": 49.19
+              },
+              {
+                "distM": 4877,
+                "dba": 41.76
+              },
+              {
+                "distM": 7620,
+                "dba": 34.32
+              }
+            ]
+          }
+        ]
+      },
+      "engineLabel": "Airbus A350-1041\u00a0/ RR Trent XWB-97",
+      "noiseIdentifier": "A350-1041",
+      "mappingNote": "A350-1000",
+      "spectralApproachClass": 246,
+      "spectralDepartureClass": 146
+    },
+    {
+      "sourceType": "verified",
+      "label": "ERJ190-300",
+      "aircraftTypeCodes": [
+        "E290"
+      ],
+      "anpId": "ERJ190-300",
+      "confidence": 0.85,
+      "npd": {
+        "refMetric": "Lmax_dBA",
+        "thrust": [
+          {
+            "setting": "departure",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 101.36
+              },
+              {
+                "distM": 122,
+                "dba": 94.77
+              },
+              {
+                "distM": 192,
+                "dba": 89.88
+              },
+              {
+                "distM": 305,
+                "dba": 84.58
+              },
+              {
+                "distM": 610,
+                "dba": 76.0
+              },
+              {
+                "distM": 1219,
+                "dba": 65.33
+              },
+              {
+                "distM": 1920,
+                "dba": 58.8
+              },
+              {
+                "distM": 3048,
+                "dba": 51.59
+              },
+              {
+                "distM": 4877,
+                "dba": 43.54
+              },
+              {
+                "distM": 7620,
+                "dba": 35.13
+              }
+            ]
+          },
+          {
+            "setting": "climb",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 101.36
+              },
+              {
+                "distM": 122,
+                "dba": 94.77
+              },
+              {
+                "distM": 192,
+                "dba": 89.88
+              },
+              {
+                "distM": 305,
+                "dba": 84.58
+              },
+              {
+                "distM": 610,
+                "dba": 76.0
+              },
+              {
+                "distM": 1219,
+                "dba": 65.33
+              },
+              {
+                "distM": 1920,
+                "dba": 58.8
+              },
+              {
+                "distM": 3048,
+                "dba": 51.59
+              },
+              {
+                "distM": 4877,
+                "dba": 43.54
+              },
+              {
+                "distM": 7620,
+                "dba": 35.13
+              }
+            ]
+          },
+          {
+            "setting": "cruise",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 101.36
+              },
+              {
+                "distM": 122,
+                "dba": 94.77
+              },
+              {
+                "distM": 192,
+                "dba": 89.88
+              },
+              {
+                "distM": 305,
+                "dba": 84.58
+              },
+              {
+                "distM": 610,
+                "dba": 76.0
+              },
+              {
+                "distM": 1219,
+                "dba": 65.33
+              },
+              {
+                "distM": 1920,
+                "dba": 58.8
+              },
+              {
+                "distM": 3048,
+                "dba": 51.59
+              },
+              {
+                "distM": 4877,
+                "dba": 43.54
+              },
+              {
+                "distM": 7620,
+                "dba": 35.13
+              }
+            ]
+          },
+          {
+            "setting": "approach",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 89.34
+              },
+              {
+                "distM": 122,
+                "dba": 82.52
+              },
+              {
+                "distM": 192,
+                "dba": 77.87
+              },
+              {
+                "distM": 305,
+                "dba": 72.95
+              },
+              {
+                "distM": 610,
+                "dba": 65.12
+              },
+              {
+                "distM": 1219,
+                "dba": 56.65
+              },
+              {
+                "distM": 1920,
+                "dba": 50.56
+              },
+              {
+                "distM": 3048,
+                "dba": 43.76
+              },
+              {
+                "distM": 4877,
+                "dba": 36.11
+              },
+              {
+                "distM": 7620,
+                "dba": 28.04
+              }
+            ]
+          }
+        ]
+      },
+      "engineLabel": "ERJ 190-300 / PW1900G",
+      "noiseIdentifier": "ERJ190-300",
+      "mappingNote": "E190-E2",
+      "spectralApproachClass": 247,
+      "spectralDepartureClass": 147
+    },
+    {
+      "sourceType": "verified",
+      "label": "ERJ190-400",
+      "aircraftTypeCodes": [
+        "E295"
+      ],
+      "anpId": "ERJ190-400",
+      "confidence": 0.85,
+      "npd": {
+        "refMetric": "Lmax_dBA",
+        "thrust": [
+          {
+            "setting": "departure",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 101.36
+              },
+              {
+                "distM": 122,
+                "dba": 94.77
+              },
+              {
+                "distM": 192,
+                "dba": 89.88
+              },
+              {
+                "distM": 305,
+                "dba": 84.58
+              },
+              {
+                "distM": 610,
+                "dba": 76.0
+              },
+              {
+                "distM": 1219,
+                "dba": 65.33
+              },
+              {
+                "distM": 1920,
+                "dba": 58.8
+              },
+              {
+                "distM": 3048,
+                "dba": 51.59
+              },
+              {
+                "distM": 4877,
+                "dba": 43.54
+              },
+              {
+                "distM": 7620,
+                "dba": 35.13
+              }
+            ]
+          },
+          {
+            "setting": "climb",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 101.36
+              },
+              {
+                "distM": 122,
+                "dba": 94.77
+              },
+              {
+                "distM": 192,
+                "dba": 89.88
+              },
+              {
+                "distM": 305,
+                "dba": 84.58
+              },
+              {
+                "distM": 610,
+                "dba": 76.0
+              },
+              {
+                "distM": 1219,
+                "dba": 65.33
+              },
+              {
+                "distM": 1920,
+                "dba": 58.8
+              },
+              {
+                "distM": 3048,
+                "dba": 51.59
+              },
+              {
+                "distM": 4877,
+                "dba": 43.54
+              },
+              {
+                "distM": 7620,
+                "dba": 35.13
+              }
+            ]
+          },
+          {
+            "setting": "cruise",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 101.36
+              },
+              {
+                "distM": 122,
+                "dba": 94.77
+              },
+              {
+                "distM": 192,
+                "dba": 89.88
+              },
+              {
+                "distM": 305,
+                "dba": 84.58
+              },
+              {
+                "distM": 610,
+                "dba": 76.0
+              },
+              {
+                "distM": 1219,
+                "dba": 65.33
+              },
+              {
+                "distM": 1920,
+                "dba": 58.8
+              },
+              {
+                "distM": 3048,
+                "dba": 51.59
+              },
+              {
+                "distM": 4877,
+                "dba": 43.54
+              },
+              {
+                "distM": 7620,
+                "dba": 35.13
+              }
+            ]
+          },
+          {
+            "setting": "approach",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 89.34
+              },
+              {
+                "distM": 122,
+                "dba": 82.52
+              },
+              {
+                "distM": 192,
+                "dba": 77.87
+              },
+              {
+                "distM": 305,
+                "dba": 72.95
+              },
+              {
+                "distM": 610,
+                "dba": 65.12
+              },
+              {
+                "distM": 1219,
+                "dba": 56.65
+              },
+              {
+                "distM": 1920,
+                "dba": 50.56
+              },
+              {
+                "distM": 3048,
+                "dba": 43.76
+              },
+              {
+                "distM": 4877,
+                "dba": 36.11
+              },
+              {
+                "distM": 7620,
+                "dba": 28.04
+              }
+            ]
+          }
+        ]
+      },
+      "engineLabel": "ERJ 190-400 / PW1900G",
+      "noiseIdentifier": "ERJ190-400",
+      "mappingNote": "E195-E2",
+      "spectralApproachClass": 247,
+      "spectralDepartureClass": 147
+    },
+    {
+      "sourceType": "verified",
+      "label": "FAL900EX",
+      "aircraftTypeCodes": [
+        "F900"
+      ],
+      "anpId": "FAL900EX",
+      "confidence": 0.85,
+      "npd": {
+        "refMetric": "Lmax_dBA",
+        "thrust": [
+          {
+            "setting": "departure",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 108.8
+              },
+              {
+                "distM": 122,
+                "dba": 101.6
+              },
+              {
+                "distM": 192,
+                "dba": 96.5
+              },
+              {
+                "distM": 305,
+                "dba": 90.8
+              },
+              {
+                "distM": 610,
+                "dba": 81.3
+              },
+              {
+                "distM": 1219,
+                "dba": 70.7
+              },
+              {
+                "distM": 1920,
+                "dba": 63.3
+              },
+              {
+                "distM": 3048,
+                "dba": 55.2
+              },
+              {
+                "distM": 4877,
+                "dba": 46.4
+              },
+              {
+                "distM": 7620,
+                "dba": 37.4
+              }
+            ]
+          },
+          {
+            "setting": "climb",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 108.8
+              },
+              {
+                "distM": 122,
+                "dba": 101.6
+              },
+              {
+                "distM": 192,
+                "dba": 96.5
+              },
+              {
+                "distM": 305,
+                "dba": 90.8
+              },
+              {
+                "distM": 610,
+                "dba": 81.3
+              },
+              {
+                "distM": 1219,
+                "dba": 70.7
+              },
+              {
+                "distM": 1920,
+                "dba": 63.3
+              },
+              {
+                "distM": 3048,
+                "dba": 55.2
+              },
+              {
+                "distM": 4877,
+                "dba": 46.4
+              },
+              {
+                "distM": 7620,
+                "dba": 37.4
+              }
+            ]
+          },
+          {
+            "setting": "cruise",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 108.8
+              },
+              {
+                "distM": 122,
+                "dba": 101.6
+              },
+              {
+                "distM": 192,
+                "dba": 96.5
+              },
+              {
+                "distM": 305,
+                "dba": 90.8
+              },
+              {
+                "distM": 610,
+                "dba": 81.3
+              },
+              {
+                "distM": 1219,
+                "dba": 70.7
+              },
+              {
+                "distM": 1920,
+                "dba": 63.3
+              },
+              {
+                "distM": 3048,
+                "dba": 55.2
+              },
+              {
+                "distM": 4877,
+                "dba": 46.4
+              },
+              {
+                "distM": 7620,
+                "dba": 37.4
+              }
+            ]
+          },
+          {
+            "setting": "approach",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 92.8
+              },
+              {
+                "distM": 122,
+                "dba": 85.6
+              },
+              {
+                "distM": 192,
+                "dba": 80.7
+              },
+              {
+                "distM": 305,
+                "dba": 75.4
+              },
+              {
+                "distM": 610,
+                "dba": 67.1
+              },
+              {
+                "distM": 1219,
+                "dba": 57.8
+              },
+              {
+                "distM": 1920,
+                "dba": 50.9
+              },
+              {
+                "distM": 3048,
+                "dba": 43.2
+              },
+              {
+                "distM": 4877,
+                "dba": 34.7
+              },
+              {
+                "distM": 7620,
+                "dba": 25.9
+              }
+            ]
+          }
+        ]
+      },
+      "engineLabel": "Dassault FAL900EX / TFE731-60",
+      "noiseIdentifier": "FAL900EX",
+      "mappingNote": "Falcon 900EX (ICAO F900 covers 900 family)",
+      "spectralApproachClass": 206,
+      "spectralDepartureClass": 107
+    },
+    {
+      "sourceType": "verified",
+      "label": "G650ER",
+      "aircraftTypeCodes": [
+        "GLF6"
+      ],
+      "anpId": "G650ER",
+      "confidence": 0.85,
+      "npd": {
+        "refMetric": "Lmax_dBA",
+        "thrust": [
+          {
+            "setting": "departure",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 105.88
+              },
+              {
+                "distM": 122,
+                "dba": 98.83
+              },
+              {
+                "distM": 192,
+                "dba": 94.13
+              },
+              {
+                "distM": 305,
+                "dba": 89.34
+              },
+              {
+                "distM": 610,
+                "dba": 81.64
+              },
+              {
+                "distM": 1219,
+                "dba": 73.31
+              },
+              {
+                "distM": 1920,
+                "dba": 67.02
+              },
+              {
+                "distM": 3048,
+                "dba": 60.62
+              },
+              {
+                "distM": 4877,
+                "dba": 52.66
+              },
+              {
+                "distM": 7620,
+                "dba": 45.1
+              }
+            ]
+          },
+          {
+            "setting": "climb",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 105.88
+              },
+              {
+                "distM": 122,
+                "dba": 98.83
+              },
+              {
+                "distM": 192,
+                "dba": 94.13
+              },
+              {
+                "distM": 305,
+                "dba": 89.34
+              },
+              {
+                "distM": 610,
+                "dba": 81.64
+              },
+              {
+                "distM": 1219,
+                "dba": 73.31
+              },
+              {
+                "distM": 1920,
+                "dba": 67.02
+              },
+              {
+                "distM": 3048,
+                "dba": 60.62
+              },
+              {
+                "distM": 4877,
+                "dba": 52.66
+              },
+              {
+                "distM": 7620,
+                "dba": 45.1
+              }
+            ]
+          },
+          {
+            "setting": "cruise",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 105.88
+              },
+              {
+                "distM": 122,
+                "dba": 98.83
+              },
+              {
+                "distM": 192,
+                "dba": 94.13
+              },
+              {
+                "distM": 305,
+                "dba": 89.34
+              },
+              {
+                "distM": 610,
+                "dba": 81.64
+              },
+              {
+                "distM": 1219,
+                "dba": 73.31
+              },
+              {
+                "distM": 1920,
+                "dba": 67.02
+              },
+              {
+                "distM": 3048,
+                "dba": 60.62
+              },
+              {
+                "distM": 4877,
+                "dba": 52.66
+              },
+              {
+                "distM": 7620,
+                "dba": 45.1
+              }
+            ]
+          },
+          {
+            "setting": "approach",
+            "points": [
+              {
+                "distM": 61,
+                "dba": 87.71
+              },
+              {
+                "distM": 122,
+                "dba": 81.06
+              },
+              {
+                "distM": 192,
+                "dba": 76.57
+              },
+              {
+                "distM": 305,
+                "dba": 71.85
+              },
+              {
+                "distM": 610,
+                "dba": 64.32
+              },
+              {
+                "distM": 1219,
+                "dba": 56.01
+              },
+              {
+                "distM": 1920,
+                "dba": 49.58
+              },
+              {
+                "distM": 3048,
+                "dba": 43.03
+              },
+              {
+                "distM": 4877,
+                "dba": 34.64
+              },
+              {
+                "distM": 7620,
+                "dba": 26.68
+              }
+            ]
+          }
+        ]
+      },
+      "engineLabel": "Gulfstream G650ER / BR-700-725A1-12",
+      "noiseIdentifier": "G650ER",
+      "mappingNote": "Gulfstream G650ER",
+      "spectralApproachClass": 205,
+      "spectralDepartureClass": 113
+    },
     {
       "sourceType": "verified",
       "label": "V2527A",

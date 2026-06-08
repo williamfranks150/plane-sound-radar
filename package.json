@@ -1,17 +1,15 @@
 {
   "name": "plane-sound-radar",
-  "version": "1.7.0",
+  "version": "2.0.0",
   "private": true,
   "description": "Plane Sound radar web prototype.",
   "scripts": {
     "check": "node scripts/check-js.js",
-    "format": "prettier --write index.html style.css config.js app.constants.js app.data.js app.utils.js app.aircraft-db.js app.weather.js app.audio-monitor.js app.audio-source.js app.acoustics.js app.aircraft.js app.mics.js app.selected-mics.js app.connection.js app.render.js app.radar.js app.location.js app.loop.js app.mic-specs.js app.search.js app.feed.js app.js worker-index.js mic-specs.json manifest.webmanifest",
-    "format:check": "prettier --check index.html style.css config.js app.constants.js app.data.js app.utils.js app.aircraft-db.js app.weather.js app.audio-monitor.js app.audio-source.js app.acoustics.js app.aircraft.js app.mics.js app.selected-mics.js app.connection.js app.render.js app.radar.js app.location.js app.loop.js app.mic-specs.js app.search.js app.feed.js app.js worker-index.js mic-specs.json manifest.webmanifest",
+    "format": "prettier --write index.html style.css config.js app.constants.js app.data.js app.utils.js app.aircraft-db.js app.propagation.js app.spectral.js app.weather.js app.audio-monitor.js app.audio-source.js app.threshold.js app.acoustics.js app.aircraft.js app.mics.js app.selected-mics.js app.connection.js app.render.js app.forecast-log.js app.radar.js app.location.js app.loop.js app.mic-specs.js app.search.js app.feed.js app.js worker-index.js mic-specs.json manifest.webmanifest",
+    "format:check": "prettier --check index.html style.css config.js app.constants.js app.data.js app.utils.js app.aircraft-db.js app.propagation.js app.spectral.js app.weather.js app.audio-monitor.js app.audio-source.js app.threshold.js app.acoustics.js app.aircraft.js app.mics.js app.selected-mics.js app.connection.js app.render.js app.forecast-log.js app.radar.js app.location.js app.loop.js app.mic-specs.js app.search.js app.feed.js app.js worker-index.js mic-specs.json manifest.webmanifest",
     "serve": "http-server . -p 5173 -c-1",
     "start": "npm run serve",
-    "test": "npm run check",
-    "validate:acoustics": "node scripts/validate-acoustic-data.js",
-    "validate:v3": "node scripts/validate-v3-data.js"
+    "test": "npm run check"
   },
   "devDependencies": {
     "http-server": "^14.1.1",

@@ -4,7 +4,7 @@ const state = {
   loc: null,
   savedLoc: null,
   activePanel: null,
-  settings: { package: "none", active: [], scene: "exterior_dialogue" },
+  settings: { package: "none", active: [], scene: "quiet_exterior" },
   hiddenMics: [],
   adsb: {
     state: "idle",
@@ -52,6 +52,19 @@ function setPanel(name) {
 // === End manual mic spec editor ===
 
 function init() {
+  if (typeof psLoadLog === "function") psLoadLog();
+  // Migrate any saved scene key from an older preset set to the current one.
+  if (state.settings && typeof PS_SCENE_PROFILES !== "undefined") {
+    if (!PS_SCENE_PROFILES[state.settings.scene]) {
+      const map = {
+        exterior_dialogue: "quiet_exterior",
+        suburban: "loud_exterior",
+        urban: "loud_exterior",
+        controlled_interior: "quiet_interior",
+      };
+      state.settings.scene = map[state.settings.scene] || "quiet_exterior";
+    }
+  }
   if (typeof psBootAcousticEngine === "function") {
     psBootAcousticEngine().then(() => {
       render();
@@ -79,6 +92,32 @@ function init() {
   $("tabMics").onclick = () => setPanel("mics");
   $("tabAircraft").onclick = () => setPanel("aircraft");
   $("tabLocation").onclick = () => setPanel("location");
+  $("tabLog").onclick = () => setPanel("log");
+  const aboutBtn = $("aboutBtn");
+  const aboutOverlay = $("aboutOverlay");
+  const aboutClose = $("aboutCloseBtn");
+  if (aboutBtn && aboutOverlay) {
+    aboutBtn.onclick = () => aboutOverlay.classList.remove("hidden");
+    if (aboutClose)
+      aboutClose.onclick = () => aboutOverlay.classList.add("hidden");
+    aboutOverlay.onclick = (e) => {
+      if (e.target === aboutOverlay) aboutOverlay.classList.add("hidden");
+    };
+  }
+  const privacyBtn = $("privacyBtn");
+  const privacyOverlay = $("privacyOverlay");
+  const privacyClose = $("privacyCloseBtn");
+  if (privacyBtn && privacyOverlay) {
+    privacyBtn.onclick = () => {
+      if (aboutOverlay) aboutOverlay.classList.add("hidden");
+      privacyOverlay.classList.remove("hidden");
+    };
+    if (privacyClose)
+      privacyClose.onclick = () => privacyOverlay.classList.add("hidden");
+    privacyOverlay.onclick = (e) => {
+      if (e.target === privacyOverlay) privacyOverlay.classList.add("hidden");
+    };
+  }
   $("searchBtn").onclick = doSearch;
   $("searchInput").onkeydown = (e) => {
     if (e.key === "Enter") doSearch();

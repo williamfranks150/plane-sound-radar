@@ -214,11 +214,34 @@ function psWeatherCorrectionForAircraft(context, sourceProfile) {
     : Number.isFinite(Number(layer.hpa))
       ? Number(layer.hpa) / 10
       : PS_PRESSURE_REF_KPA;
-  const absorptionDbPerKm = psBroadbandAircraftAbsorptionDbPerKm(
-    layer.temperatureC,
-    layer.humidityPct,
-    pressureKpa,
-  );
+  // Spectrum-aware absorption: use this aircraft's actual 1/3-octave spectrum
+  // (EASA spectral class for verified types, category-representative otherwise)
+  // so high-frequency-heavy and low-frequency-heavy aircraft attenuate
+  // correctly over distance. Falls back to the generic broadband blend when no
+  // spectrum is available. Only affects the proxy/estimated propagation path;
+  // the verified-NPD level already includes ANP reference absorption.
+  let absorptionDbPerKm;
+  if (
+    typeof psAircraftSpectrum === "function" &&
+    typeof psSpectralAbsorptionDbPerKm === "function"
+  ) {
+    const spectrum = psAircraftSpectrum(
+      sourceProfile,
+      (sourceProfile && sourceProfile.regime) || "approach",
+    );
+    absorptionDbPerKm = psSpectralAbsorptionDbPerKm(
+      spectrum,
+      layer.temperatureC,
+      layer.humidityPct,
+      pressureKpa,
+    );
+  } else {
+    absorptionDbPerKm = psBroadbandAircraftAbsorptionDbPerKm(
+      layer.temperatureC,
+      layer.humidityPct,
+      pressureKpa,
+    );
+  }
 
   const refraction = psRefractionBand(context, data.surface, data.levels);
 

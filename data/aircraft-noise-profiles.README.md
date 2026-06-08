@@ -1,64 +1,52 @@
-﻿# Aircraft noise profiles — verified NPD ingest
+# Aircraft noise profiles — verified data
 
-`data/aircraft-noise-profiles.json` holds VERIFIED aircraft noise data. When a
-tracked aircraft's ICAO type matches a profile here that carries an `npd`
-block, the acoustic engine reads the received level directly from the
-Noise-Power-Distance curve (Lmax dB-A vs slant distance, by thrust setting).
-That path is tagged `VERIFIED NPD` in the UI and is the most accurate source.
+`data/aircraft-noise-profiles.json` holds VERIFIED aircraft noise curves. When a
+tracked aircraft's ICAO type matches a profile here, the engine reads the
+received level directly from that aircraft's certified Noise-Power-Distance
+(NPD) curve (LAmax dB-A vs slant distance, by thrust setting) and tags it
+`VERIFIED NPD` in the UI. Aircraft with no match fall back to the proxy database
+and then to estimated class profiles, tagged `PROXY DATA` / `ESTIMATED` with
+lower confidence on purpose.
 
-Profiles without a match fall back to the proxy DB
-(`aircraft-type-profiles.json`) and then to estimated class profiles. Those are
-tagged `PROXY DATA` / `ESTIMATED` and carry lower confidence on purpose.
+## What's currently verified (15 aircraft)
 
-## Getting real data
+From the **EASA ANP database v9** (14 modern types):
 
-You qualify as a modelling user under Reg. (EU) 598/2014 Art. 7(3). Request the
-EASA ANP data (or download the legacy EUROCONTROL ANP v2.3 set) and export the
-`NPD_data` table to CSV. You want the LAMAX rows.
+| ICAO | Aircraft | ICAO | Aircraft |
+|------|----------|------|----------|
+| A20N | A320neo  | B744 | 747-400 |
+| A21N | A321neo  | B763 | 767-300ER |
+| A339 | A330-900neo | B77W | 777-300ER |
+| A333 | A330 (Trent 772 — see note) | B789 | 787-9 |
+| A35K | A350-1000 | E290 | E190-E2 |
+| F900 | Falcon 900EX | E295 | E195-E2 |
+| GLF6 | Gulfstream G650ER | | |
 
-## Converting
+Plus one retained legacy curve: **A320** (A320ceo, IAE V2527-A5).
+
+**Note on A333:** the v9 entry `A330-743L` (RR Trent 772B, a ceo-generation
+engine) was mapped to ICAO `A333` as the most common A330ceo passenger variant.
+If you see A330s labelled oddly, this is the mapping to double-check.
+
+**Two A320neo engine variants** exist in v9 (LEAP and PW geared turbofan). ADS-B
+reports both as `A20N`, so the louder of the two (the PW variant) carries the
+`A20N` code; the other is kept in the file but not auto-matched.
+
+## What is NOT verified (still estimated)
+
+The v9 set is modern types only. Common workhorses are NOT in it and use
+estimates: **737-800 / 737 MAX, A320ceo family (A319/A321ceo), CRJ regional
+jets, E175, Dash 8 / Q400, A220.** These show as PROXY/ESTIMATED. That's honest:
+the app never claims verified accuracy it doesn't have.
+
+## Re-running the converter (when EASA updates the data)
 
 ```
-node scripts/convert-anp-npd.js path\to\NPD_data.csv path\to\ICAO_to_ANPID.csv > data\aircraft-noise-profiles.json
+pip install openpyxl
+python scripts/convert-easa-anp-xlsx.py --npd EASA_ANP_database_NPD_Data_v9.xlsx --acft EASA_ANP_database_Aircraft_v9.xlsx --merge data/aircraft-noise-profiles.json --out data/aircraft-noise-profiles.json
 ```
 
-- `NPD_data.csv` — the ANP NPD table. The converter auto-detects the descriptor
-  column by its values (it keeps LAMAX rows), the ANP-id column, the
-  operation-mode column (A/D), and the ten standard distance columns
-  (200..25000 ft, converted to metres).
-- `ICAO_to_ANPID.csv` — a two-column map `ICAO,ANPID` (e.g. `B738,737800`) so the
-  curves attach to the type codes ADS-B reports. Build it for the types you care
-  about; rows without a mapping are still imported but won't match live traffic
-  until mapped.
-
-## Schema
-
-```json
-{
-  "schema": "plane-sound-aircraft-noise-profiles-v1",
-  "mode": "verified-data-required",
-  "sources": [ { "name": "...", "metric": "LAMAX", "note": "..." } ],
-  "profiles": [
-    {
-      "sourceType": "verified",
-      "label": "737800",
-      "aircraftTypeCodes": ["B738"],
-      "anpId": "737800",
-      "confidence": 0.85,
-      "npd": {
-        "refMetric": "Lmax_dBA",
-        "thrust": [
-          { "setting": "departure", "points": [ { "distM": 61, "dba": 99.2 }, ... ] },
-          { "setting": "approach",  "points": [ { "distM": 61, "dba": 94.1 }, ... ] }
-        ]
-      }
-    }
-  ]
-}
-```
-
-The engine selects the thrust column by inferred flight regime (departure/climb
-→ departure column; approach/descent → approach column; level/cruise → cruise),
-interpolates Lmax linearly in log10(distance), and only adds the live refraction
-correction on top — it does NOT re-apply spreading, because the NPD curve
-already includes it.
+It keeps only LAmax rows, takes the loudest power setting per operating mode
+(worst case for contamination), converts the ten standard ANP distances from
+feet to metres, and attaches ICAO codes from the mapping table inside the
+script. It does not invent or alter any noise values.

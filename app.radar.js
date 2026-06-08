@@ -1,5 +1,36 @@
 ﻿"use strict";
 
+// Smooths arrow size frame-to-frame so the loudness-driven "Doppler swell"
+// eases instead of snapping when the received level (and so the target size)
+// updates. Keyed per aircraft; entries expire after a minute of no sightings.
+const PS_RADAR_SIZE_CACHE = new Map();
+
+function psRadarSizeKey(p) {
+  return String(p && (p.icao || p.callsign || p.raw?.hex || "")).trim();
+}
+
+function psSmoothedSize(p, targetSize, now) {
+  const key = psRadarSizeKey(p);
+  if (!key) return targetSize;
+
+  const entry = PS_RADAR_SIZE_CACHE.get(key);
+  let size =
+    entry && Number.isFinite(Number(entry.size))
+      ? Number(entry.size) * 0.78 + targetSize * 0.22
+      : targetSize;
+
+  PS_RADAR_SIZE_CACHE.set(key, { size, lastSeen: now });
+  return size;
+}
+
+function psPruneRadarSizeCache(now) {
+  for (const [key, value] of PS_RADAR_SIZE_CACHE.entries()) {
+    if (!value || now - Number(value.lastSeen || 0) > 60000) {
+      PS_RADAR_SIZE_CACHE.delete(key);
+    }
+  }
+}
+
 function resizeCanvas() {
   const c = $("radar");
   const wrap = c.parentElement;
@@ -24,12 +55,34 @@ function resizeCanvas() {
   c.style.height = h + "px";
 }
 
+// Only aircraft whose heard-time arrival is within this many seconds are shown
+// as approaching. A sound mixer needs a short, useful lead time; anything
+// further out is not actionable and only clutters the scope. Audible (red)
+// contacts are always shown regardless of this window.
+const PS_APPROACH_VISIBLE_SECONDS = 600; // 10 minutes
+
 function psPlaneColor(p) {
   if (p.status === "audible") return "#ff5050";
   if (p.status === "approaching") return "#ffd040";
   if (p.status === "no-risk" || p.status === "high") return "#607070";
 
   return "#00ff8a";
+}
+
+// Is this aircraft something the mixer should currently see on the scope?
+// Yes only for: audible (in the mic now) or approaching within the visible
+// window. Everything else — tracked/clear, below-threshold, high, or an
+// approaching contact still more than the window away — is hidden, so the
+// radar shows only real, imminent concerns.
+function psPlaneIsVisible(p) {
+  if (p.status === "audible") return true;
+
+  if (p.status === "approaching") {
+    const secs = psTimedDisplaySeconds(p);
+    return secs == null || secs <= PS_APPROACH_VISIBLE_SECONDS;
+  }
+
+  return false;
 }
 
 function psPlaneAlpha(p) {
@@ -53,14 +106,36 @@ function psPlaneTimeTag(p) {
   return "";
 }
 
-function psPlaneHasTimer(p) {
-  return psPlaneTimeTag(p) !== "";
-}
+// Arrow size encodes IMPACT ON THE AUDIO, not timing. It "breathes" with how
+// far the received level sits above the contamination threshold (dB over
+// threshold) — louder at the mic => bigger arrow, quieter => smaller — like a
+// Doppler swell as the aircraft passes. Red (audible) sits at roughly 2x the
+// yellow (approaching) base so an in-mic aircraft always reads as the biggest
+// thing on the scope. Ranges are kept tight so a busy flight-path scene with
+// many contacts stays readable and the no-overlap rule still has room to work.
+//
+//   yellow (approaching): ~9 .. 14 px
+//   red    (audible):     ~18 .. 28 px
+function psImpactPlaneSize(p, uiScale) {
+  const ac = p.acoustic || {};
+  // Margin in dB above the contamination threshold. May be negative (just
+  // under threshold) up through ~25 dB (right overhead, very loud).
+  const margin = Number.isFinite(Number(ac.marginDba))
+    ? Number(ac.marginDba)
+    : 0;
+  // Map 0..18 dB over threshold to 0..1; clamp so it never runs away.
+  const loud = clamp(margin / 18, 0, 1);
 
-function psTimedPlaneSize(p, uiScale) {
-  const base = clamp((9 + p.risk * 8) * uiScale, 5, 22 * uiScale);
+  if (p.status === "audible") {
+    const lo = 18 * uiScale;
+    const hi = 28 * uiScale;
+    return clamp(lo + (hi - lo) * loud, lo, hi);
+  }
 
-  return psPlaneHasTimer(p) ? clamp(base * 1.5, 8, 34 * uiScale) : base;
+  // approaching (yellow)
+  const lo = 9 * uiScale;
+  const hi = 14 * uiScale;
+  return clamp(lo + (hi - lo) * loud, lo, hi);
 }
 
 function psTimedDisplaySeconds(p) {
@@ -419,6 +494,8 @@ function drawRadar() {
   const rs = rangeSettings();
   const scale = gridR / rs.radar;
   const protectedRects = psCanvasProtectedRects(c, uiScale);
+  const now = Date.now();
+  psPruneRadarSizeCache(now);
 
   ctx.clearRect(0, 0, c.width, c.height);
   ctx.save();
@@ -434,15 +511,17 @@ function drawRadar() {
   const arrowRects = [];
 
   state.analyzed.forEach((p) => {
-    if ((p.status === "high" || p.status === "no-risk") && p.h > rs.radar)
-      return;
+    // Only imminent concerns are shown: audible now, or approaching within the
+    // visible lead-time window. Everything else is hidden (no green tracked
+    // contacts, no far-future arrivals cluttering the scope).
+    if (!psPlaneIsVisible(p)) return;
 
     const rawPx = cx + p.x * scale;
     const rawPy = cy - p.y * scale;
     const tag = psPlaneTimeTag(p);
     const isTimed = tag !== "";
     const col = psPlaneColor(p);
-    const size = psTimedPlaneSize(p, uiScale);
+    const size = psSmoothedSize(p, psImpactPlaneSize(p, uiScale), now);
     const dp = psDisplayPointForAircraft(
       p,
       rawPx,
